@@ -1,0 +1,4 @@
+- Session is a network connection between a client application and the server
+- User represents a human being who connects to the server with a session.
+- Topic is a named communication channel which routes content between sessions.
+- Clients such as mobile or web applications create sessions by connecting to the server over a websocket
