@@ -36,3 +36,7 @@ const (
 	// TopicCategorySystem is a constant indicating a system topic.
 	TopicCategorySystem TopicCategory = "SYSTEM"
 )
+
+func (t TopicCategory) String() string {
+	return string(t)
+}

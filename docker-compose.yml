@@ -1,0 +1,43 @@
+version: '3'
+services:
+  semezana:
+    build: .
+    restart: always
+    depends_on:
+      - db
+      - nsqlookupd
+      - nsqd  
+    ports:
+      - "8080:8080"
+    environment:
+      - DEBUG=true
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_NAME=semezana
+      - DB_PASSWORD=postgres
+      - NSQ_ADDRESS=nsqd:4150
+      - NSQ_LOOKUP_ADDRESS=nsqlookupd:4161
+
+  db:
+    image: postgres:14.1-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=semezana
+  nsqlookupd:
+    image: nsqio/nsq
+    command: /nsqlookupd
+
+  nsqd:
+    image: nsqio/nsq
+    command:  /nsqd --broadcast-address=nsqd --lookupd-tcp-address=nsqlookupd:4160
+    depends_on:
+      - nsqlookupd
+  nsqadmin:
+    image: nsqio/nsq
+    command: /nsqadmin --lookupd-http-address=nsqlookupd:4161
+    depends_on:
+      - nsqlookupd  
+    ports:
+      - "4171:4171"

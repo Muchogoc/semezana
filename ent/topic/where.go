@@ -103,6 +103,13 @@ func Name(v string) predicate.Topic {
 	})
 }
 
+// Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
+func Type(v string) predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldType), v))
+	})
+}
+
 // State applies equality check predicate on the "state" field. It's identical to StateEQ.
 func State(v string) predicate.Topic {
 	return predicate.Topic(func(s *sql.Selector) {
@@ -117,10 +124,17 @@ func StateAt(v time.Time) predicate.Topic {
 	})
 }
 
-// SequenceID applies equality check predicate on the "sequence_id" field. It's identical to SequenceIDEQ.
-func SequenceID(v int) predicate.Topic {
+// Sequence applies equality check predicate on the "sequence" field. It's identical to SequenceEQ.
+func Sequence(v int) predicate.Topic {
 	return predicate.Topic(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldSequenceID), v))
+		s.Where(sql.EQ(s.C(FieldSequence), v))
+	})
+}
+
+// Touched applies equality check predicate on the "touched" field. It's identical to TouchedEQ.
+func Touched(v time.Time) predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldTouched), v))
 	})
 }
 
@@ -351,6 +365,105 @@ func NameContainsFold(v string) predicate.Topic {
 	})
 }
 
+// TypeEQ applies the EQ predicate on the "type" field.
+func TypeEQ(v string) predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldType), v))
+	})
+}
+
+// TypeNEQ applies the NEQ predicate on the "type" field.
+func TypeNEQ(v string) predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldType), v))
+	})
+}
+
+// TypeIn applies the In predicate on the "type" field.
+func TypeIn(vs ...string) predicate.Topic {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.In(s.C(FieldType), v...))
+	})
+}
+
+// TypeNotIn applies the NotIn predicate on the "type" field.
+func TypeNotIn(vs ...string) predicate.Topic {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.NotIn(s.C(FieldType), v...))
+	})
+}
+
+// TypeGT applies the GT predicate on the "type" field.
+func TypeGT(v string) predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldType), v))
+	})
+}
+
+// TypeGTE applies the GTE predicate on the "type" field.
+func TypeGTE(v string) predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldType), v))
+	})
+}
+
+// TypeLT applies the LT predicate on the "type" field.
+func TypeLT(v string) predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldType), v))
+	})
+}
+
+// TypeLTE applies the LTE predicate on the "type" field.
+func TypeLTE(v string) predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldType), v))
+	})
+}
+
+// TypeContains applies the Contains predicate on the "type" field.
+func TypeContains(v string) predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldType), v))
+	})
+}
+
+// TypeHasPrefix applies the HasPrefix predicate on the "type" field.
+func TypeHasPrefix(v string) predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldType), v))
+	})
+}
+
+// TypeHasSuffix applies the HasSuffix predicate on the "type" field.
+func TypeHasSuffix(v string) predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldType), v))
+	})
+}
+
+// TypeEqualFold applies the EqualFold predicate on the "type" field.
+func TypeEqualFold(v string) predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldType), v))
+	})
+}
+
+// TypeContainsFold applies the ContainsFold predicate on the "type" field.
+func TypeContainsFold(v string) predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldType), v))
+	})
+}
+
 // StateEQ applies the EQ predicate on the "state" field.
 func StateEQ(v string) predicate.Topic {
 	return predicate.Topic(func(s *sql.Selector) {
@@ -514,67 +627,187 @@ func StateAtLTE(v time.Time) predicate.Topic {
 	})
 }
 
-// SequenceIDEQ applies the EQ predicate on the "sequence_id" field.
-func SequenceIDEQ(v int) predicate.Topic {
+// SequenceEQ applies the EQ predicate on the "sequence" field.
+func SequenceEQ(v int) predicate.Topic {
 	return predicate.Topic(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldSequenceID), v))
+		s.Where(sql.EQ(s.C(FieldSequence), v))
 	})
 }
 
-// SequenceIDNEQ applies the NEQ predicate on the "sequence_id" field.
-func SequenceIDNEQ(v int) predicate.Topic {
+// SequenceNEQ applies the NEQ predicate on the "sequence" field.
+func SequenceNEQ(v int) predicate.Topic {
 	return predicate.Topic(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldSequenceID), v))
+		s.Where(sql.NEQ(s.C(FieldSequence), v))
 	})
 }
 
-// SequenceIDIn applies the In predicate on the "sequence_id" field.
-func SequenceIDIn(vs ...int) predicate.Topic {
+// SequenceIn applies the In predicate on the "sequence" field.
+func SequenceIn(vs ...int) predicate.Topic {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
 	}
 	return predicate.Topic(func(s *sql.Selector) {
-		s.Where(sql.In(s.C(FieldSequenceID), v...))
+		s.Where(sql.In(s.C(FieldSequence), v...))
 	})
 }
 
-// SequenceIDNotIn applies the NotIn predicate on the "sequence_id" field.
-func SequenceIDNotIn(vs ...int) predicate.Topic {
+// SequenceNotIn applies the NotIn predicate on the "sequence" field.
+func SequenceNotIn(vs ...int) predicate.Topic {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
 	}
 	return predicate.Topic(func(s *sql.Selector) {
-		s.Where(sql.NotIn(s.C(FieldSequenceID), v...))
+		s.Where(sql.NotIn(s.C(FieldSequence), v...))
 	})
 }
 
-// SequenceIDGT applies the GT predicate on the "sequence_id" field.
-func SequenceIDGT(v int) predicate.Topic {
+// SequenceGT applies the GT predicate on the "sequence" field.
+func SequenceGT(v int) predicate.Topic {
 	return predicate.Topic(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldSequenceID), v))
+		s.Where(sql.GT(s.C(FieldSequence), v))
 	})
 }
 
-// SequenceIDGTE applies the GTE predicate on the "sequence_id" field.
-func SequenceIDGTE(v int) predicate.Topic {
+// SequenceGTE applies the GTE predicate on the "sequence" field.
+func SequenceGTE(v int) predicate.Topic {
 	return predicate.Topic(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldSequenceID), v))
+		s.Where(sql.GTE(s.C(FieldSequence), v))
 	})
 }
 
-// SequenceIDLT applies the LT predicate on the "sequence_id" field.
-func SequenceIDLT(v int) predicate.Topic {
+// SequenceLT applies the LT predicate on the "sequence" field.
+func SequenceLT(v int) predicate.Topic {
 	return predicate.Topic(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldSequenceID), v))
+		s.Where(sql.LT(s.C(FieldSequence), v))
 	})
 }
 
-// SequenceIDLTE applies the LTE predicate on the "sequence_id" field.
-func SequenceIDLTE(v int) predicate.Topic {
+// SequenceLTE applies the LTE predicate on the "sequence" field.
+func SequenceLTE(v int) predicate.Topic {
 	return predicate.Topic(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldSequenceID), v))
+		s.Where(sql.LTE(s.C(FieldSequence), v))
+	})
+}
+
+// TouchedEQ applies the EQ predicate on the "touched" field.
+func TouchedEQ(v time.Time) predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldTouched), v))
+	})
+}
+
+// TouchedNEQ applies the NEQ predicate on the "touched" field.
+func TouchedNEQ(v time.Time) predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldTouched), v))
+	})
+}
+
+// TouchedIn applies the In predicate on the "touched" field.
+func TouchedIn(vs ...time.Time) predicate.Topic {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.In(s.C(FieldTouched), v...))
+	})
+}
+
+// TouchedNotIn applies the NotIn predicate on the "touched" field.
+func TouchedNotIn(vs ...time.Time) predicate.Topic {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.NotIn(s.C(FieldTouched), v...))
+	})
+}
+
+// TouchedGT applies the GT predicate on the "touched" field.
+func TouchedGT(v time.Time) predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldTouched), v))
+	})
+}
+
+// TouchedGTE applies the GTE predicate on the "touched" field.
+func TouchedGTE(v time.Time) predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldTouched), v))
+	})
+}
+
+// TouchedLT applies the LT predicate on the "touched" field.
+func TouchedLT(v time.Time) predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldTouched), v))
+	})
+}
+
+// TouchedLTE applies the LTE predicate on the "touched" field.
+func TouchedLTE(v time.Time) predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldTouched), v))
+	})
+}
+
+// AccessIsNil applies the IsNil predicate on the "access" field.
+func AccessIsNil() predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldAccess)))
+	})
+}
+
+// AccessNotNil applies the NotNil predicate on the "access" field.
+func AccessNotNil() predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldAccess)))
+	})
+}
+
+// PublicIsNil applies the IsNil predicate on the "public" field.
+func PublicIsNil() predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldPublic)))
+	})
+}
+
+// PublicNotNil applies the NotNil predicate on the "public" field.
+func PublicNotNil() predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldPublic)))
+	})
+}
+
+// TrustedIsNil applies the IsNil predicate on the "trusted" field.
+func TrustedIsNil() predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldTrusted)))
+	})
+}
+
+// TrustedNotNil applies the NotNil predicate on the "trusted" field.
+func TrustedNotNil() predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldTrusted)))
+	})
+}
+
+// TagsIsNil applies the IsNil predicate on the "tags" field.
+func TagsIsNil() predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldTags)))
+	})
+}
+
+// TagsNotNil applies the NotNil predicate on the "tags" field.
+func TagsNotNil() predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldTags)))
 	})
 }
 

@@ -749,24 +749,23 @@ func (m *DeviceMutation) ResetEdge(name string) error {
 // MessageMutation represents an operation that mutates the Message nodes in the graph.
 type MessageMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *uuid.UUID
-	created_at     *time.Time
-	updated_at     *time.Time
-	sequence_id    *int
-	addsequence_id *int
-	from           *uuid.UUID
-	content        *map[string]interface{}
-	header         *map[string]interface{}
-	clearedFields  map[string]struct{}
-	topic          *uuid.UUID
-	clearedtopic   bool
-	sender         *uuid.UUID
-	clearedsender  bool
-	done           bool
-	oldValue       func(context.Context) (*Message, error)
-	predicates     []predicate.Message
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	created_at    *time.Time
+	updated_at    *time.Time
+	sequence      *int
+	addsequence   *int
+	content       *map[string]interface{}
+	header        *map[string]interface{}
+	clearedFields map[string]struct{}
+	topic         *uuid.UUID
+	clearedtopic  bool
+	sender        *uuid.UUID
+	clearedsender bool
+	done          bool
+	oldValue      func(context.Context) (*Message, error)
+	predicates    []predicate.Message
 }
 
 var _ ent.Mutation = (*MessageMutation)(nil)
@@ -981,109 +980,60 @@ func (m *MessageMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
-// SetSequenceID sets the "sequence_id" field.
-func (m *MessageMutation) SetSequenceID(i int) {
-	m.sequence_id = &i
-	m.addsequence_id = nil
+// SetSequence sets the "sequence" field.
+func (m *MessageMutation) SetSequence(i int) {
+	m.sequence = &i
+	m.addsequence = nil
 }
 
-// SequenceID returns the value of the "sequence_id" field in the mutation.
-func (m *MessageMutation) SequenceID() (r int, exists bool) {
-	v := m.sequence_id
+// Sequence returns the value of the "sequence" field in the mutation.
+func (m *MessageMutation) Sequence() (r int, exists bool) {
+	v := m.sequence
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldSequenceID returns the old "sequence_id" field's value of the Message entity.
+// OldSequence returns the old "sequence" field's value of the Message entity.
 // If the Message object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *MessageMutation) OldSequenceID(ctx context.Context) (v int, err error) {
+func (m *MessageMutation) OldSequence(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSequenceID is only allowed on UpdateOne operations")
+		return v, errors.New("OldSequence is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSequenceID requires an ID field in the mutation")
+		return v, errors.New("OldSequence requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSequenceID: %w", err)
+		return v, fmt.Errorf("querying old value for OldSequence: %w", err)
 	}
-	return oldValue.SequenceID, nil
+	return oldValue.Sequence, nil
 }
 
-// AddSequenceID adds i to the "sequence_id" field.
-func (m *MessageMutation) AddSequenceID(i int) {
-	if m.addsequence_id != nil {
-		*m.addsequence_id += i
+// AddSequence adds i to the "sequence" field.
+func (m *MessageMutation) AddSequence(i int) {
+	if m.addsequence != nil {
+		*m.addsequence += i
 	} else {
-		m.addsequence_id = &i
+		m.addsequence = &i
 	}
 }
 
-// AddedSequenceID returns the value that was added to the "sequence_id" field in this mutation.
-func (m *MessageMutation) AddedSequenceID() (r int, exists bool) {
-	v := m.addsequence_id
+// AddedSequence returns the value that was added to the "sequence" field in this mutation.
+func (m *MessageMutation) AddedSequence() (r int, exists bool) {
+	v := m.addsequence
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// ResetSequenceID resets all changes to the "sequence_id" field.
-func (m *MessageMutation) ResetSequenceID() {
-	m.sequence_id = nil
-	m.addsequence_id = nil
-}
-
-// SetFrom sets the "from" field.
-func (m *MessageMutation) SetFrom(u uuid.UUID) {
-	m.from = &u
-}
-
-// From returns the value of the "from" field in the mutation.
-func (m *MessageMutation) From() (r uuid.UUID, exists bool) {
-	v := m.from
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldFrom returns the old "from" field's value of the Message entity.
-// If the Message object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *MessageMutation) OldFrom(ctx context.Context) (v *uuid.UUID, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldFrom is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldFrom requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldFrom: %w", err)
-	}
-	return oldValue.From, nil
-}
-
-// ClearFrom clears the value of the "from" field.
-func (m *MessageMutation) ClearFrom() {
-	m.from = nil
-	m.clearedFields[message.FieldFrom] = struct{}{}
-}
-
-// FromCleared returns if the "from" field was cleared in this mutation.
-func (m *MessageMutation) FromCleared() bool {
-	_, ok := m.clearedFields[message.FieldFrom]
-	return ok
-}
-
-// ResetFrom resets all changes to the "from" field.
-func (m *MessageMutation) ResetFrom() {
-	m.from = nil
-	delete(m.clearedFields, message.FieldFrom)
+// ResetSequence resets all changes to the "sequence" field.
+func (m *MessageMutation) ResetSequence() {
+	m.sequence = nil
+	m.addsequence = nil
 }
 
 // SetContent sets the "content" field.
@@ -1242,7 +1192,7 @@ func (m *MessageMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *MessageMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 6)
 	if m.topic != nil {
 		fields = append(fields, message.FieldTopicID)
 	}
@@ -1252,11 +1202,8 @@ func (m *MessageMutation) Fields() []string {
 	if m.updated_at != nil {
 		fields = append(fields, message.FieldUpdatedAt)
 	}
-	if m.sequence_id != nil {
-		fields = append(fields, message.FieldSequenceID)
-	}
-	if m.from != nil {
-		fields = append(fields, message.FieldFrom)
+	if m.sequence != nil {
+		fields = append(fields, message.FieldSequence)
 	}
 	if m.content != nil {
 		fields = append(fields, message.FieldContent)
@@ -1278,10 +1225,8 @@ func (m *MessageMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case message.FieldUpdatedAt:
 		return m.UpdatedAt()
-	case message.FieldSequenceID:
-		return m.SequenceID()
-	case message.FieldFrom:
-		return m.From()
+	case message.FieldSequence:
+		return m.Sequence()
 	case message.FieldContent:
 		return m.Content()
 	case message.FieldHeader:
@@ -1301,10 +1246,8 @@ func (m *MessageMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldCreatedAt(ctx)
 	case message.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
-	case message.FieldSequenceID:
-		return m.OldSequenceID(ctx)
-	case message.FieldFrom:
-		return m.OldFrom(ctx)
+	case message.FieldSequence:
+		return m.OldSequence(ctx)
 	case message.FieldContent:
 		return m.OldContent(ctx)
 	case message.FieldHeader:
@@ -1339,19 +1282,12 @@ func (m *MessageMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetUpdatedAt(v)
 		return nil
-	case message.FieldSequenceID:
+	case message.FieldSequence:
 		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetSequenceID(v)
-		return nil
-	case message.FieldFrom:
-		v, ok := value.(uuid.UUID)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetFrom(v)
+		m.SetSequence(v)
 		return nil
 	case message.FieldContent:
 		v, ok := value.(map[string]interface{})
@@ -1375,8 +1311,8 @@ func (m *MessageMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *MessageMutation) AddedFields() []string {
 	var fields []string
-	if m.addsequence_id != nil {
-		fields = append(fields, message.FieldSequenceID)
+	if m.addsequence != nil {
+		fields = append(fields, message.FieldSequence)
 	}
 	return fields
 }
@@ -1386,8 +1322,8 @@ func (m *MessageMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *MessageMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
-	case message.FieldSequenceID:
-		return m.AddedSequenceID()
+	case message.FieldSequence:
+		return m.AddedSequence()
 	}
 	return nil, false
 }
@@ -1397,12 +1333,12 @@ func (m *MessageMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *MessageMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case message.FieldSequenceID:
+	case message.FieldSequence:
 		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.AddSequenceID(v)
+		m.AddSequence(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Message numeric field %s", name)
@@ -1411,11 +1347,7 @@ func (m *MessageMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *MessageMutation) ClearedFields() []string {
-	var fields []string
-	if m.FieldCleared(message.FieldFrom) {
-		fields = append(fields, message.FieldFrom)
-	}
-	return fields
+	return nil
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -1428,11 +1360,6 @@ func (m *MessageMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *MessageMutation) ClearField(name string) error {
-	switch name {
-	case message.FieldFrom:
-		m.ClearFrom()
-		return nil
-	}
 	return fmt.Errorf("unknown Message nullable field %s", name)
 }
 
@@ -1449,11 +1376,8 @@ func (m *MessageMutation) ResetField(name string) error {
 	case message.FieldUpdatedAt:
 		m.ResetUpdatedAt()
 		return nil
-	case message.FieldSequenceID:
-		m.ResetSequenceID()
-		return nil
-	case message.FieldFrom:
-		m.ResetFrom()
+	case message.FieldSequence:
+		m.ResetSequence()
 		return nil
 	case message.FieldContent:
 		m.ResetContent()
@@ -2160,10 +2084,12 @@ type TopicMutation struct {
 	created_at           *time.Time
 	updated_at           *time.Time
 	name                 *string
+	_type                *string
 	state                *string
 	state_at             *time.Time
-	sequence_id          *int
-	addsequence_id       *int
+	sequence             *int
+	addsequence          *int
+	touched              *time.Time
 	access               *map[string]interface{}
 	public               *map[string]interface{}
 	trusted              *map[string]interface{}
@@ -2395,6 +2321,42 @@ func (m *TopicMutation) ResetName() {
 	m.name = nil
 }
 
+// SetType sets the "type" field.
+func (m *TopicMutation) SetType(s string) {
+	m._type = &s
+}
+
+// GetType returns the value of the "type" field in the mutation.
+func (m *TopicMutation) GetType() (r string, exists bool) {
+	v := m._type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldType returns the old "type" field's value of the Topic entity.
+// If the Topic object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TopicMutation) OldType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldType: %w", err)
+	}
+	return oldValue.Type, nil
+}
+
+// ResetType resets all changes to the "type" field.
+func (m *TopicMutation) ResetType() {
+	m._type = nil
+}
+
 // SetState sets the "state" field.
 func (m *TopicMutation) SetState(s string) {
 	m.state = &s
@@ -2467,60 +2429,96 @@ func (m *TopicMutation) ResetStateAt() {
 	m.state_at = nil
 }
 
-// SetSequenceID sets the "sequence_id" field.
-func (m *TopicMutation) SetSequenceID(i int) {
-	m.sequence_id = &i
-	m.addsequence_id = nil
+// SetSequence sets the "sequence" field.
+func (m *TopicMutation) SetSequence(i int) {
+	m.sequence = &i
+	m.addsequence = nil
 }
 
-// SequenceID returns the value of the "sequence_id" field in the mutation.
-func (m *TopicMutation) SequenceID() (r int, exists bool) {
-	v := m.sequence_id
+// Sequence returns the value of the "sequence" field in the mutation.
+func (m *TopicMutation) Sequence() (r int, exists bool) {
+	v := m.sequence
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldSequenceID returns the old "sequence_id" field's value of the Topic entity.
+// OldSequence returns the old "sequence" field's value of the Topic entity.
 // If the Topic object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TopicMutation) OldSequenceID(ctx context.Context) (v int, err error) {
+func (m *TopicMutation) OldSequence(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSequenceID is only allowed on UpdateOne operations")
+		return v, errors.New("OldSequence is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSequenceID requires an ID field in the mutation")
+		return v, errors.New("OldSequence requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSequenceID: %w", err)
+		return v, fmt.Errorf("querying old value for OldSequence: %w", err)
 	}
-	return oldValue.SequenceID, nil
+	return oldValue.Sequence, nil
 }
 
-// AddSequenceID adds i to the "sequence_id" field.
-func (m *TopicMutation) AddSequenceID(i int) {
-	if m.addsequence_id != nil {
-		*m.addsequence_id += i
+// AddSequence adds i to the "sequence" field.
+func (m *TopicMutation) AddSequence(i int) {
+	if m.addsequence != nil {
+		*m.addsequence += i
 	} else {
-		m.addsequence_id = &i
+		m.addsequence = &i
 	}
 }
 
-// AddedSequenceID returns the value that was added to the "sequence_id" field in this mutation.
-func (m *TopicMutation) AddedSequenceID() (r int, exists bool) {
-	v := m.addsequence_id
+// AddedSequence returns the value that was added to the "sequence" field in this mutation.
+func (m *TopicMutation) AddedSequence() (r int, exists bool) {
+	v := m.addsequence
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// ResetSequenceID resets all changes to the "sequence_id" field.
-func (m *TopicMutation) ResetSequenceID() {
-	m.sequence_id = nil
-	m.addsequence_id = nil
+// ResetSequence resets all changes to the "sequence" field.
+func (m *TopicMutation) ResetSequence() {
+	m.sequence = nil
+	m.addsequence = nil
+}
+
+// SetTouched sets the "touched" field.
+func (m *TopicMutation) SetTouched(t time.Time) {
+	m.touched = &t
+}
+
+// Touched returns the value of the "touched" field in the mutation.
+func (m *TopicMutation) Touched() (r time.Time, exists bool) {
+	v := m.touched
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTouched returns the old "touched" field's value of the Topic entity.
+// If the Topic object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TopicMutation) OldTouched(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTouched is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTouched requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTouched: %w", err)
+	}
+	return oldValue.Touched, nil
+}
+
+// ResetTouched resets all changes to the "touched" field.
+func (m *TopicMutation) ResetTouched() {
+	m.touched = nil
 }
 
 // SetAccess sets the "access" field.
@@ -2554,9 +2552,22 @@ func (m *TopicMutation) OldAccess(ctx context.Context) (v map[string]interface{}
 	return oldValue.Access, nil
 }
 
+// ClearAccess clears the value of the "access" field.
+func (m *TopicMutation) ClearAccess() {
+	m.access = nil
+	m.clearedFields[topic.FieldAccess] = struct{}{}
+}
+
+// AccessCleared returns if the "access" field was cleared in this mutation.
+func (m *TopicMutation) AccessCleared() bool {
+	_, ok := m.clearedFields[topic.FieldAccess]
+	return ok
+}
+
 // ResetAccess resets all changes to the "access" field.
 func (m *TopicMutation) ResetAccess() {
 	m.access = nil
+	delete(m.clearedFields, topic.FieldAccess)
 }
 
 // SetPublic sets the "public" field.
@@ -2590,9 +2601,22 @@ func (m *TopicMutation) OldPublic(ctx context.Context) (v map[string]interface{}
 	return oldValue.Public, nil
 }
 
+// ClearPublic clears the value of the "public" field.
+func (m *TopicMutation) ClearPublic() {
+	m.public = nil
+	m.clearedFields[topic.FieldPublic] = struct{}{}
+}
+
+// PublicCleared returns if the "public" field was cleared in this mutation.
+func (m *TopicMutation) PublicCleared() bool {
+	_, ok := m.clearedFields[topic.FieldPublic]
+	return ok
+}
+
 // ResetPublic resets all changes to the "public" field.
 func (m *TopicMutation) ResetPublic() {
 	m.public = nil
+	delete(m.clearedFields, topic.FieldPublic)
 }
 
 // SetTrusted sets the "trusted" field.
@@ -2626,9 +2650,22 @@ func (m *TopicMutation) OldTrusted(ctx context.Context) (v map[string]interface{
 	return oldValue.Trusted, nil
 }
 
+// ClearTrusted clears the value of the "trusted" field.
+func (m *TopicMutation) ClearTrusted() {
+	m.trusted = nil
+	m.clearedFields[topic.FieldTrusted] = struct{}{}
+}
+
+// TrustedCleared returns if the "trusted" field was cleared in this mutation.
+func (m *TopicMutation) TrustedCleared() bool {
+	_, ok := m.clearedFields[topic.FieldTrusted]
+	return ok
+}
+
 // ResetTrusted resets all changes to the "trusted" field.
 func (m *TopicMutation) ResetTrusted() {
 	m.trusted = nil
+	delete(m.clearedFields, topic.FieldTrusted)
 }
 
 // SetTags sets the "tags" field.
@@ -2662,9 +2699,22 @@ func (m *TopicMutation) OldTags(ctx context.Context) (v map[string]interface{}, 
 	return oldValue.Tags, nil
 }
 
+// ClearTags clears the value of the "tags" field.
+func (m *TopicMutation) ClearTags() {
+	m.tags = nil
+	m.clearedFields[topic.FieldTags] = struct{}{}
+}
+
+// TagsCleared returns if the "tags" field was cleared in this mutation.
+func (m *TopicMutation) TagsCleared() bool {
+	_, ok := m.clearedFields[topic.FieldTags]
+	return ok
+}
+
 // ResetTags resets all changes to the "tags" field.
 func (m *TopicMutation) ResetTags() {
 	m.tags = nil
+	delete(m.clearedFields, topic.FieldTags)
 }
 
 // AddMessageIDs adds the "messages" edge to the Message entity by ids.
@@ -2848,7 +2898,7 @@ func (m *TopicMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *TopicMutation) Fields() []string {
-	fields := make([]string, 0, 10)
+	fields := make([]string, 0, 12)
 	if m.created_at != nil {
 		fields = append(fields, topic.FieldCreatedAt)
 	}
@@ -2858,14 +2908,20 @@ func (m *TopicMutation) Fields() []string {
 	if m.name != nil {
 		fields = append(fields, topic.FieldName)
 	}
+	if m._type != nil {
+		fields = append(fields, topic.FieldType)
+	}
 	if m.state != nil {
 		fields = append(fields, topic.FieldState)
 	}
 	if m.state_at != nil {
 		fields = append(fields, topic.FieldStateAt)
 	}
-	if m.sequence_id != nil {
-		fields = append(fields, topic.FieldSequenceID)
+	if m.sequence != nil {
+		fields = append(fields, topic.FieldSequence)
+	}
+	if m.touched != nil {
+		fields = append(fields, topic.FieldTouched)
 	}
 	if m.access != nil {
 		fields = append(fields, topic.FieldAccess)
@@ -2893,12 +2949,16 @@ func (m *TopicMutation) Field(name string) (ent.Value, bool) {
 		return m.UpdatedAt()
 	case topic.FieldName:
 		return m.Name()
+	case topic.FieldType:
+		return m.GetType()
 	case topic.FieldState:
 		return m.State()
 	case topic.FieldStateAt:
 		return m.StateAt()
-	case topic.FieldSequenceID:
-		return m.SequenceID()
+	case topic.FieldSequence:
+		return m.Sequence()
+	case topic.FieldTouched:
+		return m.Touched()
 	case topic.FieldAccess:
 		return m.Access()
 	case topic.FieldPublic:
@@ -2922,12 +2982,16 @@ func (m *TopicMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldUpdatedAt(ctx)
 	case topic.FieldName:
 		return m.OldName(ctx)
+	case topic.FieldType:
+		return m.OldType(ctx)
 	case topic.FieldState:
 		return m.OldState(ctx)
 	case topic.FieldStateAt:
 		return m.OldStateAt(ctx)
-	case topic.FieldSequenceID:
-		return m.OldSequenceID(ctx)
+	case topic.FieldSequence:
+		return m.OldSequence(ctx)
+	case topic.FieldTouched:
+		return m.OldTouched(ctx)
 	case topic.FieldAccess:
 		return m.OldAccess(ctx)
 	case topic.FieldPublic:
@@ -2966,6 +3030,13 @@ func (m *TopicMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetName(v)
 		return nil
+	case topic.FieldType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetType(v)
+		return nil
 	case topic.FieldState:
 		v, ok := value.(string)
 		if !ok {
@@ -2980,12 +3051,19 @@ func (m *TopicMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetStateAt(v)
 		return nil
-	case topic.FieldSequenceID:
+	case topic.FieldSequence:
 		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetSequenceID(v)
+		m.SetSequence(v)
+		return nil
+	case topic.FieldTouched:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTouched(v)
 		return nil
 	case topic.FieldAccess:
 		v, ok := value.(map[string]interface{})
@@ -3023,8 +3101,8 @@ func (m *TopicMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *TopicMutation) AddedFields() []string {
 	var fields []string
-	if m.addsequence_id != nil {
-		fields = append(fields, topic.FieldSequenceID)
+	if m.addsequence != nil {
+		fields = append(fields, topic.FieldSequence)
 	}
 	return fields
 }
@@ -3034,8 +3112,8 @@ func (m *TopicMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *TopicMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
-	case topic.FieldSequenceID:
-		return m.AddedSequenceID()
+	case topic.FieldSequence:
+		return m.AddedSequence()
 	}
 	return nil, false
 }
@@ -3045,12 +3123,12 @@ func (m *TopicMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *TopicMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case topic.FieldSequenceID:
+	case topic.FieldSequence:
 		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.AddSequenceID(v)
+		m.AddSequence(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Topic numeric field %s", name)
@@ -3059,7 +3137,20 @@ func (m *TopicMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *TopicMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(topic.FieldAccess) {
+		fields = append(fields, topic.FieldAccess)
+	}
+	if m.FieldCleared(topic.FieldPublic) {
+		fields = append(fields, topic.FieldPublic)
+	}
+	if m.FieldCleared(topic.FieldTrusted) {
+		fields = append(fields, topic.FieldTrusted)
+	}
+	if m.FieldCleared(topic.FieldTags) {
+		fields = append(fields, topic.FieldTags)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -3072,6 +3163,20 @@ func (m *TopicMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *TopicMutation) ClearField(name string) error {
+	switch name {
+	case topic.FieldAccess:
+		m.ClearAccess()
+		return nil
+	case topic.FieldPublic:
+		m.ClearPublic()
+		return nil
+	case topic.FieldTrusted:
+		m.ClearTrusted()
+		return nil
+	case topic.FieldTags:
+		m.ClearTags()
+		return nil
+	}
 	return fmt.Errorf("unknown Topic nullable field %s", name)
 }
 
@@ -3088,14 +3193,20 @@ func (m *TopicMutation) ResetField(name string) error {
 	case topic.FieldName:
 		m.ResetName()
 		return nil
+	case topic.FieldType:
+		m.ResetType()
+		return nil
 	case topic.FieldState:
 		m.ResetState()
 		return nil
 	case topic.FieldStateAt:
 		m.ResetStateAt()
 		return nil
-	case topic.FieldSequenceID:
-		m.ResetSequenceID()
+	case topic.FieldSequence:
+		m.ResetSequence()
+		return nil
+	case topic.FieldTouched:
+		m.ResetTouched()
 		return nil
 	case topic.FieldAccess:
 		m.ResetAccess()

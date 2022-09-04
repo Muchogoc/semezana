@@ -18,7 +18,8 @@ type Subscription struct {
 // Fields of the Subscription.
 func (Subscription) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.New()),
+		field.UUID("id", uuid.New()).
+			Default(uuid.New),
 		field.Time("created_at").Default(time.Now),
 		field.Time("updated_at").Default(time.Now()).UpdateDefault(time.Now),
 		field.UUID("topic_id", uuid.New()),

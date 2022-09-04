@@ -57,36 +57,16 @@ func (mu *MessageUpdate) SetUpdatedAt(t time.Time) *MessageUpdate {
 	return mu
 }
 
-// SetSequenceID sets the "sequence_id" field.
-func (mu *MessageUpdate) SetSequenceID(i int) *MessageUpdate {
-	mu.mutation.ResetSequenceID()
-	mu.mutation.SetSequenceID(i)
+// SetSequence sets the "sequence" field.
+func (mu *MessageUpdate) SetSequence(i int) *MessageUpdate {
+	mu.mutation.ResetSequence()
+	mu.mutation.SetSequence(i)
 	return mu
 }
 
-// AddSequenceID adds i to the "sequence_id" field.
-func (mu *MessageUpdate) AddSequenceID(i int) *MessageUpdate {
-	mu.mutation.AddSequenceID(i)
-	return mu
-}
-
-// SetFrom sets the "from" field.
-func (mu *MessageUpdate) SetFrom(u uuid.UUID) *MessageUpdate {
-	mu.mutation.SetFrom(u)
-	return mu
-}
-
-// SetNillableFrom sets the "from" field if the given value is not nil.
-func (mu *MessageUpdate) SetNillableFrom(u *uuid.UUID) *MessageUpdate {
-	if u != nil {
-		mu.SetFrom(*u)
-	}
-	return mu
-}
-
-// ClearFrom clears the value of the "from" field.
-func (mu *MessageUpdate) ClearFrom() *MessageUpdate {
-	mu.mutation.ClearFrom()
+// AddSequence adds i to the "sequence" field.
+func (mu *MessageUpdate) AddSequence(i int) *MessageUpdate {
+	mu.mutation.AddSequence(i)
 	return mu
 }
 
@@ -214,11 +194,6 @@ func (mu *MessageUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (mu *MessageUpdate) check() error {
-	if v, ok := mu.mutation.SequenceID(); ok {
-		if err := message.SequenceIDValidator(v); err != nil {
-			return &ValidationError{Name: "sequence_id", err: fmt.Errorf(`ent: validator failed for field "Message.sequence_id": %w`, err)}
-		}
-	}
 	if _, ok := mu.mutation.TopicID(); mu.mutation.TopicCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Message.topic"`)
 	}
@@ -257,31 +232,18 @@ func (mu *MessageUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: message.FieldUpdatedAt,
 		})
 	}
-	if value, ok := mu.mutation.SequenceID(); ok {
+	if value, ok := mu.mutation.Sequence(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
 			Value:  value,
-			Column: message.FieldSequenceID,
+			Column: message.FieldSequence,
 		})
 	}
-	if value, ok := mu.mutation.AddedSequenceID(); ok {
+	if value, ok := mu.mutation.AddedSequence(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
 			Value:  value,
-			Column: message.FieldSequenceID,
-		})
-	}
-	if value, ok := mu.mutation.From(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeUUID,
-			Value:  value,
-			Column: message.FieldFrom,
-		})
-	}
-	if mu.mutation.FromCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeUUID,
-			Column: message.FieldFrom,
+			Column: message.FieldSequence,
 		})
 	}
 	if value, ok := mu.mutation.Content(); ok {
@@ -413,36 +375,16 @@ func (muo *MessageUpdateOne) SetUpdatedAt(t time.Time) *MessageUpdateOne {
 	return muo
 }
 
-// SetSequenceID sets the "sequence_id" field.
-func (muo *MessageUpdateOne) SetSequenceID(i int) *MessageUpdateOne {
-	muo.mutation.ResetSequenceID()
-	muo.mutation.SetSequenceID(i)
+// SetSequence sets the "sequence" field.
+func (muo *MessageUpdateOne) SetSequence(i int) *MessageUpdateOne {
+	muo.mutation.ResetSequence()
+	muo.mutation.SetSequence(i)
 	return muo
 }
 
-// AddSequenceID adds i to the "sequence_id" field.
-func (muo *MessageUpdateOne) AddSequenceID(i int) *MessageUpdateOne {
-	muo.mutation.AddSequenceID(i)
-	return muo
-}
-
-// SetFrom sets the "from" field.
-func (muo *MessageUpdateOne) SetFrom(u uuid.UUID) *MessageUpdateOne {
-	muo.mutation.SetFrom(u)
-	return muo
-}
-
-// SetNillableFrom sets the "from" field if the given value is not nil.
-func (muo *MessageUpdateOne) SetNillableFrom(u *uuid.UUID) *MessageUpdateOne {
-	if u != nil {
-		muo.SetFrom(*u)
-	}
-	return muo
-}
-
-// ClearFrom clears the value of the "from" field.
-func (muo *MessageUpdateOne) ClearFrom() *MessageUpdateOne {
-	muo.mutation.ClearFrom()
+// AddSequence adds i to the "sequence" field.
+func (muo *MessageUpdateOne) AddSequence(i int) *MessageUpdateOne {
+	muo.mutation.AddSequence(i)
 	return muo
 }
 
@@ -583,11 +525,6 @@ func (muo *MessageUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (muo *MessageUpdateOne) check() error {
-	if v, ok := muo.mutation.SequenceID(); ok {
-		if err := message.SequenceIDValidator(v); err != nil {
-			return &ValidationError{Name: "sequence_id", err: fmt.Errorf(`ent: validator failed for field "Message.sequence_id": %w`, err)}
-		}
-	}
 	if _, ok := muo.mutation.TopicID(); muo.mutation.TopicCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Message.topic"`)
 	}
@@ -643,31 +580,18 @@ func (muo *MessageUpdateOne) sqlSave(ctx context.Context) (_node *Message, err e
 			Column: message.FieldUpdatedAt,
 		})
 	}
-	if value, ok := muo.mutation.SequenceID(); ok {
+	if value, ok := muo.mutation.Sequence(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
 			Value:  value,
-			Column: message.FieldSequenceID,
+			Column: message.FieldSequence,
 		})
 	}
-	if value, ok := muo.mutation.AddedSequenceID(); ok {
+	if value, ok := muo.mutation.AddedSequence(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
 			Value:  value,
-			Column: message.FieldSequenceID,
-		})
-	}
-	if value, ok := muo.mutation.From(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeUUID,
-			Value:  value,
-			Column: message.FieldFrom,
-		})
-	}
-	if muo.mutation.FromCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeUUID,
-			Column: message.FieldFrom,
+			Column: message.FieldSequence,
 		})
 	}
 	if value, ok := muo.mutation.Content(); ok {

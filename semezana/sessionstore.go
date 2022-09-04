@@ -1,4 +1,4 @@
-package main
+package semezana
 
 import (
 	"log"
@@ -37,10 +37,11 @@ func (s *SessionStore) NewSession(conn *websocket.Conn) (*Session, int) {
 	s.lock.Unlock()
 
 	session.ws = conn
-	session.subscriptions = make(map[string]*Subscription)
-	session.send = make(chan interface{}, sendQueueLimit+32) // buffered
-	session.stop = make(chan interface{}, 1)                 // Buffered by 1 just to make it non-blocking
-	session.detach = make(chan string, 64)                   // buffered
+	session.subscriptions = &sync.Map{}
+	session.send = make(chan interface{}, sendQueueLimit+32)
+	session.stop = make(chan interface{}, 1)
+	session.detach = make(chan string, 64)
+	// session.messageLock = &sync.Mutex{}
 
 	s.lock.Lock()
 

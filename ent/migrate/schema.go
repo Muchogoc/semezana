@@ -46,8 +46,7 @@ var (
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "sequence_id", Type: field.TypeInt},
-		{Name: "from", Type: field.TypeUUID, Nullable: true},
+		{Name: "sequence", Type: field.TypeInt},
 		{Name: "content", Type: field.TypeJSON},
 		{Name: "header", Type: field.TypeJSON},
 		{Name: "topic_id", Type: field.TypeUUID},
@@ -61,22 +60,22 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "messages_topics_messages",
-				Columns:    []*schema.Column{MessagesColumns[7]},
+				Columns:    []*schema.Column{MessagesColumns[6]},
 				RefColumns: []*schema.Column{TopicsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "messages_users_messages",
-				Columns:    []*schema.Column{MessagesColumns[8]},
+				Columns:    []*schema.Column{MessagesColumns[7]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "message_topic_id_sequence_id",
+				Name:    "message_topic_id_sequence",
 				Unique:  true,
-				Columns: []*schema.Column{MessagesColumns[7], MessagesColumns[3]},
+				Columns: []*schema.Column{MessagesColumns[6], MessagesColumns[3]},
 			},
 		},
 	}
@@ -121,13 +120,15 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString},
+		{Name: "type", Type: field.TypeString},
 		{Name: "state", Type: field.TypeString},
 		{Name: "state_at", Type: field.TypeTime},
-		{Name: "sequence_id", Type: field.TypeInt},
-		{Name: "access", Type: field.TypeJSON},
-		{Name: "public", Type: field.TypeJSON},
-		{Name: "trusted", Type: field.TypeJSON},
-		{Name: "tags", Type: field.TypeJSON},
+		{Name: "sequence", Type: field.TypeInt, Default: 0},
+		{Name: "touched", Type: field.TypeTime},
+		{Name: "access", Type: field.TypeJSON, Nullable: true},
+		{Name: "public", Type: field.TypeJSON, Nullable: true},
+		{Name: "trusted", Type: field.TypeJSON, Nullable: true},
+		{Name: "tags", Type: field.TypeJSON, Nullable: true},
 	}
 	// TopicsTable holds the schema information for the "topics" table.
 	TopicsTable = &schema.Table{

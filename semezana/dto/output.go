@@ -31,6 +31,7 @@ type MsgServerInfo struct{}
 
 // ServerComMessage is a wrapper for server-side messages.
 type ServerComMessage struct {
+	Type     string         `json:"type"`
 	Control  *MsgServerCtrl `json:"control,omitempty"`
 	Data     *MsgServerData `json:"data,omitempty"`
 	Meta     *MsgServerMeta `json:"meta,omitempty"`

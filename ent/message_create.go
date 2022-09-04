@@ -57,23 +57,9 @@ func (mc *MessageCreate) SetNillableUpdatedAt(t *time.Time) *MessageCreate {
 	return mc
 }
 
-// SetSequenceID sets the "sequence_id" field.
-func (mc *MessageCreate) SetSequenceID(i int) *MessageCreate {
-	mc.mutation.SetSequenceID(i)
-	return mc
-}
-
-// SetFrom sets the "from" field.
-func (mc *MessageCreate) SetFrom(u uuid.UUID) *MessageCreate {
-	mc.mutation.SetFrom(u)
-	return mc
-}
-
-// SetNillableFrom sets the "from" field if the given value is not nil.
-func (mc *MessageCreate) SetNillableFrom(u *uuid.UUID) *MessageCreate {
-	if u != nil {
-		mc.SetFrom(*u)
-	}
+// SetSequence sets the "sequence" field.
+func (mc *MessageCreate) SetSequence(i int) *MessageCreate {
+	mc.mutation.SetSequence(i)
 	return mc
 }
 
@@ -92,6 +78,14 @@ func (mc *MessageCreate) SetHeader(m map[string]interface{}) *MessageCreate {
 // SetID sets the "id" field.
 func (mc *MessageCreate) SetID(u uuid.UUID) *MessageCreate {
 	mc.mutation.SetID(u)
+	return mc
+}
+
+// SetNillableID sets the "id" field if the given value is not nil.
+func (mc *MessageCreate) SetNillableID(u *uuid.UUID) *MessageCreate {
+	if u != nil {
+		mc.SetID(*u)
+	}
 	return mc
 }
 
@@ -204,6 +198,10 @@ func (mc *MessageCreate) defaults() {
 		v := message.DefaultUpdatedAt
 		mc.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := mc.mutation.ID(); !ok {
+		v := message.DefaultID()
+		mc.mutation.SetID(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -217,13 +215,8 @@ func (mc *MessageCreate) check() error {
 	if _, ok := mc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Message.updated_at"`)}
 	}
-	if _, ok := mc.mutation.SequenceID(); !ok {
-		return &ValidationError{Name: "sequence_id", err: errors.New(`ent: missing required field "Message.sequence_id"`)}
-	}
-	if v, ok := mc.mutation.SequenceID(); ok {
-		if err := message.SequenceIDValidator(v); err != nil {
-			return &ValidationError{Name: "sequence_id", err: fmt.Errorf(`ent: validator failed for field "Message.sequence_id": %w`, err)}
-		}
+	if _, ok := mc.mutation.Sequence(); !ok {
+		return &ValidationError{Name: "sequence", err: errors.New(`ent: missing required field "Message.sequence"`)}
 	}
 	if _, ok := mc.mutation.Content(); !ok {
 		return &ValidationError{Name: "content", err: errors.New(`ent: missing required field "Message.content"`)}
@@ -286,21 +279,13 @@ func (mc *MessageCreate) createSpec() (*Message, *sqlgraph.CreateSpec) {
 		})
 		_node.UpdatedAt = value
 	}
-	if value, ok := mc.mutation.SequenceID(); ok {
+	if value, ok := mc.mutation.Sequence(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
 			Value:  value,
-			Column: message.FieldSequenceID,
+			Column: message.FieldSequence,
 		})
-		_node.SequenceID = value
-	}
-	if value, ok := mc.mutation.From(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeUUID,
-			Value:  value,
-			Column: message.FieldFrom,
-		})
-		_node.From = &value
+		_node.Sequence = value
 	}
 	if value, ok := mc.mutation.Content(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

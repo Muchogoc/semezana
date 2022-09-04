@@ -22,10 +22,14 @@ type MsgClientAcc struct {
 }
 
 // MsgClientLogin is a login {login} message.
-type MsgClientLogin struct{}
+type MsgClientLogin struct {
+	User string `json:"user"`
+}
 
 // MsgClientSub is a subscription request {sub} message.
 type MsgClientSub struct {
+	User  string `json:"user"`
+	Topic string `json:"topic"`
 }
 
 // MsgClientLeave is an unsubscribe {leave} request message.
@@ -35,6 +39,7 @@ type MsgClientLeave struct {
 // MsgClientPub is client's request to publish data to topic subscribers {pub}.
 type MsgClientPub struct {
 	Id      string                 `json:"id,omitempty"`
+	User    string                 `json:"user"`
 	Topic   string                 `json:"topic"`
 	Head    map[string]interface{} `json:"head,omitempty"`
 	Content interface{}            `json:"content"`
@@ -55,8 +60,15 @@ type MsgClientNote struct{}
 // MsgClientExtra is not a stand-alone message but extra data which augments the main payload.
 type MsgClientExtra struct{}
 
+// Auth is used for authentication
+type Auth struct {
+	Token string `json:"token,omitempty"`
+}
+
 // ClientComMessage is a wrapper for client messages.
 type ClientComMessage struct {
+	Type         string          `json:"type"`
+	Auth         string          `json:"auth,omitempty"`
 	Hi           *MsgClientHi    `json:"hi,omitempty"`
 	Account      *MsgClientAcc   `json:"account,omitempty"`
 	Login        *MsgClientLogin `json:"login,omitempty"`

@@ -26,10 +26,8 @@ type Message struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// SequenceID holds the value of the "sequence_id" field.
-	SequenceID int `json:"sequence_id,omitempty"`
-	// Who sent the message
-	From *uuid.UUID `json:"from,omitempty"`
+	// Sequence holds the value of the "sequence" field.
+	Sequence int `json:"sequence,omitempty"`
 	// The message data
 	Content map[string]interface{} `json:"content,omitempty"`
 	// The message header
@@ -82,11 +80,9 @@ func (*Message) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case message.FieldFrom:
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case message.FieldContent, message.FieldHeader:
 			values[i] = new([]byte)
-		case message.FieldSequenceID:
+		case message.FieldSequence:
 			values[i] = new(sql.NullInt64)
 		case message.FieldCreatedAt, message.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -133,18 +129,11 @@ func (m *Message) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				m.UpdatedAt = value.Time
 			}
-		case message.FieldSequenceID:
+		case message.FieldSequence:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field sequence_id", values[i])
+				return fmt.Errorf("unexpected type %T for field sequence", values[i])
 			} else if value.Valid {
-				m.SequenceID = int(value.Int64)
-			}
-		case message.FieldFrom:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field from", values[i])
-			} else if value.Valid {
-				m.From = new(uuid.UUID)
-				*m.From = *value.S.(*uuid.UUID)
+				m.Sequence = int(value.Int64)
 			}
 		case message.FieldContent:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -216,13 +205,8 @@ func (m *Message) String() string {
 	builder.WriteString("updated_at=")
 	builder.WriteString(m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("sequence_id=")
-	builder.WriteString(fmt.Sprintf("%v", m.SequenceID))
-	builder.WriteString(", ")
-	if v := m.From; v != nil {
-		builder.WriteString("from=")
-		builder.WriteString(fmt.Sprintf("%v", *v))
-	}
+	builder.WriteString("sequence=")
+	builder.WriteString(fmt.Sprintf("%v", m.Sequence))
 	builder.WriteString(", ")
 	builder.WriteString("content=")
 	builder.WriteString(fmt.Sprintf("%v", m.Content))

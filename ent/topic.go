@@ -24,12 +24,16 @@ type Topic struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
+	// Type holds the value of the "type" field.
+	Type string `json:"type,omitempty"`
 	// State holds the value of the "state" field.
 	State string `json:"state,omitempty"`
 	// StateAt holds the value of the "state_at" field.
 	StateAt time.Time `json:"state_at,omitempty"`
-	// SequenceID holds the value of the "sequence_id" field.
-	SequenceID int `json:"sequence_id,omitempty"`
+	// sequential ID of the latest message sent through the topic
+	Sequence int `json:"sequence,omitempty"`
+	// timestamp of the last message sent to the topic
+	Touched time.Time `json:"touched,omitempty"`
 	// Access holds the value of the "access" field.
 	Access map[string]interface{} `json:"access,omitempty"`
 	// Public holds the value of the "public" field.
@@ -90,11 +94,11 @@ func (*Topic) scanValues(columns []string) ([]interface{}, error) {
 		switch columns[i] {
 		case topic.FieldAccess, topic.FieldPublic, topic.FieldTrusted, topic.FieldTags:
 			values[i] = new([]byte)
-		case topic.FieldSequenceID:
+		case topic.FieldSequence:
 			values[i] = new(sql.NullInt64)
-		case topic.FieldName, topic.FieldState:
+		case topic.FieldName, topic.FieldType, topic.FieldState:
 			values[i] = new(sql.NullString)
-		case topic.FieldCreatedAt, topic.FieldUpdatedAt, topic.FieldStateAt:
+		case topic.FieldCreatedAt, topic.FieldUpdatedAt, topic.FieldStateAt, topic.FieldTouched:
 			values[i] = new(sql.NullTime)
 		case topic.FieldID:
 			values[i] = new(uuid.UUID)
@@ -137,6 +141,12 @@ func (t *Topic) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				t.Name = value.String
 			}
+		case topic.FieldType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field type", values[i])
+			} else if value.Valid {
+				t.Type = value.String
+			}
 		case topic.FieldState:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field state", values[i])
@@ -149,11 +159,17 @@ func (t *Topic) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				t.StateAt = value.Time
 			}
-		case topic.FieldSequenceID:
+		case topic.FieldSequence:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field sequence_id", values[i])
+				return fmt.Errorf("unexpected type %T for field sequence", values[i])
 			} else if value.Valid {
-				t.SequenceID = int(value.Int64)
+				t.Sequence = int(value.Int64)
+			}
+		case topic.FieldTouched:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field touched", values[i])
+			} else if value.Valid {
+				t.Touched = value.Time
 			}
 		case topic.FieldAccess:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -239,14 +255,20 @@ func (t *Topic) String() string {
 	builder.WriteString("name=")
 	builder.WriteString(t.Name)
 	builder.WriteString(", ")
+	builder.WriteString("type=")
+	builder.WriteString(t.Type)
+	builder.WriteString(", ")
 	builder.WriteString("state=")
 	builder.WriteString(t.State)
 	builder.WriteString(", ")
 	builder.WriteString("state_at=")
 	builder.WriteString(t.StateAt.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("sequence_id=")
-	builder.WriteString(fmt.Sprintf("%v", t.SequenceID))
+	builder.WriteString("sequence=")
+	builder.WriteString(fmt.Sprintf("%v", t.Sequence))
+	builder.WriteString(", ")
+	builder.WriteString("touched=")
+	builder.WriteString(t.Touched.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("access=")
 	builder.WriteString(fmt.Sprintf("%v", t.Access))

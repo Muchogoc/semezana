@@ -58,6 +58,12 @@ func (tu *TopicUpdate) SetName(s string) *TopicUpdate {
 	return tu
 }
 
+// SetType sets the "type" field.
+func (tu *TopicUpdate) SetType(s string) *TopicUpdate {
+	tu.mutation.SetType(s)
+	return tu
+}
+
 // SetState sets the "state" field.
 func (tu *TopicUpdate) SetState(s string) *TopicUpdate {
 	tu.mutation.SetState(s)
@@ -70,16 +76,38 @@ func (tu *TopicUpdate) SetStateAt(t time.Time) *TopicUpdate {
 	return tu
 }
 
-// SetSequenceID sets the "sequence_id" field.
-func (tu *TopicUpdate) SetSequenceID(i int) *TopicUpdate {
-	tu.mutation.ResetSequenceID()
-	tu.mutation.SetSequenceID(i)
+// SetSequence sets the "sequence" field.
+func (tu *TopicUpdate) SetSequence(i int) *TopicUpdate {
+	tu.mutation.ResetSequence()
+	tu.mutation.SetSequence(i)
 	return tu
 }
 
-// AddSequenceID adds i to the "sequence_id" field.
-func (tu *TopicUpdate) AddSequenceID(i int) *TopicUpdate {
-	tu.mutation.AddSequenceID(i)
+// SetNillableSequence sets the "sequence" field if the given value is not nil.
+func (tu *TopicUpdate) SetNillableSequence(i *int) *TopicUpdate {
+	if i != nil {
+		tu.SetSequence(*i)
+	}
+	return tu
+}
+
+// AddSequence adds i to the "sequence" field.
+func (tu *TopicUpdate) AddSequence(i int) *TopicUpdate {
+	tu.mutation.AddSequence(i)
+	return tu
+}
+
+// SetTouched sets the "touched" field.
+func (tu *TopicUpdate) SetTouched(t time.Time) *TopicUpdate {
+	tu.mutation.SetTouched(t)
+	return tu
+}
+
+// SetNillableTouched sets the "touched" field if the given value is not nil.
+func (tu *TopicUpdate) SetNillableTouched(t *time.Time) *TopicUpdate {
+	if t != nil {
+		tu.SetTouched(*t)
+	}
 	return tu
 }
 
@@ -89,9 +117,21 @@ func (tu *TopicUpdate) SetAccess(m map[string]interface{}) *TopicUpdate {
 	return tu
 }
 
+// ClearAccess clears the value of the "access" field.
+func (tu *TopicUpdate) ClearAccess() *TopicUpdate {
+	tu.mutation.ClearAccess()
+	return tu
+}
+
 // SetPublic sets the "public" field.
 func (tu *TopicUpdate) SetPublic(m map[string]interface{}) *TopicUpdate {
 	tu.mutation.SetPublic(m)
+	return tu
+}
+
+// ClearPublic clears the value of the "public" field.
+func (tu *TopicUpdate) ClearPublic() *TopicUpdate {
+	tu.mutation.ClearPublic()
 	return tu
 }
 
@@ -101,9 +141,21 @@ func (tu *TopicUpdate) SetTrusted(m map[string]interface{}) *TopicUpdate {
 	return tu
 }
 
+// ClearTrusted clears the value of the "trusted" field.
+func (tu *TopicUpdate) ClearTrusted() *TopicUpdate {
+	tu.mutation.ClearTrusted()
+	return tu
+}
+
 // SetTags sets the "tags" field.
 func (tu *TopicUpdate) SetTags(m map[string]interface{}) *TopicUpdate {
 	tu.mutation.SetTags(m)
+	return tu
+}
+
+// ClearTags clears the value of the "tags" field.
+func (tu *TopicUpdate) ClearTags() *TopicUpdate {
+	tu.mutation.ClearTags()
 	return tu
 }
 
@@ -322,6 +374,13 @@ func (tu *TopicUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: topic.FieldName,
 		})
 	}
+	if value, ok := tu.mutation.GetType(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: topic.FieldType,
+		})
+	}
 	if value, ok := tu.mutation.State(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
@@ -336,24 +395,37 @@ func (tu *TopicUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: topic.FieldStateAt,
 		})
 	}
-	if value, ok := tu.mutation.SequenceID(); ok {
+	if value, ok := tu.mutation.Sequence(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
 			Value:  value,
-			Column: topic.FieldSequenceID,
+			Column: topic.FieldSequence,
 		})
 	}
-	if value, ok := tu.mutation.AddedSequenceID(); ok {
+	if value, ok := tu.mutation.AddedSequence(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
 			Value:  value,
-			Column: topic.FieldSequenceID,
+			Column: topic.FieldSequence,
+		})
+	}
+	if value, ok := tu.mutation.Touched(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: topic.FieldTouched,
 		})
 	}
 	if value, ok := tu.mutation.Access(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeJSON,
 			Value:  value,
+			Column: topic.FieldAccess,
+		})
+	}
+	if tu.mutation.AccessCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
 			Column: topic.FieldAccess,
 		})
 	}
@@ -364,6 +436,12 @@ func (tu *TopicUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: topic.FieldPublic,
 		})
 	}
+	if tu.mutation.PublicCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Column: topic.FieldPublic,
+		})
+	}
 	if value, ok := tu.mutation.Trusted(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeJSON,
@@ -371,10 +449,22 @@ func (tu *TopicUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: topic.FieldTrusted,
 		})
 	}
+	if tu.mutation.TrustedCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Column: topic.FieldTrusted,
+		})
+	}
 	if value, ok := tu.mutation.Tags(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeJSON,
 			Value:  value,
+			Column: topic.FieldTags,
+		})
+	}
+	if tu.mutation.TagsCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
 			Column: topic.FieldTags,
 		})
 	}
@@ -585,6 +675,12 @@ func (tuo *TopicUpdateOne) SetName(s string) *TopicUpdateOne {
 	return tuo
 }
 
+// SetType sets the "type" field.
+func (tuo *TopicUpdateOne) SetType(s string) *TopicUpdateOne {
+	tuo.mutation.SetType(s)
+	return tuo
+}
+
 // SetState sets the "state" field.
 func (tuo *TopicUpdateOne) SetState(s string) *TopicUpdateOne {
 	tuo.mutation.SetState(s)
@@ -597,16 +693,38 @@ func (tuo *TopicUpdateOne) SetStateAt(t time.Time) *TopicUpdateOne {
 	return tuo
 }
 
-// SetSequenceID sets the "sequence_id" field.
-func (tuo *TopicUpdateOne) SetSequenceID(i int) *TopicUpdateOne {
-	tuo.mutation.ResetSequenceID()
-	tuo.mutation.SetSequenceID(i)
+// SetSequence sets the "sequence" field.
+func (tuo *TopicUpdateOne) SetSequence(i int) *TopicUpdateOne {
+	tuo.mutation.ResetSequence()
+	tuo.mutation.SetSequence(i)
 	return tuo
 }
 
-// AddSequenceID adds i to the "sequence_id" field.
-func (tuo *TopicUpdateOne) AddSequenceID(i int) *TopicUpdateOne {
-	tuo.mutation.AddSequenceID(i)
+// SetNillableSequence sets the "sequence" field if the given value is not nil.
+func (tuo *TopicUpdateOne) SetNillableSequence(i *int) *TopicUpdateOne {
+	if i != nil {
+		tuo.SetSequence(*i)
+	}
+	return tuo
+}
+
+// AddSequence adds i to the "sequence" field.
+func (tuo *TopicUpdateOne) AddSequence(i int) *TopicUpdateOne {
+	tuo.mutation.AddSequence(i)
+	return tuo
+}
+
+// SetTouched sets the "touched" field.
+func (tuo *TopicUpdateOne) SetTouched(t time.Time) *TopicUpdateOne {
+	tuo.mutation.SetTouched(t)
+	return tuo
+}
+
+// SetNillableTouched sets the "touched" field if the given value is not nil.
+func (tuo *TopicUpdateOne) SetNillableTouched(t *time.Time) *TopicUpdateOne {
+	if t != nil {
+		tuo.SetTouched(*t)
+	}
 	return tuo
 }
 
@@ -616,9 +734,21 @@ func (tuo *TopicUpdateOne) SetAccess(m map[string]interface{}) *TopicUpdateOne {
 	return tuo
 }
 
+// ClearAccess clears the value of the "access" field.
+func (tuo *TopicUpdateOne) ClearAccess() *TopicUpdateOne {
+	tuo.mutation.ClearAccess()
+	return tuo
+}
+
 // SetPublic sets the "public" field.
 func (tuo *TopicUpdateOne) SetPublic(m map[string]interface{}) *TopicUpdateOne {
 	tuo.mutation.SetPublic(m)
+	return tuo
+}
+
+// ClearPublic clears the value of the "public" field.
+func (tuo *TopicUpdateOne) ClearPublic() *TopicUpdateOne {
+	tuo.mutation.ClearPublic()
 	return tuo
 }
 
@@ -628,9 +758,21 @@ func (tuo *TopicUpdateOne) SetTrusted(m map[string]interface{}) *TopicUpdateOne 
 	return tuo
 }
 
+// ClearTrusted clears the value of the "trusted" field.
+func (tuo *TopicUpdateOne) ClearTrusted() *TopicUpdateOne {
+	tuo.mutation.ClearTrusted()
+	return tuo
+}
+
 // SetTags sets the "tags" field.
 func (tuo *TopicUpdateOne) SetTags(m map[string]interface{}) *TopicUpdateOne {
 	tuo.mutation.SetTags(m)
+	return tuo
+}
+
+// ClearTags clears the value of the "tags" field.
+func (tuo *TopicUpdateOne) ClearTags() *TopicUpdateOne {
+	tuo.mutation.ClearTags()
 	return tuo
 }
 
@@ -879,6 +1021,13 @@ func (tuo *TopicUpdateOne) sqlSave(ctx context.Context) (_node *Topic, err error
 			Column: topic.FieldName,
 		})
 	}
+	if value, ok := tuo.mutation.GetType(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: topic.FieldType,
+		})
+	}
 	if value, ok := tuo.mutation.State(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
@@ -893,24 +1042,37 @@ func (tuo *TopicUpdateOne) sqlSave(ctx context.Context) (_node *Topic, err error
 			Column: topic.FieldStateAt,
 		})
 	}
-	if value, ok := tuo.mutation.SequenceID(); ok {
+	if value, ok := tuo.mutation.Sequence(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
 			Value:  value,
-			Column: topic.FieldSequenceID,
+			Column: topic.FieldSequence,
 		})
 	}
-	if value, ok := tuo.mutation.AddedSequenceID(); ok {
+	if value, ok := tuo.mutation.AddedSequence(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
 			Value:  value,
-			Column: topic.FieldSequenceID,
+			Column: topic.FieldSequence,
+		})
+	}
+	if value, ok := tuo.mutation.Touched(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: topic.FieldTouched,
 		})
 	}
 	if value, ok := tuo.mutation.Access(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeJSON,
 			Value:  value,
+			Column: topic.FieldAccess,
+		})
+	}
+	if tuo.mutation.AccessCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
 			Column: topic.FieldAccess,
 		})
 	}
@@ -921,6 +1083,12 @@ func (tuo *TopicUpdateOne) sqlSave(ctx context.Context) (_node *Topic, err error
 			Column: topic.FieldPublic,
 		})
 	}
+	if tuo.mutation.PublicCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Column: topic.FieldPublic,
+		})
+	}
 	if value, ok := tuo.mutation.Trusted(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeJSON,
@@ -928,10 +1096,22 @@ func (tuo *TopicUpdateOne) sqlSave(ctx context.Context) (_node *Topic, err error
 			Column: topic.FieldTrusted,
 		})
 	}
+	if tuo.mutation.TrustedCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Column: topic.FieldTrusted,
+		})
+	}
 	if value, ok := tuo.mutation.Tags(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeJSON,
 			Value:  value,
+			Column: topic.FieldTags,
+		})
+	}
+	if tuo.mutation.TagsCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
 			Column: topic.FieldTags,
 		})
 	}

@@ -1,4 +1,4 @@
-package main
+package semezana
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/Muchogoc/semezana/server/dto"
+	"github.com/Muchogoc/semezana/semezana/dto"
 	"github.com/gorilla/websocket"
 )
 
@@ -26,6 +26,8 @@ type Session struct {
 	// Outbound messages channel, buffered.
 	send chan interface{}
 
+	// messageLock *sync.Mutex
+
 	// detach - channel for detaching session from topic, buffered.
 	// Content is topic name to detach from.
 	detach chan string
@@ -34,8 +36,9 @@ type Session struct {
 	uid string
 	// Map of topic subscriptions, indexed by topic name.
 	// Don't access directly. Use getters/setters.
-	subscriptions map[string]*Subscription
-	subsLock      sync.RWMutex
+	// subscriptions map[string]*Subscription
+	// subsLock      sync.RWMutex
+	subscriptions *sync.Map
 
 	// connected client details
 	// IP address of the.

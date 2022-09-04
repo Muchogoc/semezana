@@ -17,15 +17,22 @@ type Message struct {
 
 // Fields of the Message.
 func (Message) Fields() []ent.Field {
+	// field.UUID("from", uuid.New()).Optional().Nillable().Comment("Who sent the message"),
+
 	return []ent.Field{
-		field.UUID("id", uuid.New()),
+		field.UUID("id", uuid.New()).
+			Default(uuid.New),
 		field.UUID("topic_id", uuid.New()),
-		field.Time("created_at").Default(time.Now),
-		field.Time("updated_at").Default(time.Now()).UpdateDefault(time.Now),
-		field.Int("sequence_id").Positive(),
-		field.UUID("from", uuid.New()).Optional().Nillable().Comment("Who sent the message"),
-		field.JSON("content", map[string]interface{}{}).Comment("The message data"),
-		field.JSON("header", map[string]interface{}{}).Comment("The message header"),
+		field.Time("created_at").
+			Default(time.Now),
+		field.Time("updated_at").
+			Default(time.Now()).
+			UpdateDefault(time.Now),
+		field.Int("sequence"),
+		field.JSON("content", map[string]interface{}{}).
+			Comment("The message data"),
+		field.JSON("header", map[string]interface{}{}).
+			Comment("The message header"),
 	}
 }
 
@@ -40,6 +47,6 @@ func (Message) Edges() []ent.Edge {
 // Indexes of the Subscription.
 func (Message) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("topic_id", "sequence_id").Unique(),
+		index.Fields("topic_id", "sequence").Unique(),
 	}
 }

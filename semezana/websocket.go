@@ -1,4 +1,4 @@
-package main
+package semezana
 
 import (
 	"bytes"
@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Muchogoc/semezana/server/dto"
+	"github.com/Muchogoc/semezana/semezana/dto"
 	"github.com/gorilla/websocket"
 )
 
@@ -129,16 +129,12 @@ func serveWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, count := globals.sessionStore.NewSession(ws)
+	session, _ := globals.sessionStore.NewSession(ws)
 
 	session.remoteAddress = r.RemoteAddr
 
-	log.Println("ws: session started", session.sid, session.remoteAddress, count)
-
 	ctx := context.Background()
 
-	// Do work in goroutines to return from serveWebSocket() to release file pointers.
-	// Otherwise "too many open files" will happen.
 	go session.writer(ctx)
 	go session.reader(ctx)
 }

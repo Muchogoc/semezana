@@ -17,7 +17,8 @@ type Topic struct {
 // Fields of the Topic.
 func (Topic) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.New()),
+		field.UUID("id", uuid.New()).
+			Default(uuid.New),
 		field.Time("created_at").
 			Default(time.Now),
 		field.Time("updated_at").
@@ -26,14 +27,16 @@ func (Topic) Fields() []ent.Field {
 		field.String("type"),
 		field.String("state"),
 		field.Time("state_at"),
-		field.Int("sequence_id").
+		field.Int("sequence").
+			Default(0).
 			Comment("sequential ID of the latest message sent through the topic"),
 		field.Time("touched").
+			Default(time.Now()).
 			Comment("timestamp of the last message sent to the topic"),
-		field.JSON("access", map[string]interface{}{}),
-		field.JSON("public", map[string]interface{}{}),
-		field.JSON("trusted", map[string]interface{}{}),
-		field.JSON("tags", map[string]interface{}{}),
+		field.JSON("access", map[string]interface{}{}).Optional(),
+		field.JSON("public", map[string]interface{}{}).Optional(),
+		field.JSON("trusted", map[string]interface{}{}).Optional(),
+		field.JSON("tags", map[string]interface{}{}).Optional(),
 	}
 }
 

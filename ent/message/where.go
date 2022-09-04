@@ -103,17 +103,10 @@ func UpdatedAt(v time.Time) predicate.Message {
 	})
 }
 
-// SequenceID applies equality check predicate on the "sequence_id" field. It's identical to SequenceIDEQ.
-func SequenceID(v int) predicate.Message {
+// Sequence applies equality check predicate on the "sequence" field. It's identical to SequenceEQ.
+func Sequence(v int) predicate.Message {
 	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldSequenceID), v))
-	})
-}
-
-// From applies equality check predicate on the "from" field. It's identical to FromEQ.
-func From(v uuid.UUID) predicate.Message {
-	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldFrom), v))
+		s.Where(sql.EQ(s.C(FieldSequence), v))
 	})
 }
 
@@ -281,145 +274,67 @@ func UpdatedAtLTE(v time.Time) predicate.Message {
 	})
 }
 
-// SequenceIDEQ applies the EQ predicate on the "sequence_id" field.
-func SequenceIDEQ(v int) predicate.Message {
+// SequenceEQ applies the EQ predicate on the "sequence" field.
+func SequenceEQ(v int) predicate.Message {
 	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldSequenceID), v))
+		s.Where(sql.EQ(s.C(FieldSequence), v))
 	})
 }
 
-// SequenceIDNEQ applies the NEQ predicate on the "sequence_id" field.
-func SequenceIDNEQ(v int) predicate.Message {
+// SequenceNEQ applies the NEQ predicate on the "sequence" field.
+func SequenceNEQ(v int) predicate.Message {
 	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldSequenceID), v))
+		s.Where(sql.NEQ(s.C(FieldSequence), v))
 	})
 }
 
-// SequenceIDIn applies the In predicate on the "sequence_id" field.
-func SequenceIDIn(vs ...int) predicate.Message {
+// SequenceIn applies the In predicate on the "sequence" field.
+func SequenceIn(vs ...int) predicate.Message {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
 	}
 	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.In(s.C(FieldSequenceID), v...))
+		s.Where(sql.In(s.C(FieldSequence), v...))
 	})
 }
 
-// SequenceIDNotIn applies the NotIn predicate on the "sequence_id" field.
-func SequenceIDNotIn(vs ...int) predicate.Message {
+// SequenceNotIn applies the NotIn predicate on the "sequence" field.
+func SequenceNotIn(vs ...int) predicate.Message {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
 	}
 	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.NotIn(s.C(FieldSequenceID), v...))
+		s.Where(sql.NotIn(s.C(FieldSequence), v...))
 	})
 }
 
-// SequenceIDGT applies the GT predicate on the "sequence_id" field.
-func SequenceIDGT(v int) predicate.Message {
+// SequenceGT applies the GT predicate on the "sequence" field.
+func SequenceGT(v int) predicate.Message {
 	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldSequenceID), v))
+		s.Where(sql.GT(s.C(FieldSequence), v))
 	})
 }
 
-// SequenceIDGTE applies the GTE predicate on the "sequence_id" field.
-func SequenceIDGTE(v int) predicate.Message {
+// SequenceGTE applies the GTE predicate on the "sequence" field.
+func SequenceGTE(v int) predicate.Message {
 	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldSequenceID), v))
+		s.Where(sql.GTE(s.C(FieldSequence), v))
 	})
 }
 
-// SequenceIDLT applies the LT predicate on the "sequence_id" field.
-func SequenceIDLT(v int) predicate.Message {
+// SequenceLT applies the LT predicate on the "sequence" field.
+func SequenceLT(v int) predicate.Message {
 	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldSequenceID), v))
+		s.Where(sql.LT(s.C(FieldSequence), v))
 	})
 }
 
-// SequenceIDLTE applies the LTE predicate on the "sequence_id" field.
-func SequenceIDLTE(v int) predicate.Message {
+// SequenceLTE applies the LTE predicate on the "sequence" field.
+func SequenceLTE(v int) predicate.Message {
 	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldSequenceID), v))
-	})
-}
-
-// FromEQ applies the EQ predicate on the "from" field.
-func FromEQ(v uuid.UUID) predicate.Message {
-	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldFrom), v))
-	})
-}
-
-// FromNEQ applies the NEQ predicate on the "from" field.
-func FromNEQ(v uuid.UUID) predicate.Message {
-	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldFrom), v))
-	})
-}
-
-// FromIn applies the In predicate on the "from" field.
-func FromIn(vs ...uuid.UUID) predicate.Message {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.In(s.C(FieldFrom), v...))
-	})
-}
-
-// FromNotIn applies the NotIn predicate on the "from" field.
-func FromNotIn(vs ...uuid.UUID) predicate.Message {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.NotIn(s.C(FieldFrom), v...))
-	})
-}
-
-// FromGT applies the GT predicate on the "from" field.
-func FromGT(v uuid.UUID) predicate.Message {
-	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldFrom), v))
-	})
-}
-
-// FromGTE applies the GTE predicate on the "from" field.
-func FromGTE(v uuid.UUID) predicate.Message {
-	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldFrom), v))
-	})
-}
-
-// FromLT applies the LT predicate on the "from" field.
-func FromLT(v uuid.UUID) predicate.Message {
-	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldFrom), v))
-	})
-}
-
-// FromLTE applies the LTE predicate on the "from" field.
-func FromLTE(v uuid.UUID) predicate.Message {
-	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldFrom), v))
-	})
-}
-
-// FromIsNil applies the IsNil predicate on the "from" field.
-func FromIsNil() predicate.Message {
-	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.IsNull(s.C(FieldFrom)))
-	})
-}
-
-// FromNotNil applies the NotNil predicate on the "from" field.
-func FromNotNil() predicate.Message {
-	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.NotNull(s.C(FieldFrom)))
+		s.Where(sql.LTE(s.C(FieldSequence), v))
 	})
 }
 

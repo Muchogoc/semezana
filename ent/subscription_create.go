@@ -69,6 +69,14 @@ func (sc *SubscriptionCreate) SetID(u uuid.UUID) *SubscriptionCreate {
 	return sc
 }
 
+// SetNillableID sets the "id" field if the given value is not nil.
+func (sc *SubscriptionCreate) SetNillableID(u *uuid.UUID) *SubscriptionCreate {
+	if u != nil {
+		sc.SetID(*u)
+	}
+	return sc
+}
+
 // SetSubscriberID sets the "subscriber" edge to the User entity by ID.
 func (sc *SubscriptionCreate) SetSubscriberID(id uuid.UUID) *SubscriptionCreate {
 	sc.mutation.SetSubscriberID(id)
@@ -169,6 +177,10 @@ func (sc *SubscriptionCreate) defaults() {
 	if _, ok := sc.mutation.UpdatedAt(); !ok {
 		v := subscription.DefaultUpdatedAt
 		sc.mutation.SetUpdatedAt(v)
+	}
+	if _, ok := sc.mutation.ID(); !ok {
+		v := subscription.DefaultID()
+		sc.mutation.SetID(v)
 	}
 }
 

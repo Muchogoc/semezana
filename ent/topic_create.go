@@ -58,6 +58,12 @@ func (tc *TopicCreate) SetName(s string) *TopicCreate {
 	return tc
 }
 
+// SetType sets the "type" field.
+func (tc *TopicCreate) SetType(s string) *TopicCreate {
+	tc.mutation.SetType(s)
+	return tc
+}
+
 // SetState sets the "state" field.
 func (tc *TopicCreate) SetState(s string) *TopicCreate {
 	tc.mutation.SetState(s)
@@ -70,9 +76,31 @@ func (tc *TopicCreate) SetStateAt(t time.Time) *TopicCreate {
 	return tc
 }
 
-// SetSequenceID sets the "sequence_id" field.
-func (tc *TopicCreate) SetSequenceID(i int) *TopicCreate {
-	tc.mutation.SetSequenceID(i)
+// SetSequence sets the "sequence" field.
+func (tc *TopicCreate) SetSequence(i int) *TopicCreate {
+	tc.mutation.SetSequence(i)
+	return tc
+}
+
+// SetNillableSequence sets the "sequence" field if the given value is not nil.
+func (tc *TopicCreate) SetNillableSequence(i *int) *TopicCreate {
+	if i != nil {
+		tc.SetSequence(*i)
+	}
+	return tc
+}
+
+// SetTouched sets the "touched" field.
+func (tc *TopicCreate) SetTouched(t time.Time) *TopicCreate {
+	tc.mutation.SetTouched(t)
+	return tc
+}
+
+// SetNillableTouched sets the "touched" field if the given value is not nil.
+func (tc *TopicCreate) SetNillableTouched(t *time.Time) *TopicCreate {
+	if t != nil {
+		tc.SetTouched(*t)
+	}
 	return tc
 }
 
@@ -103,6 +131,14 @@ func (tc *TopicCreate) SetTags(m map[string]interface{}) *TopicCreate {
 // SetID sets the "id" field.
 func (tc *TopicCreate) SetID(u uuid.UUID) *TopicCreate {
 	tc.mutation.SetID(u)
+	return tc
+}
+
+// SetNillableID sets the "id" field if the given value is not nil.
+func (tc *TopicCreate) SetNillableID(u *uuid.UUID) *TopicCreate {
+	if u != nil {
+		tc.SetID(*u)
+	}
 	return tc
 }
 
@@ -236,6 +272,18 @@ func (tc *TopicCreate) defaults() {
 		v := topic.DefaultUpdatedAt
 		tc.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := tc.mutation.Sequence(); !ok {
+		v := topic.DefaultSequence
+		tc.mutation.SetSequence(v)
+	}
+	if _, ok := tc.mutation.Touched(); !ok {
+		v := topic.DefaultTouched
+		tc.mutation.SetTouched(v)
+	}
+	if _, ok := tc.mutation.ID(); !ok {
+		v := topic.DefaultID()
+		tc.mutation.SetID(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -249,26 +297,20 @@ func (tc *TopicCreate) check() error {
 	if _, ok := tc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Topic.name"`)}
 	}
+	if _, ok := tc.mutation.GetType(); !ok {
+		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Topic.type"`)}
+	}
 	if _, ok := tc.mutation.State(); !ok {
 		return &ValidationError{Name: "state", err: errors.New(`ent: missing required field "Topic.state"`)}
 	}
 	if _, ok := tc.mutation.StateAt(); !ok {
 		return &ValidationError{Name: "state_at", err: errors.New(`ent: missing required field "Topic.state_at"`)}
 	}
-	if _, ok := tc.mutation.SequenceID(); !ok {
-		return &ValidationError{Name: "sequence_id", err: errors.New(`ent: missing required field "Topic.sequence_id"`)}
+	if _, ok := tc.mutation.Sequence(); !ok {
+		return &ValidationError{Name: "sequence", err: errors.New(`ent: missing required field "Topic.sequence"`)}
 	}
-	if _, ok := tc.mutation.Access(); !ok {
-		return &ValidationError{Name: "access", err: errors.New(`ent: missing required field "Topic.access"`)}
-	}
-	if _, ok := tc.mutation.Public(); !ok {
-		return &ValidationError{Name: "public", err: errors.New(`ent: missing required field "Topic.public"`)}
-	}
-	if _, ok := tc.mutation.Trusted(); !ok {
-		return &ValidationError{Name: "trusted", err: errors.New(`ent: missing required field "Topic.trusted"`)}
-	}
-	if _, ok := tc.mutation.Tags(); !ok {
-		return &ValidationError{Name: "tags", err: errors.New(`ent: missing required field "Topic.tags"`)}
+	if _, ok := tc.mutation.Touched(); !ok {
+		return &ValidationError{Name: "touched", err: errors.New(`ent: missing required field "Topic.touched"`)}
 	}
 	return nil
 }
@@ -330,6 +372,14 @@ func (tc *TopicCreate) createSpec() (*Topic, *sqlgraph.CreateSpec) {
 		})
 		_node.Name = value
 	}
+	if value, ok := tc.mutation.GetType(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: topic.FieldType,
+		})
+		_node.Type = value
+	}
 	if value, ok := tc.mutation.State(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
@@ -346,13 +396,21 @@ func (tc *TopicCreate) createSpec() (*Topic, *sqlgraph.CreateSpec) {
 		})
 		_node.StateAt = value
 	}
-	if value, ok := tc.mutation.SequenceID(); ok {
+	if value, ok := tc.mutation.Sequence(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
 			Value:  value,
-			Column: topic.FieldSequenceID,
+			Column: topic.FieldSequence,
 		})
-		_node.SequenceID = value
+		_node.Sequence = value
+	}
+	if value, ok := tc.mutation.Touched(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: topic.FieldTouched,
+		})
+		_node.Touched = value
 	}
 	if value, ok := tc.mutation.Access(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

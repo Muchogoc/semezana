@@ -11,6 +11,7 @@ import (
 	"github.com/Muchogoc/semezana/ent/subscription"
 	"github.com/Muchogoc/semezana/ent/topic"
 	"github.com/Muchogoc/semezana/ent/user"
+	"github.com/google/uuid"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -29,6 +30,10 @@ func init() {
 	device.DefaultUpdatedAt = deviceDescUpdatedAt.Default.(time.Time)
 	// device.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	device.UpdateDefaultUpdatedAt = deviceDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// deviceDescID is the schema descriptor for id field.
+	deviceDescID := deviceFields[0].Descriptor()
+	// device.DefaultID holds the default value on creation for the id field.
+	device.DefaultID = deviceDescID.Default.(func() uuid.UUID)
 	messageFields := schema.Message{}.Fields()
 	_ = messageFields
 	// messageDescCreatedAt is the schema descriptor for created_at field.
@@ -41,10 +46,10 @@ func init() {
 	message.DefaultUpdatedAt = messageDescUpdatedAt.Default.(time.Time)
 	// message.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	message.UpdateDefaultUpdatedAt = messageDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// messageDescSequenceID is the schema descriptor for sequence_id field.
-	messageDescSequenceID := messageFields[4].Descriptor()
-	// message.SequenceIDValidator is a validator for the "sequence_id" field. It is called by the builders before save.
-	message.SequenceIDValidator = messageDescSequenceID.Validators[0].(func(int) error)
+	// messageDescID is the schema descriptor for id field.
+	messageDescID := messageFields[0].Descriptor()
+	// message.DefaultID holds the default value on creation for the id field.
+	message.DefaultID = messageDescID.Default.(func() uuid.UUID)
 	subscriptionFields := schema.Subscription{}.Fields()
 	_ = subscriptionFields
 	// subscriptionDescCreatedAt is the schema descriptor for created_at field.
@@ -57,6 +62,10 @@ func init() {
 	subscription.DefaultUpdatedAt = subscriptionDescUpdatedAt.Default.(time.Time)
 	// subscription.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	subscription.UpdateDefaultUpdatedAt = subscriptionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// subscriptionDescID is the schema descriptor for id field.
+	subscriptionDescID := subscriptionFields[0].Descriptor()
+	// subscription.DefaultID holds the default value on creation for the id field.
+	subscription.DefaultID = subscriptionDescID.Default.(func() uuid.UUID)
 	topicFields := schema.Topic{}.Fields()
 	_ = topicFields
 	// topicDescCreatedAt is the schema descriptor for created_at field.
@@ -69,6 +78,18 @@ func init() {
 	topic.DefaultUpdatedAt = topicDescUpdatedAt.Default.(time.Time)
 	// topic.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	topic.UpdateDefaultUpdatedAt = topicDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// topicDescSequence is the schema descriptor for sequence field.
+	topicDescSequence := topicFields[7].Descriptor()
+	// topic.DefaultSequence holds the default value on creation for the sequence field.
+	topic.DefaultSequence = topicDescSequence.Default.(int)
+	// topicDescTouched is the schema descriptor for touched field.
+	topicDescTouched := topicFields[8].Descriptor()
+	// topic.DefaultTouched holds the default value on creation for the touched field.
+	topic.DefaultTouched = topicDescTouched.Default.(time.Time)
+	// topicDescID is the schema descriptor for id field.
+	topicDescID := topicFields[0].Descriptor()
+	// topic.DefaultID holds the default value on creation for the id field.
+	topic.DefaultID = topicDescID.Default.(func() uuid.UUID)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescCreatedAt is the schema descriptor for created_at field.
@@ -81,4 +102,8 @@ func init() {
 	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(time.Time)
 	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	user.UpdateDefaultUpdatedAt = userDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// userDescID is the schema descriptor for id field.
+	userDescID := userFields[0].Descriptor()
+	// user.DefaultID holds the default value on creation for the id field.
+	user.DefaultID = userDescID.Default.(func() uuid.UUID)
 }

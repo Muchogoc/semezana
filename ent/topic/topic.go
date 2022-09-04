@@ -4,6 +4,8 @@ package topic
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const (
@@ -17,12 +19,16 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
+	// FieldType holds the string denoting the type field in the database.
+	FieldType = "type"
 	// FieldState holds the string denoting the state field in the database.
 	FieldState = "state"
 	// FieldStateAt holds the string denoting the state_at field in the database.
 	FieldStateAt = "state_at"
-	// FieldSequenceID holds the string denoting the sequence_id field in the database.
-	FieldSequenceID = "sequence_id"
+	// FieldSequence holds the string denoting the sequence field in the database.
+	FieldSequence = "sequence"
+	// FieldTouched holds the string denoting the touched field in the database.
+	FieldTouched = "touched"
 	// FieldAccess holds the string denoting the access field in the database.
 	FieldAccess = "access"
 	// FieldPublic holds the string denoting the public field in the database.
@@ -66,9 +72,11 @@ var Columns = []string{
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldName,
+	FieldType,
 	FieldState,
 	FieldStateAt,
-	FieldSequenceID,
+	FieldSequence,
+	FieldTouched,
 	FieldAccess,
 	FieldPublic,
 	FieldTrusted,
@@ -98,4 +106,10 @@ var (
 	DefaultUpdatedAt time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
+	// DefaultSequence holds the default value on creation for the "sequence" field.
+	DefaultSequence int
+	// DefaultTouched holds the default value on creation for the "touched" field.
+	DefaultTouched time.Time
+	// DefaultID holds the default value on creation for the "id" field.
+	DefaultID func() uuid.UUID
 )
