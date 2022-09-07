@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/Muchogoc/semezana/ent"
+	"github.com/Muchogoc/semezana/ent/channel"
 	"github.com/Muchogoc/semezana/ent/subscription"
-	"github.com/Muchogoc/semezana/ent/topic"
 	"github.com/Muchogoc/semezana/semezana/dto"
 	"github.com/Muchogoc/semezana/semezana/models"
 	"github.com/google/uuid"
@@ -63,7 +63,7 @@ func (s *Session) handshakeHandler(ctx context.Context, msg *dto.ClientComMessag
 
 // accountHandler
 // 1. Creates a user's account if 'new'
-// 1.1 Create a "me" topic on NSQ
+// 1.1 Create a "me" channel on NSQ
 // 2. Updates a user's account
 func (s *Session) accountHandler(ctx context.Context, msg *dto.ClientComMessage) {
 	var response *dto.ServerComMessage
@@ -71,6 +71,7 @@ func (s *Session) accountHandler(ctx context.Context, msg *dto.ClientComMessage)
 	if strings.HasPrefix(msg.Account.User, "new") {
 		user, err := globals.client.User.
 			Create().
+			SetName("Test User").
 			SetState(models.StateOK.String()).
 			SetStateAt(msg.Timestamp).
 			Save(ctx)
@@ -104,7 +105,7 @@ func (s *Session) accountHandler(ctx context.Context, msg *dto.ClientComMessage)
 
 // loginHandler
 // 1. Set up session
-// 2. Register session as channel to user's subscription-topics
+// 2. Register session as channel to user's subscription-channels
 func (s *Session) loginHandler(ctx context.Context, msg *dto.ClientComMessage) {
 	uid, err := uuid.Parse(msg.Login.User)
 	if err != nil {
@@ -143,17 +144,17 @@ func (s *Session) loginHandler(ctx context.Context, msg *dto.ClientComMessage) {
 	}
 
 	for _, subscription := range subscriptions {
-		s.addSub(subscription.TopicID.String(), subscription)
+		s.addSub(subscription.ChannelID.String(), subscription)
 		go s.nsqConsumer(ctx, subscription)
 	}
 
 }
 
 // subscriptionHandler
-// 1. Create user subscription to a topic
-// 2. if topic doesn't exist create
-// 3. Create subscription-topic as NSQ Topic
-// 4. Add subscription to session, creates a subsequent channel to subscription-topic
+// 1. Create user subscription to a channel
+// 2. if channel doesn't exist create
+// 3. Create subscription-channel as NSQ Topic
+// 4. Add subscription to session, creates a subsequent channel to subscription-channel
 func (s *Session) subscriptionHandler(ctx context.Context, msg *dto.ClientComMessage) {
 	uid, err := uuid.Parse(msg.Subscription.User)
 	if err != nil {
@@ -179,7 +180,7 @@ func (s *Session) subscriptionHandler(ctx context.Context, msg *dto.ClientComMes
 		return
 	}
 
-	cid, err := uuid.Parse(msg.Subscription.Topic)
+	cid, err := uuid.Parse(msg.Subscription.Channel)
 	if err != nil {
 		response := &dto.ServerComMessage{
 			Control: &dto.MsgServerCtrl{
@@ -191,10 +192,8 @@ func (s *Session) subscriptionHandler(ctx context.Context, msg *dto.ClientComMes
 		return
 	}
 
-	// check if topic exists
-	exists, err := globals.client.Topic.Query().Where(
-		topic.ID(cid),
-	).Exist(ctx)
+	// check if channel exists
+	exists, err := globals.client.Channel.Query().Where(channel.ID(cid)).Exist(ctx)
 	if err != nil {
 		response := &dto.ServerComMessage{
 			Control: &dto.MsgServerCtrl{
@@ -208,9 +207,9 @@ func (s *Session) subscriptionHandler(ctx context.Context, msg *dto.ClientComMes
 
 	var sub *ent.Subscription
 	if exists {
-		// check if there is a subscription with the topic
+		// check if there is a subscription with the channel
 		exist, err := user.QuerySubscriptions().Where(
-			subscription.TopicID(cid),
+			subscription.ChannelID(cid),
 		).Exist(ctx)
 		if err != nil {
 			response := &dto.ServerComMessage{
@@ -225,8 +224,10 @@ func (s *Session) subscriptionHandler(ctx context.Context, msg *dto.ClientComMes
 
 		if !exist {
 			sub, err = globals.client.Subscription.Create().
-				SetSubscriber(user).
-				SetTopicID(cid).
+				SetRole("OWNER").
+				SetStatus("OK").
+				SetUser(user).
+				SetChannelID(cid).
 				Save(ctx)
 			if err != nil {
 				response := &dto.ServerComMessage{
@@ -240,7 +241,7 @@ func (s *Session) subscriptionHandler(ctx context.Context, msg *dto.ClientComMes
 			}
 		} else {
 			sub, err = user.QuerySubscriptions().Where(
-				subscription.TopicID(cid),
+				subscription.ChannelID(cid),
 			).Only(ctx)
 			if err != nil {
 				response := &dto.ServerComMessage{
@@ -255,10 +256,10 @@ func (s *Session) subscriptionHandler(ctx context.Context, msg *dto.ClientComMes
 		}
 
 	} else {
-		// create topic
-		topic, err := globals.client.Topic.Create().
+		// create channel
+		channel, err := globals.client.Channel.Create().
 			SetName("Test Topic").
-			SetType(string(models.TopicCategoryP2P)).
+			SetType(string(models.ChannelCategoryP2P)).
 			SetState(models.StateOK.String()).
 			SetStateAt(time.Now()).
 			Save(ctx)
@@ -276,8 +277,10 @@ func (s *Session) subscriptionHandler(ctx context.Context, msg *dto.ClientComMes
 		// create subscription
 		// add subscription to user
 		sub, err = globals.client.Subscription.Create().
-			SetSubscriber(user).
-			SetTopic(topic).
+			SetUser(user).
+			SetChannel(channel).
+			SetRole("OWNER").
+			SetStatus("OK").
 			Save(ctx)
 		if err != nil {
 			response := &dto.ServerComMessage{
@@ -307,23 +310,23 @@ func (s *Session) subscriptionHandler(ctx context.Context, msg *dto.ClientComMes
 		return
 	}
 
-	s.addSub(sub.TopicID.String(), sub)
+	s.addSub(sub.ChannelID.String(), sub)
 	go s.nsqConsumer(ctx, sub)
 
 	response := &dto.ServerComMessage{
 		Control: &dto.MsgServerCtrl{
 			Code:    http.StatusOK,
-			Message: fmt.Sprintf("topic: %s, subscription: %s", sub.TopicID.String(), sub.ID.String()),
+			Message: fmt.Sprintf("channel: %s, subscription: %s", sub.ChannelID.String(), sub.ID.String()),
 		},
 	}
 	s.queueOut(response)
 }
 
 // publishHandler
-// 1. Fetch topic
-// 2. Fetch subscription-topic
+// 1. Fetch channel
+// 2. Fetch subscription-channel
 // 2. Save Message to DB
-// 3. Publish details to topic
+// 3. Publish details to channel
 // 4. Return data response
 func (s *Session) publishHandler(ctx context.Context, msg *dto.ClientComMessage) {
 	uid, err := uuid.Parse(msg.Publish.User)
@@ -338,7 +341,7 @@ func (s *Session) publishHandler(ctx context.Context, msg *dto.ClientComMessage)
 		return
 	}
 
-	cid, err := uuid.Parse(msg.Publish.Topic)
+	cid, err := uuid.Parse(msg.Publish.Channel)
 	if err != nil {
 		response := &dto.ServerComMessage{
 			Control: &dto.MsgServerCtrl{
@@ -350,7 +353,7 @@ func (s *Session) publishHandler(ctx context.Context, msg *dto.ClientComMessage)
 		return
 	}
 
-	topic, err := globals.client.Topic.Get(ctx, cid)
+	channel, err := globals.client.Channel.Get(ctx, cid)
 	if err != nil {
 		response := &dto.ServerComMessage{
 			Control: &dto.MsgServerCtrl{
@@ -362,14 +365,14 @@ func (s *Session) publishHandler(ctx context.Context, msg *dto.ClientComMessage)
 		return
 	}
 
-	sequence := topic.Sequence + 1
+	sequence := channel.Sequence + 1
 
 	message, err := globals.client.Message.Create().
-		SetSenderID(uid).
-		SetTopic(topic).
+		SetAuthorID(uid).
+		SetChannel(channel).
 		SetHeader(msg.Publish.Head).
-		SetContent(map[string]interface{}{
-			"content": msg.Publish.Content,
+		SetContent(models.MessageContent{
+			Text: msg.Publish.Content.(string),
 		}).
 		SetSequence(sequence).
 		Save(ctx)
@@ -384,7 +387,7 @@ func (s *Session) publishHandler(ctx context.Context, msg *dto.ClientComMessage)
 		return
 	}
 
-	topic, err = topic.Update().
+	channel, err = channel.Update().
 		SetSequence(sequence).
 		SetTouched(msg.Timestamp).
 		Save(ctx)
@@ -399,7 +402,7 @@ func (s *Session) publishHandler(ctx context.Context, msg *dto.ClientComMessage)
 		return
 	}
 
-	subscriptions, err := topic.QuerySubscriptions().All(ctx)
+	subscriptions, err := channel.QuerySubscriptions().All(ctx)
 	if err != nil {
 		response := &dto.ServerComMessage{
 			Control: &dto.MsgServerCtrl{
@@ -418,6 +421,22 @@ func (s *Session) publishHandler(ctx context.Context, msg *dto.ClientComMessage)
 	}
 
 	for _, subscription := range subscriptions {
+		_, err := globals.client.Recipient.Create().
+			SetMessage(message).
+			SetUserID(subscription.UserID).
+			SetStatus("DELIVERED").
+			SetDeliveredAt(msg.Timestamp).
+			Save(ctx)
+		if err != nil {
+			response := &dto.ServerComMessage{
+				Control: &dto.MsgServerCtrl{
+					Code:    http.StatusInternalServerError,
+					Message: err.Error(),
+				},
+			}
+			s.queueOut(response)
+		}
+
 		globals.producer.Publish(subscription.ID.String(), payload.Marshal())
 	}
 

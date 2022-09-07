@@ -9,13 +9,13 @@ import (
 	"github.com/google/uuid"
 )
 
-// Topic holds the schema definition for the Topic entity.
-type Topic struct {
+// Channel holds the schema definition for the Channel entity.
+type Channel struct {
 	ent.Schema
 }
 
-// Fields of the Topic.
-func (Topic) Fields() []ent.Field {
+// Fields of the Channel.
+func (Channel) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.New()).
 			Default(uuid.New),
@@ -29,22 +29,18 @@ func (Topic) Fields() []ent.Field {
 		field.Time("state_at"),
 		field.Int("sequence").
 			Default(0).
-			Comment("sequential ID of the latest message sent through the topic"),
+			Comment("sequential number of the latest message sent through the Channel"),
 		field.Time("touched").
 			Default(time.Now()).
-			Comment("timestamp of the last message sent to the topic"),
-		field.JSON("access", map[string]interface{}{}).Optional(),
-		field.JSON("public", map[string]interface{}{}).Optional(),
-		field.JSON("trusted", map[string]interface{}{}).Optional(),
-		field.JSON("tags", map[string]interface{}{}).Optional(),
+			Comment("timestamp of the last message sent to the Channel"),
 	}
 }
 
-// Edges of the Topic.
-func (Topic) Edges() []ent.Edge {
+// Edges of the Channel.
+func (Channel) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("messages", Message.Type),
-		edge.To("subscriptions", Subscription.Type),
-		edge.From("owner", User.Type).Ref("topics"),
+		edge.From("members", User.Type).Ref("channels").
+			Through("subscriptions", Subscription.Type),
 	}
 }

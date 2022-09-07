@@ -5,11 +5,11 @@ package ent
 import (
 	"time"
 
+	"github.com/Muchogoc/semezana/ent/channel"
 	"github.com/Muchogoc/semezana/ent/device"
 	"github.com/Muchogoc/semezana/ent/message"
 	"github.com/Muchogoc/semezana/ent/schema"
 	"github.com/Muchogoc/semezana/ent/subscription"
-	"github.com/Muchogoc/semezana/ent/topic"
 	"github.com/Muchogoc/semezana/ent/user"
 	"github.com/google/uuid"
 )
@@ -18,6 +18,30 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	channelFields := schema.Channel{}.Fields()
+	_ = channelFields
+	// channelDescCreatedAt is the schema descriptor for created_at field.
+	channelDescCreatedAt := channelFields[1].Descriptor()
+	// channel.DefaultCreatedAt holds the default value on creation for the created_at field.
+	channel.DefaultCreatedAt = channelDescCreatedAt.Default.(func() time.Time)
+	// channelDescUpdatedAt is the schema descriptor for updated_at field.
+	channelDescUpdatedAt := channelFields[2].Descriptor()
+	// channel.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	channel.DefaultUpdatedAt = channelDescUpdatedAt.Default.(time.Time)
+	// channel.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	channel.UpdateDefaultUpdatedAt = channelDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// channelDescSequence is the schema descriptor for sequence field.
+	channelDescSequence := channelFields[7].Descriptor()
+	// channel.DefaultSequence holds the default value on creation for the sequence field.
+	channel.DefaultSequence = channelDescSequence.Default.(int)
+	// channelDescTouched is the schema descriptor for touched field.
+	channelDescTouched := channelFields[8].Descriptor()
+	// channel.DefaultTouched holds the default value on creation for the touched field.
+	channel.DefaultTouched = channelDescTouched.Default.(time.Time)
+	// channelDescID is the schema descriptor for id field.
+	channelDescID := channelFields[0].Descriptor()
+	// channel.DefaultID holds the default value on creation for the id field.
+	channel.DefaultID = channelDescID.Default.(func() uuid.UUID)
 	deviceFields := schema.Device{}.Fields()
 	_ = deviceFields
 	// deviceDescCreatedAt is the schema descriptor for created_at field.
@@ -52,52 +76,18 @@ func init() {
 	message.DefaultID = messageDescID.Default.(func() uuid.UUID)
 	subscriptionFields := schema.Subscription{}.Fields()
 	_ = subscriptionFields
-	// subscriptionDescCreatedAt is the schema descriptor for created_at field.
-	subscriptionDescCreatedAt := subscriptionFields[1].Descriptor()
-	// subscription.DefaultCreatedAt holds the default value on creation for the created_at field.
-	subscription.DefaultCreatedAt = subscriptionDescCreatedAt.Default.(func() time.Time)
-	// subscriptionDescUpdatedAt is the schema descriptor for updated_at field.
-	subscriptionDescUpdatedAt := subscriptionFields[2].Descriptor()
-	// subscription.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	subscription.DefaultUpdatedAt = subscriptionDescUpdatedAt.Default.(time.Time)
-	// subscription.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	subscription.UpdateDefaultUpdatedAt = subscriptionDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// subscriptionDescID is the schema descriptor for id field.
 	subscriptionDescID := subscriptionFields[0].Descriptor()
 	// subscription.DefaultID holds the default value on creation for the id field.
 	subscription.DefaultID = subscriptionDescID.Default.(func() uuid.UUID)
-	topicFields := schema.Topic{}.Fields()
-	_ = topicFields
-	// topicDescCreatedAt is the schema descriptor for created_at field.
-	topicDescCreatedAt := topicFields[1].Descriptor()
-	// topic.DefaultCreatedAt holds the default value on creation for the created_at field.
-	topic.DefaultCreatedAt = topicDescCreatedAt.Default.(func() time.Time)
-	// topicDescUpdatedAt is the schema descriptor for updated_at field.
-	topicDescUpdatedAt := topicFields[2].Descriptor()
-	// topic.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	topic.DefaultUpdatedAt = topicDescUpdatedAt.Default.(time.Time)
-	// topic.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	topic.UpdateDefaultUpdatedAt = topicDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// topicDescSequence is the schema descriptor for sequence field.
-	topicDescSequence := topicFields[7].Descriptor()
-	// topic.DefaultSequence holds the default value on creation for the sequence field.
-	topic.DefaultSequence = topicDescSequence.Default.(int)
-	// topicDescTouched is the schema descriptor for touched field.
-	topicDescTouched := topicFields[8].Descriptor()
-	// topic.DefaultTouched holds the default value on creation for the touched field.
-	topic.DefaultTouched = topicDescTouched.Default.(time.Time)
-	// topicDescID is the schema descriptor for id field.
-	topicDescID := topicFields[0].Descriptor()
-	// topic.DefaultID holds the default value on creation for the id field.
-	topic.DefaultID = topicDescID.Default.(func() uuid.UUID)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescCreatedAt is the schema descriptor for created_at field.
-	userDescCreatedAt := userFields[1].Descriptor()
+	userDescCreatedAt := userFields[2].Descriptor()
 	// user.DefaultCreatedAt holds the default value on creation for the created_at field.
 	user.DefaultCreatedAt = userDescCreatedAt.Default.(func() time.Time)
 	// userDescUpdatedAt is the schema descriptor for updated_at field.
-	userDescUpdatedAt := userFields[2].Descriptor()
+	userDescUpdatedAt := userFields[3].Descriptor()
 	// user.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(time.Time)
 	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

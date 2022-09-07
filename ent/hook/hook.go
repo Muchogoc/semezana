@@ -9,6 +9,19 @@ import (
 	"github.com/Muchogoc/semezana/ent"
 )
 
+// The ChannelFunc type is an adapter to allow the use of ordinary
+// function as Channel mutator.
+type ChannelFunc func(context.Context, *ent.ChannelMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ChannelFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.ChannelMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ChannelMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // The DeviceFunc type is an adapter to allow the use of ordinary
 // function as Device mutator.
 type DeviceFunc func(context.Context, *ent.DeviceMutation) (ent.Value, error)
@@ -35,6 +48,19 @@ func (f MessageFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 	return f(ctx, mv)
 }
 
+// The RecipientFunc type is an adapter to allow the use of ordinary
+// function as Recipient mutator.
+type RecipientFunc func(context.Context, *ent.RecipientMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RecipientFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.RecipientMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RecipientMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // The SubscriptionFunc type is an adapter to allow the use of ordinary
 // function as Subscription mutator.
 type SubscriptionFunc func(context.Context, *ent.SubscriptionMutation) (ent.Value, error)
@@ -44,19 +70,6 @@ func (f SubscriptionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 	mv, ok := m.(*ent.SubscriptionMutation)
 	if !ok {
 		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SubscriptionMutation", m)
-	}
-	return f(ctx, mv)
-}
-
-// The TopicFunc type is an adapter to allow the use of ordinary
-// function as Topic mutator.
-type TopicFunc func(context.Context, *ent.TopicMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f TopicFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.TopicMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TopicMutation", m)
 	}
 	return f(ctx, mv)
 }

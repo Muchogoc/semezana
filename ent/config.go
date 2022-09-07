@@ -24,10 +24,11 @@ type config struct {
 
 // hooks per client, for fast access.
 type hooks struct {
+	Channel      []ent.Hook
 	Device       []ent.Hook
 	Message      []ent.Hook
+	Recipient    []ent.Hook
 	Subscription []ent.Hook
-	Topic        []ent.Hook
 	User         []ent.Hook
 }
 

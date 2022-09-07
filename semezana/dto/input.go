@@ -28,33 +28,33 @@ type MsgClientLogin struct {
 
 // MsgClientSub is a subscription request {sub} message.
 type MsgClientSub struct {
-	User  string `json:"user"`
-	Topic string `json:"topic"`
+	User    string `json:"user"`
+	Channel string `json:"channel"`
 }
 
 // MsgClientLeave is an unsubscribe {leave} request message.
 type MsgClientLeave struct {
 }
 
-// MsgClientPub is client's request to publish data to topic subscribers {pub}.
+// MsgClientPub is client's request to publish data to channel subscribers {pub}.
 type MsgClientPub struct {
 	Id      string                 `json:"id,omitempty"`
 	User    string                 `json:"user"`
-	Topic   string                 `json:"topic"`
+	Channel string                 `json:"channel"`
 	Head    map[string]interface{} `json:"head,omitempty"`
 	Content interface{}            `json:"content"`
 }
 
-// MsgClientGet is a query of topic state {get}.
+// MsgClientGet is a query of channel state {get}.
 type MsgClientGet struct{}
 
-// MsgClientSet is an update of topic state {set}.
+// MsgClientSet is an update of channel state {set}.
 type MsgClientSet struct{}
 
-// MsgClientDel delete messages or topic {del}.
+// MsgClientDel delete messages or channel {del}.
 type MsgClientDel struct{}
 
-// MsgClientNote is a client-generated notification for topic subscribers {note}.
+// MsgClientNote is a client-generated notification for channel subscribers {note}.
 type MsgClientNote struct{}
 
 // MsgClientExtra is not a stand-alone message but extra data which augments the main payload.
@@ -84,9 +84,9 @@ type ClientComMessage struct {
 	// // Sender's UserId as string.
 	// SenderID string `json:"-"`
 
-	// //Topics
-	// Originator string `json:"-"` // Original Topic
-	Receiver string `json:"-"` // Destination Topic
+	// //Channels
+	// Originator string `json:"-"` // Original Channel
+	Receiver string `json:"-"` // Destination Channel
 
 	// Timestamp when this message was received by the server.
 	Timestamp time.Time `json:"-"`

@@ -1,6 +1,10 @@
 package dto
 
-import "time"
+import (
+	"time"
+
+	"github.com/Muchogoc/semezana/semezana/models"
+)
 
 // MsgServerCtrl is a server control message {ctrl}.
 type MsgServerCtrl struct {
@@ -8,22 +12,23 @@ type MsgServerCtrl struct {
 	Timestamp  time.Time   `json:"timestamp,omitempty"`
 	Parameters interface{} `json:"parameters,omitempty"`
 	Message    string      `json:"message,omitempty"`
+	Line       int
 }
 
 // MsgServerData is a server {data} message.
 type MsgServerData struct {
-	Topic     string                 `json:"topic"`
+	Channel   string                 `json:"channel"`
 	From      string                 `json:"from,omitempty"`
 	Timestamp time.Time              `json:"timestamp"`
 	SeqId     int                    `json:"sequence"`
 	Head      map[string]interface{} `json:"head,omitempty"`
-	Content   interface{}            `json:"content"`
+	Content   models.MessageContent  `json:"content"`
 }
 
 // MsgServerPres is presence notification {pres} (authoritative update).
 type MsgServerPres struct{}
 
-// MsgServerMeta is a topic metadata {meta} update.
+// MsgServerMeta is a channel metadata {meta} update.
 type MsgServerMeta struct{}
 
 // MsgServerInfo is the server-side copy of MsgClientNote with From and optionally Src added (non-authoritative).

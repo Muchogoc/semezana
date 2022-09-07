@@ -5,11 +5,10 @@ package ent
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/Muchogoc/semezana/ent/channel"
 	"github.com/Muchogoc/semezana/ent/subscription"
-	"github.com/Muchogoc/semezana/ent/topic"
 	"github.com/Muchogoc/semezana/ent/user"
 	"github.com/google/uuid"
 )
@@ -19,14 +18,14 @@ type Subscription struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
-	// CreatedAt holds the value of the "created_at" field.
-	CreatedAt time.Time `json:"created_at,omitempty"`
-	// UpdatedAt holds the value of the "updated_at" field.
-	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// TopicID holds the value of the "topic_id" field.
-	TopicID uuid.UUID `json:"topic_id,omitempty"`
+	// ChannelID holds the value of the "channel_id" field.
+	ChannelID uuid.UUID `json:"channel_id,omitempty"`
 	// UserID holds the value of the "user_id" field.
 	UserID uuid.UUID `json:"user_id,omitempty"`
+	// Authorizations in channel
+	Role string `json:"role,omitempty"`
+	// Access to channel
+	Status string `json:"status,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the SubscriptionQuery when eager-loading is set.
 	Edges SubscriptionEdges `json:"edges"`
@@ -34,39 +33,39 @@ type Subscription struct {
 
 // SubscriptionEdges holds the relations/edges for other nodes in the graph.
 type SubscriptionEdges struct {
-	// Subscriber holds the value of the subscriber edge.
-	Subscriber *User `json:"subscriber,omitempty"`
-	// Topic holds the value of the topic edge.
-	Topic *Topic `json:"topic,omitempty"`
+	// User holds the value of the user edge.
+	User *User `json:"user,omitempty"`
+	// Channel holds the value of the channel edge.
+	Channel *Channel `json:"channel,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [2]bool
 }
 
-// SubscriberOrErr returns the Subscriber value or an error if the edge
+// UserOrErr returns the User value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e SubscriptionEdges) SubscriberOrErr() (*User, error) {
+func (e SubscriptionEdges) UserOrErr() (*User, error) {
 	if e.loadedTypes[0] {
-		if e.Subscriber == nil {
+		if e.User == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: user.Label}
 		}
-		return e.Subscriber, nil
+		return e.User, nil
 	}
-	return nil, &NotLoadedError{edge: "subscriber"}
+	return nil, &NotLoadedError{edge: "user"}
 }
 
-// TopicOrErr returns the Topic value or an error if the edge
+// ChannelOrErr returns the Channel value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e SubscriptionEdges) TopicOrErr() (*Topic, error) {
+func (e SubscriptionEdges) ChannelOrErr() (*Channel, error) {
 	if e.loadedTypes[1] {
-		if e.Topic == nil {
+		if e.Channel == nil {
 			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: topic.Label}
+			return nil, &NotFoundError{label: channel.Label}
 		}
-		return e.Topic, nil
+		return e.Channel, nil
 	}
-	return nil, &NotLoadedError{edge: "topic"}
+	return nil, &NotLoadedError{edge: "channel"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -74,9 +73,9 @@ func (*Subscription) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case subscription.FieldCreatedAt, subscription.FieldUpdatedAt:
-			values[i] = new(sql.NullTime)
-		case subscription.FieldID, subscription.FieldTopicID, subscription.FieldUserID:
+		case subscription.FieldRole, subscription.FieldStatus:
+			values[i] = new(sql.NullString)
+		case subscription.FieldID, subscription.FieldChannelID, subscription.FieldUserID:
 			values[i] = new(uuid.UUID)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Subscription", columns[i])
@@ -99,23 +98,11 @@ func (s *Subscription) assignValues(columns []string, values []interface{}) erro
 			} else if value != nil {
 				s.ID = *value
 			}
-		case subscription.FieldCreatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field created_at", values[i])
-			} else if value.Valid {
-				s.CreatedAt = value.Time
-			}
-		case subscription.FieldUpdatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
-			} else if value.Valid {
-				s.UpdatedAt = value.Time
-			}
-		case subscription.FieldTopicID:
+		case subscription.FieldChannelID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field topic_id", values[i])
+				return fmt.Errorf("unexpected type %T for field channel_id", values[i])
 			} else if value != nil {
-				s.TopicID = *value
+				s.ChannelID = *value
 			}
 		case subscription.FieldUserID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
@@ -123,19 +110,31 @@ func (s *Subscription) assignValues(columns []string, values []interface{}) erro
 			} else if value != nil {
 				s.UserID = *value
 			}
+		case subscription.FieldRole:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field role", values[i])
+			} else if value.Valid {
+				s.Role = value.String
+			}
+		case subscription.FieldStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field status", values[i])
+			} else if value.Valid {
+				s.Status = value.String
+			}
 		}
 	}
 	return nil
 }
 
-// QuerySubscriber queries the "subscriber" edge of the Subscription entity.
-func (s *Subscription) QuerySubscriber() *UserQuery {
-	return (&SubscriptionClient{config: s.config}).QuerySubscriber(s)
+// QueryUser queries the "user" edge of the Subscription entity.
+func (s *Subscription) QueryUser() *UserQuery {
+	return (&SubscriptionClient{config: s.config}).QueryUser(s)
 }
 
-// QueryTopic queries the "topic" edge of the Subscription entity.
-func (s *Subscription) QueryTopic() *TopicQuery {
-	return (&SubscriptionClient{config: s.config}).QueryTopic(s)
+// QueryChannel queries the "channel" edge of the Subscription entity.
+func (s *Subscription) QueryChannel() *ChannelQuery {
+	return (&SubscriptionClient{config: s.config}).QueryChannel(s)
 }
 
 // Update returns a builder for updating this Subscription.
@@ -161,17 +160,17 @@ func (s *Subscription) String() string {
 	var builder strings.Builder
 	builder.WriteString("Subscription(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", s.ID))
-	builder.WriteString("created_at=")
-	builder.WriteString(s.CreatedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("updated_at=")
-	builder.WriteString(s.UpdatedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("topic_id=")
-	builder.WriteString(fmt.Sprintf("%v", s.TopicID))
+	builder.WriteString("channel_id=")
+	builder.WriteString(fmt.Sprintf("%v", s.ChannelID))
 	builder.WriteString(", ")
 	builder.WriteString("user_id=")
 	builder.WriteString(fmt.Sprintf("%v", s.UserID))
+	builder.WriteString(", ")
+	builder.WriteString("role=")
+	builder.WriteString(s.Role)
+	builder.WriteString(", ")
+	builder.WriteString("status=")
+	builder.WriteString(s.Status)
 	builder.WriteByte(')')
 	return builder.String()
 }

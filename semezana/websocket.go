@@ -83,8 +83,8 @@ func (s *Session) writer(ctx context.Context) {
 		case <-s.stop:
 			return
 
-		case topic := <-s.detach:
-			s.delSub(topic)
+		case channel := <-s.detach:
+			s.delSub(channel)
 
 		case <-ticker.C:
 			if err := wsWrite(s.ws, websocket.PingMessage, nil); err != nil {

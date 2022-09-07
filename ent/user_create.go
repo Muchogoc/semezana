@@ -10,10 +10,10 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Muchogoc/semezana/ent/channel"
 	"github.com/Muchogoc/semezana/ent/device"
 	"github.com/Muchogoc/semezana/ent/message"
 	"github.com/Muchogoc/semezana/ent/subscription"
-	"github.com/Muchogoc/semezana/ent/topic"
 	"github.com/Muchogoc/semezana/ent/user"
 	"github.com/google/uuid"
 )
@@ -23,6 +23,12 @@ type UserCreate struct {
 	config
 	mutation *UserMutation
 	hooks    []Hook
+}
+
+// SetName sets the "name" field.
+func (uc *UserCreate) SetName(s string) *UserCreate {
+	uc.mutation.SetName(s)
+	return uc
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -79,30 +85,6 @@ func (uc *UserCreate) SetNillableLastSeen(t *time.Time) *UserCreate {
 	return uc
 }
 
-// SetAccess sets the "access" field.
-func (uc *UserCreate) SetAccess(m map[string]interface{}) *UserCreate {
-	uc.mutation.SetAccess(m)
-	return uc
-}
-
-// SetPublic sets the "public" field.
-func (uc *UserCreate) SetPublic(m map[string]interface{}) *UserCreate {
-	uc.mutation.SetPublic(m)
-	return uc
-}
-
-// SetTrusted sets the "trusted" field.
-func (uc *UserCreate) SetTrusted(m map[string]interface{}) *UserCreate {
-	uc.mutation.SetTrusted(m)
-	return uc
-}
-
-// SetTags sets the "tags" field.
-func (uc *UserCreate) SetTags(m map[string]interface{}) *UserCreate {
-	uc.mutation.SetTags(m)
-	return uc
-}
-
 // SetID sets the "id" field.
 func (uc *UserCreate) SetID(u uuid.UUID) *UserCreate {
 	uc.mutation.SetID(u)
@@ -115,21 +97,6 @@ func (uc *UserCreate) SetNillableID(u *uuid.UUID) *UserCreate {
 		uc.SetID(*u)
 	}
 	return uc
-}
-
-// AddSubscriptionIDs adds the "subscriptions" edge to the Subscription entity by IDs.
-func (uc *UserCreate) AddSubscriptionIDs(ids ...uuid.UUID) *UserCreate {
-	uc.mutation.AddSubscriptionIDs(ids...)
-	return uc
-}
-
-// AddSubscriptions adds the "subscriptions" edges to the Subscription entity.
-func (uc *UserCreate) AddSubscriptions(s ...*Subscription) *UserCreate {
-	ids := make([]uuid.UUID, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return uc.AddSubscriptionIDs(ids...)
 }
 
 // AddMessageIDs adds the "messages" edge to the Message entity by IDs.
@@ -147,19 +114,19 @@ func (uc *UserCreate) AddMessages(m ...*Message) *UserCreate {
 	return uc.AddMessageIDs(ids...)
 }
 
-// AddTopicIDs adds the "topics" edge to the Topic entity by IDs.
-func (uc *UserCreate) AddTopicIDs(ids ...uuid.UUID) *UserCreate {
-	uc.mutation.AddTopicIDs(ids...)
+// AddRecipientMessageIDs adds the "recipient_messages" edge to the Message entity by IDs.
+func (uc *UserCreate) AddRecipientMessageIDs(ids ...uuid.UUID) *UserCreate {
+	uc.mutation.AddRecipientMessageIDs(ids...)
 	return uc
 }
 
-// AddTopics adds the "topics" edges to the Topic entity.
-func (uc *UserCreate) AddTopics(t ...*Topic) *UserCreate {
-	ids := make([]uuid.UUID, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+// AddRecipientMessages adds the "recipient_messages" edges to the Message entity.
+func (uc *UserCreate) AddRecipientMessages(m ...*Message) *UserCreate {
+	ids := make([]uuid.UUID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
 	}
-	return uc.AddTopicIDs(ids...)
+	return uc.AddRecipientMessageIDs(ids...)
 }
 
 // AddDeviceIDs adds the "devices" edge to the Device entity by IDs.
@@ -175,6 +142,36 @@ func (uc *UserCreate) AddDevices(d ...*Device) *UserCreate {
 		ids[i] = d[i].ID
 	}
 	return uc.AddDeviceIDs(ids...)
+}
+
+// AddChannelIDs adds the "channels" edge to the Channel entity by IDs.
+func (uc *UserCreate) AddChannelIDs(ids ...uuid.UUID) *UserCreate {
+	uc.mutation.AddChannelIDs(ids...)
+	return uc
+}
+
+// AddChannels adds the "channels" edges to the Channel entity.
+func (uc *UserCreate) AddChannels(c ...*Channel) *UserCreate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uc.AddChannelIDs(ids...)
+}
+
+// AddSubscriptionIDs adds the "subscriptions" edge to the Subscription entity by IDs.
+func (uc *UserCreate) AddSubscriptionIDs(ids ...uuid.UUID) *UserCreate {
+	uc.mutation.AddSubscriptionIDs(ids...)
+	return uc
+}
+
+// AddSubscriptions adds the "subscriptions" edges to the Subscription entity.
+func (uc *UserCreate) AddSubscriptions(s ...*Subscription) *UserCreate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return uc.AddSubscriptionIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -270,6 +267,9 @@ func (uc *UserCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (uc *UserCreate) check() error {
+	if _, ok := uc.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "User.name"`)}
+	}
 	if _, ok := uc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "User.created_at"`)}
 	}
@@ -318,6 +318,14 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
+	if value, ok := uc.mutation.Name(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldName,
+		})
+		_node.Name = value
+	}
 	if value, ok := uc.mutation.CreatedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
@@ -358,57 +366,6 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		})
 		_node.LastSeen = value
 	}
-	if value, ok := uc.mutation.Access(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: user.FieldAccess,
-		})
-		_node.Access = value
-	}
-	if value, ok := uc.mutation.Public(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: user.FieldPublic,
-		})
-		_node.Public = value
-	}
-	if value, ok := uc.mutation.Trusted(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: user.FieldTrusted,
-		})
-		_node.Trusted = value
-	}
-	if value, ok := uc.mutation.Tags(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: user.FieldTags,
-		})
-		_node.Tags = value
-	}
-	if nodes := uc.mutation.SubscriptionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.SubscriptionsTable,
-			Columns: []string{user.SubscriptionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: subscription.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
 	if nodes := uc.mutation.MessagesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -428,17 +385,17 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := uc.mutation.TopicsIDs(); len(nodes) > 0 {
+	if nodes := uc.mutation.RecipientMessagesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   user.TopicsTable,
-			Columns: user.TopicsPrimaryKey,
+			Table:   user.RecipientMessagesTable,
+			Columns: user.RecipientMessagesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeUUID,
-					Column: topic.FieldID,
+					Column: message.FieldID,
 				},
 			},
 		}
@@ -458,6 +415,51 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeUUID,
 					Column: device.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.ChannelsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ChannelsTable,
+			Columns: user.ChannelsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: channel.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		createE := &SubscriptionCreate{config: uc.config, mutation: newSubscriptionMutation(uc.config, OpCreate)}
+		createE.defaults()
+		_, specE := createE.createSpec()
+		edge.Target.Fields = specE.Fields
+		if specE.ID.Value != nil {
+			edge.Target.Fields = append(edge.Target.Fields, specE.ID)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.SubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.SubscriptionsTable,
+			Columns: []string{user.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: subscription.FieldID,
 				},
 			},
 		}

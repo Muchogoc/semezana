@@ -9,9 +9,10 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/Muchogoc/semezana/ent/channel"
 	"github.com/Muchogoc/semezana/ent/message"
-	"github.com/Muchogoc/semezana/ent/topic"
 	"github.com/Muchogoc/semezana/ent/user"
+	"github.com/Muchogoc/semezana/semezana/models"
 	"github.com/google/uuid"
 )
 
@@ -20,18 +21,18 @@ type Message struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
-	// TopicID holds the value of the "topic_id" field.
-	TopicID uuid.UUID `json:"topic_id,omitempty"`
+	// ChannelID holds the value of the "channel_id" field.
+	ChannelID uuid.UUID `json:"channel_id,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Sequence holds the value of the "sequence" field.
 	Sequence int `json:"sequence,omitempty"`
-	// The message data
-	Content map[string]interface{} `json:"content,omitempty"`
 	// The message header
 	Header map[string]interface{} `json:"header,omitempty"`
+	// The message data
+	Content models.MessageContent `json:"content,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the MessageQuery when eager-loading is set.
 	Edges         MessageEdges `json:"edges"`
@@ -40,39 +41,61 @@ type Message struct {
 
 // MessageEdges holds the relations/edges for other nodes in the graph.
 type MessageEdges struct {
-	// Topic holds the value of the topic edge.
-	Topic *Topic `json:"topic,omitempty"`
-	// Sender holds the value of the sender edge.
-	Sender *User `json:"sender,omitempty"`
+	// Author holds the value of the author edge.
+	Author *User `json:"author,omitempty"`
+	// Channel holds the value of the channel edge.
+	Channel *Channel `json:"channel,omitempty"`
+	// MessageRecipients holds the value of the message_recipients edge.
+	MessageRecipients []*User `json:"message_recipients,omitempty"`
+	// Recipients holds the value of the recipients edge.
+	Recipients []*Recipient `json:"recipients,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [4]bool
 }
 
-// TopicOrErr returns the Topic value or an error if the edge
+// AuthorOrErr returns the Author value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e MessageEdges) TopicOrErr() (*Topic, error) {
+func (e MessageEdges) AuthorOrErr() (*User, error) {
 	if e.loadedTypes[0] {
-		if e.Topic == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: topic.Label}
-		}
-		return e.Topic, nil
-	}
-	return nil, &NotLoadedError{edge: "topic"}
-}
-
-// SenderOrErr returns the Sender value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e MessageEdges) SenderOrErr() (*User, error) {
-	if e.loadedTypes[1] {
-		if e.Sender == nil {
+		if e.Author == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: user.Label}
 		}
-		return e.Sender, nil
+		return e.Author, nil
 	}
-	return nil, &NotLoadedError{edge: "sender"}
+	return nil, &NotLoadedError{edge: "author"}
+}
+
+// ChannelOrErr returns the Channel value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e MessageEdges) ChannelOrErr() (*Channel, error) {
+	if e.loadedTypes[1] {
+		if e.Channel == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: channel.Label}
+		}
+		return e.Channel, nil
+	}
+	return nil, &NotLoadedError{edge: "channel"}
+}
+
+// MessageRecipientsOrErr returns the MessageRecipients value or an error if the edge
+// was not loaded in eager-loading.
+func (e MessageEdges) MessageRecipientsOrErr() ([]*User, error) {
+	if e.loadedTypes[2] {
+		return e.MessageRecipients, nil
+	}
+	return nil, &NotLoadedError{edge: "message_recipients"}
+}
+
+// RecipientsOrErr returns the Recipients value or an error if the edge
+// was not loaded in eager-loading.
+func (e MessageEdges) RecipientsOrErr() ([]*Recipient, error) {
+	if e.loadedTypes[3] {
+		return e.Recipients, nil
+	}
+	return nil, &NotLoadedError{edge: "recipients"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -80,13 +103,13 @@ func (*Message) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case message.FieldContent, message.FieldHeader:
+		case message.FieldHeader, message.FieldContent:
 			values[i] = new([]byte)
 		case message.FieldSequence:
 			values[i] = new(sql.NullInt64)
 		case message.FieldCreatedAt, message.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case message.FieldID, message.FieldTopicID:
+		case message.FieldID, message.FieldChannelID:
 			values[i] = new(uuid.UUID)
 		case message.ForeignKeys[0]: // user_messages
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
@@ -111,11 +134,11 @@ func (m *Message) assignValues(columns []string, values []interface{}) error {
 			} else if value != nil {
 				m.ID = *value
 			}
-		case message.FieldTopicID:
+		case message.FieldChannelID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field topic_id", values[i])
+				return fmt.Errorf("unexpected type %T for field channel_id", values[i])
 			} else if value != nil {
-				m.TopicID = *value
+				m.ChannelID = *value
 			}
 		case message.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -135,20 +158,20 @@ func (m *Message) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				m.Sequence = int(value.Int64)
 			}
-		case message.FieldContent:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field content", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &m.Content); err != nil {
-					return fmt.Errorf("unmarshal field content: %w", err)
-				}
-			}
 		case message.FieldHeader:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field header", values[i])
 			} else if value != nil && len(*value) > 0 {
 				if err := json.Unmarshal(*value, &m.Header); err != nil {
 					return fmt.Errorf("unmarshal field header: %w", err)
+				}
+			}
+		case message.FieldContent:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field content", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &m.Content); err != nil {
+					return fmt.Errorf("unmarshal field content: %w", err)
 				}
 			}
 		case message.ForeignKeys[0]:
@@ -163,14 +186,24 @@ func (m *Message) assignValues(columns []string, values []interface{}) error {
 	return nil
 }
 
-// QueryTopic queries the "topic" edge of the Message entity.
-func (m *Message) QueryTopic() *TopicQuery {
-	return (&MessageClient{config: m.config}).QueryTopic(m)
+// QueryAuthor queries the "author" edge of the Message entity.
+func (m *Message) QueryAuthor() *UserQuery {
+	return (&MessageClient{config: m.config}).QueryAuthor(m)
 }
 
-// QuerySender queries the "sender" edge of the Message entity.
-func (m *Message) QuerySender() *UserQuery {
-	return (&MessageClient{config: m.config}).QuerySender(m)
+// QueryChannel queries the "channel" edge of the Message entity.
+func (m *Message) QueryChannel() *ChannelQuery {
+	return (&MessageClient{config: m.config}).QueryChannel(m)
+}
+
+// QueryMessageRecipients queries the "message_recipients" edge of the Message entity.
+func (m *Message) QueryMessageRecipients() *UserQuery {
+	return (&MessageClient{config: m.config}).QueryMessageRecipients(m)
+}
+
+// QueryRecipients queries the "recipients" edge of the Message entity.
+func (m *Message) QueryRecipients() *RecipientQuery {
+	return (&MessageClient{config: m.config}).QueryRecipients(m)
 }
 
 // Update returns a builder for updating this Message.
@@ -196,8 +229,8 @@ func (m *Message) String() string {
 	var builder strings.Builder
 	builder.WriteString("Message(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", m.ID))
-	builder.WriteString("topic_id=")
-	builder.WriteString(fmt.Sprintf("%v", m.TopicID))
+	builder.WriteString("channel_id=")
+	builder.WriteString(fmt.Sprintf("%v", m.ChannelID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(m.CreatedAt.Format(time.ANSIC))
@@ -208,11 +241,11 @@ func (m *Message) String() string {
 	builder.WriteString("sequence=")
 	builder.WriteString(fmt.Sprintf("%v", m.Sequence))
 	builder.WriteString(", ")
-	builder.WriteString("content=")
-	builder.WriteString(fmt.Sprintf("%v", m.Content))
-	builder.WriteString(", ")
 	builder.WriteString("header=")
 	builder.WriteString(fmt.Sprintf("%v", m.Header))
+	builder.WriteString(", ")
+	builder.WriteString("content=")
+	builder.WriteString(fmt.Sprintf("%v", m.Content))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -3,8 +3,6 @@
 package subscription
 
 import (
-	"time"
-
 	"github.com/google/uuid"
 )
 
@@ -13,43 +11,43 @@ const (
 	Label = "subscription"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldCreatedAt holds the string denoting the created_at field in the database.
-	FieldCreatedAt = "created_at"
-	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
-	FieldUpdatedAt = "updated_at"
-	// FieldTopicID holds the string denoting the topic_id field in the database.
-	FieldTopicID = "topic_id"
+	// FieldChannelID holds the string denoting the channel_id field in the database.
+	FieldChannelID = "channel_id"
 	// FieldUserID holds the string denoting the user_id field in the database.
 	FieldUserID = "user_id"
-	// EdgeSubscriber holds the string denoting the subscriber edge name in mutations.
-	EdgeSubscriber = "subscriber"
-	// EdgeTopic holds the string denoting the topic edge name in mutations.
-	EdgeTopic = "topic"
+	// FieldRole holds the string denoting the role field in the database.
+	FieldRole = "role"
+	// FieldStatus holds the string denoting the status field in the database.
+	FieldStatus = "status"
+	// EdgeUser holds the string denoting the user edge name in mutations.
+	EdgeUser = "user"
+	// EdgeChannel holds the string denoting the channel edge name in mutations.
+	EdgeChannel = "channel"
 	// Table holds the table name of the subscription in the database.
 	Table = "subscriptions"
-	// SubscriberTable is the table that holds the subscriber relation/edge.
-	SubscriberTable = "subscriptions"
-	// SubscriberInverseTable is the table name for the User entity.
+	// UserTable is the table that holds the user relation/edge.
+	UserTable = "subscriptions"
+	// UserInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
-	SubscriberInverseTable = "users"
-	// SubscriberColumn is the table column denoting the subscriber relation/edge.
-	SubscriberColumn = "user_id"
-	// TopicTable is the table that holds the topic relation/edge.
-	TopicTable = "subscriptions"
-	// TopicInverseTable is the table name for the Topic entity.
-	// It exists in this package in order to avoid circular dependency with the "topic" package.
-	TopicInverseTable = "topics"
-	// TopicColumn is the table column denoting the topic relation/edge.
-	TopicColumn = "topic_id"
+	UserInverseTable = "users"
+	// UserColumn is the table column denoting the user relation/edge.
+	UserColumn = "user_id"
+	// ChannelTable is the table that holds the channel relation/edge.
+	ChannelTable = "subscriptions"
+	// ChannelInverseTable is the table name for the Channel entity.
+	// It exists in this package in order to avoid circular dependency with the "channel" package.
+	ChannelInverseTable = "channels"
+	// ChannelColumn is the table column denoting the channel relation/edge.
+	ChannelColumn = "channel_id"
 )
 
 // Columns holds all SQL columns for subscription fields.
 var Columns = []string{
 	FieldID,
-	FieldCreatedAt,
-	FieldUpdatedAt,
-	FieldTopicID,
+	FieldChannelID,
 	FieldUserID,
+	FieldRole,
+	FieldStatus,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -63,12 +61,6 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
-	DefaultCreatedAt func() time.Time
-	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
-	DefaultUpdatedAt time.Time
-	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
-	UpdateDefaultUpdatedAt func() time.Time
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )

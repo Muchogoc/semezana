@@ -6,12 +6,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Muchogoc/semezana/ent/channel"
 	"github.com/Muchogoc/semezana/ent/subscription"
-	"github.com/Muchogoc/semezana/ent/topic"
 	"github.com/Muchogoc/semezana/ent/user"
 	"github.com/google/uuid"
 )
@@ -23,43 +22,27 @@ type SubscriptionCreate struct {
 	hooks    []Hook
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (sc *SubscriptionCreate) SetCreatedAt(t time.Time) *SubscriptionCreate {
-	sc.mutation.SetCreatedAt(t)
-	return sc
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (sc *SubscriptionCreate) SetNillableCreatedAt(t *time.Time) *SubscriptionCreate {
-	if t != nil {
-		sc.SetCreatedAt(*t)
-	}
-	return sc
-}
-
-// SetUpdatedAt sets the "updated_at" field.
-func (sc *SubscriptionCreate) SetUpdatedAt(t time.Time) *SubscriptionCreate {
-	sc.mutation.SetUpdatedAt(t)
-	return sc
-}
-
-// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (sc *SubscriptionCreate) SetNillableUpdatedAt(t *time.Time) *SubscriptionCreate {
-	if t != nil {
-		sc.SetUpdatedAt(*t)
-	}
-	return sc
-}
-
-// SetTopicID sets the "topic_id" field.
-func (sc *SubscriptionCreate) SetTopicID(u uuid.UUID) *SubscriptionCreate {
-	sc.mutation.SetTopicID(u)
+// SetChannelID sets the "channel_id" field.
+func (sc *SubscriptionCreate) SetChannelID(u uuid.UUID) *SubscriptionCreate {
+	sc.mutation.SetChannelID(u)
 	return sc
 }
 
 // SetUserID sets the "user_id" field.
 func (sc *SubscriptionCreate) SetUserID(u uuid.UUID) *SubscriptionCreate {
 	sc.mutation.SetUserID(u)
+	return sc
+}
+
+// SetRole sets the "role" field.
+func (sc *SubscriptionCreate) SetRole(s string) *SubscriptionCreate {
+	sc.mutation.SetRole(s)
+	return sc
+}
+
+// SetStatus sets the "status" field.
+func (sc *SubscriptionCreate) SetStatus(s string) *SubscriptionCreate {
+	sc.mutation.SetStatus(s)
 	return sc
 }
 
@@ -77,20 +60,14 @@ func (sc *SubscriptionCreate) SetNillableID(u *uuid.UUID) *SubscriptionCreate {
 	return sc
 }
 
-// SetSubscriberID sets the "subscriber" edge to the User entity by ID.
-func (sc *SubscriptionCreate) SetSubscriberID(id uuid.UUID) *SubscriptionCreate {
-	sc.mutation.SetSubscriberID(id)
-	return sc
+// SetUser sets the "user" edge to the User entity.
+func (sc *SubscriptionCreate) SetUser(u *User) *SubscriptionCreate {
+	return sc.SetUserID(u.ID)
 }
 
-// SetSubscriber sets the "subscriber" edge to the User entity.
-func (sc *SubscriptionCreate) SetSubscriber(u *User) *SubscriptionCreate {
-	return sc.SetSubscriberID(u.ID)
-}
-
-// SetTopic sets the "topic" edge to the Topic entity.
-func (sc *SubscriptionCreate) SetTopic(t *Topic) *SubscriptionCreate {
-	return sc.SetTopicID(t.ID)
+// SetChannel sets the "channel" edge to the Channel entity.
+func (sc *SubscriptionCreate) SetChannel(c *Channel) *SubscriptionCreate {
+	return sc.SetChannelID(c.ID)
 }
 
 // Mutation returns the SubscriptionMutation object of the builder.
@@ -170,14 +147,6 @@ func (sc *SubscriptionCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (sc *SubscriptionCreate) defaults() {
-	if _, ok := sc.mutation.CreatedAt(); !ok {
-		v := subscription.DefaultCreatedAt()
-		sc.mutation.SetCreatedAt(v)
-	}
-	if _, ok := sc.mutation.UpdatedAt(); !ok {
-		v := subscription.DefaultUpdatedAt
-		sc.mutation.SetUpdatedAt(v)
-	}
 	if _, ok := sc.mutation.ID(); !ok {
 		v := subscription.DefaultID()
 		sc.mutation.SetID(v)
@@ -186,23 +155,23 @@ func (sc *SubscriptionCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (sc *SubscriptionCreate) check() error {
-	if _, ok := sc.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Subscription.created_at"`)}
-	}
-	if _, ok := sc.mutation.UpdatedAt(); !ok {
-		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Subscription.updated_at"`)}
-	}
-	if _, ok := sc.mutation.TopicID(); !ok {
-		return &ValidationError{Name: "topic_id", err: errors.New(`ent: missing required field "Subscription.topic_id"`)}
+	if _, ok := sc.mutation.ChannelID(); !ok {
+		return &ValidationError{Name: "channel_id", err: errors.New(`ent: missing required field "Subscription.channel_id"`)}
 	}
 	if _, ok := sc.mutation.UserID(); !ok {
 		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "Subscription.user_id"`)}
 	}
-	if _, ok := sc.mutation.SubscriberID(); !ok {
-		return &ValidationError{Name: "subscriber", err: errors.New(`ent: missing required edge "Subscription.subscriber"`)}
+	if _, ok := sc.mutation.Role(); !ok {
+		return &ValidationError{Name: "role", err: errors.New(`ent: missing required field "Subscription.role"`)}
 	}
-	if _, ok := sc.mutation.TopicID(); !ok {
-		return &ValidationError{Name: "topic", err: errors.New(`ent: missing required edge "Subscription.topic"`)}
+	if _, ok := sc.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Subscription.status"`)}
+	}
+	if _, ok := sc.mutation.UserID(); !ok {
+		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "Subscription.user"`)}
+	}
+	if _, ok := sc.mutation.ChannelID(); !ok {
+		return &ValidationError{Name: "channel", err: errors.New(`ent: missing required edge "Subscription.channel"`)}
 	}
 	return nil
 }
@@ -240,28 +209,28 @@ func (sc *SubscriptionCreate) createSpec() (*Subscription, *sqlgraph.CreateSpec)
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
-	if value, ok := sc.mutation.CreatedAt(); ok {
+	if value, ok := sc.mutation.Role(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeString,
 			Value:  value,
-			Column: subscription.FieldCreatedAt,
+			Column: subscription.FieldRole,
 		})
-		_node.CreatedAt = value
+		_node.Role = value
 	}
-	if value, ok := sc.mutation.UpdatedAt(); ok {
+	if value, ok := sc.mutation.Status(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeString,
 			Value:  value,
-			Column: subscription.FieldUpdatedAt,
+			Column: subscription.FieldStatus,
 		})
-		_node.UpdatedAt = value
+		_node.Status = value
 	}
-	if nodes := sc.mutation.SubscriberIDs(); len(nodes) > 0 {
+	if nodes := sc.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   subscription.SubscriberTable,
-			Columns: []string{subscription.SubscriberColumn},
+			Inverse: false,
+			Table:   subscription.UserTable,
+			Columns: []string{subscription.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -276,24 +245,24 @@ func (sc *SubscriptionCreate) createSpec() (*Subscription, *sqlgraph.CreateSpec)
 		_node.UserID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := sc.mutation.TopicIDs(); len(nodes) > 0 {
+	if nodes := sc.mutation.ChannelIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   subscription.TopicTable,
-			Columns: []string{subscription.TopicColumn},
+			Inverse: false,
+			Table:   subscription.ChannelTable,
+			Columns: []string{subscription.ChannelColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeUUID,
-					Column: topic.FieldID,
+					Column: channel.FieldID,
 				},
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.TopicID = nodes[0]
+		_node.ChannelID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

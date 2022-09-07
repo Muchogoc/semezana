@@ -10,10 +10,11 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/Muchogoc/semezana/ent/channel"
 	"github.com/Muchogoc/semezana/ent/device"
 	"github.com/Muchogoc/semezana/ent/message"
+	"github.com/Muchogoc/semezana/ent/recipient"
 	"github.com/Muchogoc/semezana/ent/subscription"
-	"github.com/Muchogoc/semezana/ent/topic"
 	"github.com/Muchogoc/semezana/ent/user"
 )
 
@@ -35,10 +36,11 @@ type OrderFunc func(*sql.Selector)
 // columnChecker returns a function indicates if the column exists in the given column.
 func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
+		channel.Table:      channel.ValidColumn,
 		device.Table:       device.ValidColumn,
 		message.Table:      message.ValidColumn,
+		recipient.Table:    recipient.ValidColumn,
 		subscription.Table: subscription.ValidColumn,
-		topic.Table:        topic.ValidColumn,
 		user.Table:         user.ValidColumn,
 	}
 	check, ok := checks[table]

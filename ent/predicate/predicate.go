@@ -6,17 +6,20 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Channel is the predicate function for channel builders.
+type Channel func(*sql.Selector)
+
 // Device is the predicate function for device builders.
 type Device func(*sql.Selector)
 
 // Message is the predicate function for message builders.
 type Message func(*sql.Selector)
 
+// Recipient is the predicate function for recipient builders.
+type Recipient func(*sql.Selector)
+
 // Subscription is the predicate function for subscription builders.
 type Subscription func(*sql.Selector)
-
-// Topic is the predicate function for topic builders.
-type Topic func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)

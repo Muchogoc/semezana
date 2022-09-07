@@ -13,6 +13,8 @@ const (
 	Label = "user"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldName holds the string denoting the name field in the database.
+	FieldName = "name"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -23,31 +25,20 @@ const (
 	FieldStateAt = "state_at"
 	// FieldLastSeen holds the string denoting the last_seen field in the database.
 	FieldLastSeen = "last_seen"
-	// FieldAccess holds the string denoting the access field in the database.
-	FieldAccess = "access"
-	// FieldPublic holds the string denoting the public field in the database.
-	FieldPublic = "public"
-	// FieldTrusted holds the string denoting the trusted field in the database.
-	FieldTrusted = "trusted"
-	// FieldTags holds the string denoting the tags field in the database.
-	FieldTags = "tags"
-	// EdgeSubscriptions holds the string denoting the subscriptions edge name in mutations.
-	EdgeSubscriptions = "subscriptions"
 	// EdgeMessages holds the string denoting the messages edge name in mutations.
 	EdgeMessages = "messages"
-	// EdgeTopics holds the string denoting the topics edge name in mutations.
-	EdgeTopics = "topics"
+	// EdgeRecipientMessages holds the string denoting the recipient_messages edge name in mutations.
+	EdgeRecipientMessages = "recipient_messages"
 	// EdgeDevices holds the string denoting the devices edge name in mutations.
 	EdgeDevices = "devices"
+	// EdgeChannels holds the string denoting the channels edge name in mutations.
+	EdgeChannels = "channels"
+	// EdgeRecipients holds the string denoting the recipients edge name in mutations.
+	EdgeRecipients = "recipients"
+	// EdgeSubscriptions holds the string denoting the subscriptions edge name in mutations.
+	EdgeSubscriptions = "subscriptions"
 	// Table holds the table name of the user in the database.
 	Table = "users"
-	// SubscriptionsTable is the table that holds the subscriptions relation/edge.
-	SubscriptionsTable = "subscriptions"
-	// SubscriptionsInverseTable is the table name for the Subscription entity.
-	// It exists in this package in order to avoid circular dependency with the "subscription" package.
-	SubscriptionsInverseTable = "subscriptions"
-	// SubscriptionsColumn is the table column denoting the subscriptions relation/edge.
-	SubscriptionsColumn = "user_id"
 	// MessagesTable is the table that holds the messages relation/edge.
 	MessagesTable = "messages"
 	// MessagesInverseTable is the table name for the Message entity.
@@ -55,11 +46,11 @@ const (
 	MessagesInverseTable = "messages"
 	// MessagesColumn is the table column denoting the messages relation/edge.
 	MessagesColumn = "user_messages"
-	// TopicsTable is the table that holds the topics relation/edge. The primary key declared below.
-	TopicsTable = "user_topics"
-	// TopicsInverseTable is the table name for the Topic entity.
-	// It exists in this package in order to avoid circular dependency with the "topic" package.
-	TopicsInverseTable = "topics"
+	// RecipientMessagesTable is the table that holds the recipient_messages relation/edge. The primary key declared below.
+	RecipientMessagesTable = "recipients"
+	// RecipientMessagesInverseTable is the table name for the Message entity.
+	// It exists in this package in order to avoid circular dependency with the "message" package.
+	RecipientMessagesInverseTable = "messages"
 	// DevicesTable is the table that holds the devices relation/edge.
 	DevicesTable = "devices"
 	// DevicesInverseTable is the table name for the Device entity.
@@ -67,26 +58,45 @@ const (
 	DevicesInverseTable = "devices"
 	// DevicesColumn is the table column denoting the devices relation/edge.
 	DevicesColumn = "user_devices"
+	// ChannelsTable is the table that holds the channels relation/edge. The primary key declared below.
+	ChannelsTable = "subscriptions"
+	// ChannelsInverseTable is the table name for the Channel entity.
+	// It exists in this package in order to avoid circular dependency with the "channel" package.
+	ChannelsInverseTable = "channels"
+	// RecipientsTable is the table that holds the recipients relation/edge.
+	RecipientsTable = "recipients"
+	// RecipientsInverseTable is the table name for the Recipient entity.
+	// It exists in this package in order to avoid circular dependency with the "recipient" package.
+	RecipientsInverseTable = "recipients"
+	// RecipientsColumn is the table column denoting the recipients relation/edge.
+	RecipientsColumn = "user_id"
+	// SubscriptionsTable is the table that holds the subscriptions relation/edge.
+	SubscriptionsTable = "subscriptions"
+	// SubscriptionsInverseTable is the table name for the Subscription entity.
+	// It exists in this package in order to avoid circular dependency with the "subscription" package.
+	SubscriptionsInverseTable = "subscriptions"
+	// SubscriptionsColumn is the table column denoting the subscriptions relation/edge.
+	SubscriptionsColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
 var Columns = []string{
 	FieldID,
+	FieldName,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldState,
 	FieldStateAt,
 	FieldLastSeen,
-	FieldAccess,
-	FieldPublic,
-	FieldTrusted,
-	FieldTags,
 }
 
 var (
-	// TopicsPrimaryKey and TopicsColumn2 are the table columns denoting the
-	// primary key for the topics relation (M2M).
-	TopicsPrimaryKey = []string{"user_id", "topic_id"}
+	// RecipientMessagesPrimaryKey and RecipientMessagesColumn2 are the table columns denoting the
+	// primary key for the recipient_messages relation (M2M).
+	RecipientMessagesPrimaryKey = []string{"user_id", "message_id"}
+	// ChannelsPrimaryKey and ChannelsColumn2 are the table columns denoting the
+	// primary key for the channels relation (M2M).
+	ChannelsPrimaryKey = []string{"user_id", "channel_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).

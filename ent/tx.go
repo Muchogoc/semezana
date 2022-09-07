@@ -12,14 +12,16 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// Channel is the client for interacting with the Channel builders.
+	Channel *ChannelClient
 	// Device is the client for interacting with the Device builders.
 	Device *DeviceClient
 	// Message is the client for interacting with the Message builders.
 	Message *MessageClient
+	// Recipient is the client for interacting with the Recipient builders.
+	Recipient *RecipientClient
 	// Subscription is the client for interacting with the Subscription builders.
 	Subscription *SubscriptionClient
-	// Topic is the client for interacting with the Topic builders.
-	Topic *TopicClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 
@@ -157,10 +159,11 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.Channel = NewChannelClient(tx.config)
 	tx.Device = NewDeviceClient(tx.config)
 	tx.Message = NewMessageClient(tx.config)
+	tx.Recipient = NewRecipientClient(tx.config)
 	tx.Subscription = NewSubscriptionClient(tx.config)
-	tx.Topic = NewTopicClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }
 
@@ -171,7 +174,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Device.QueryXXX(), the query will be executed
+// applies a query, for example: Channel.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

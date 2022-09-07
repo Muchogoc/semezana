@@ -1,12 +1,9 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"entgo.io/ent/schema/index"
 	"github.com/google/uuid"
 )
 
@@ -20,24 +17,23 @@ func (Subscription) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.New()).
 			Default(uuid.New),
-		field.Time("created_at").Default(time.Now),
-		field.Time("updated_at").Default(time.Now()).UpdateDefault(time.Now),
-		field.UUID("topic_id", uuid.New()),
+		field.UUID("channel_id", uuid.New()),
 		field.UUID("user_id", uuid.New()),
+		field.String("role").Comment("Authorizations in channel"),
+		field.String("status").Comment("Access to channel"),
 	}
 }
 
 // Edges of the Subscription.
 func (Subscription) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("subscriber", User.Type).Ref("subscriptions").Field("user_id").Unique().Required(),
-		edge.From("topic", Topic.Type).Ref("subscriptions").Field("topic_id").Unique().Required(),
-	}
-}
-
-// Indexes of the Subscription.
-func (Subscription) Indexes() []ent.Index {
-	return []ent.Index{
-		index.Fields("user_id", "topic_id").Unique(),
+		edge.To("user", User.Type).
+			Unique().
+			Required().
+			Field("user_id"),
+		edge.To("channel", Channel.Type).
+			Unique().
+			Required().
+			Field("channel_id"),
 	}
 }

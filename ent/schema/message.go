@@ -7,6 +7,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
+	"github.com/Muchogoc/semezana/semezana/models"
 	"github.com/google/uuid"
 )
 
@@ -22,31 +23,41 @@ func (Message) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.New()).
 			Default(uuid.New),
-		field.UUID("topic_id", uuid.New()),
+		field.UUID("channel_id", uuid.New()),
 		field.Time("created_at").
 			Default(time.Now),
 		field.Time("updated_at").
 			Default(time.Now()).
 			UpdateDefault(time.Now),
 		field.Int("sequence"),
-		field.JSON("content", map[string]interface{}{}).
-			Comment("The message data"),
 		field.JSON("header", map[string]interface{}{}).
 			Comment("The message header"),
+		field.JSON("content", models.MessageContent{}).
+			Comment("The message data"),
 	}
 }
 
 // Edges of the Message.
 func (Message) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("topic", Topic.Type).Ref("messages").Field("topic_id").Unique().Required(),
-		edge.From("sender", User.Type).Ref("messages").Unique(),
+		edge.From("author", User.Type).
+			Ref("messages").
+			Unique().
+			Required(),
+		edge.From("channel", Channel.Type).
+			Ref("messages").
+			Field("channel_id").
+			Unique().
+			Required(),
+		edge.From("message_recipients", User.Type).
+			Ref("recipient_messages").
+			Through("recipients", Recipient.Type),
 	}
 }
 
 // Indexes of the Subscription.
 func (Message) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("topic_id", "sequence").Unique(),
+		index.Fields("channel_id", "sequence").Unique(),
 	}
 }

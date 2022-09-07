@@ -3,8 +3,6 @@
 package subscription
 
 import (
-	"time"
-
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/Muchogoc/semezana/ent/predicate"
@@ -82,24 +80,10 @@ func IDLTE(id uuid.UUID) predicate.Subscription {
 	})
 }
 
-// CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
-func CreatedAt(v time.Time) predicate.Subscription {
+// ChannelID applies equality check predicate on the "channel_id" field. It's identical to ChannelIDEQ.
+func ChannelID(v uuid.UUID) predicate.Subscription {
 	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldCreatedAt), v))
-	})
-}
-
-// UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
-func UpdatedAt(v time.Time) predicate.Subscription {
-	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldUpdatedAt), v))
-	})
-}
-
-// TopicID applies equality check predicate on the "topic_id" field. It's identical to TopicIDEQ.
-func TopicID(v uuid.UUID) predicate.Subscription {
-	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldTopicID), v))
+		s.Where(sql.EQ(s.C(FieldChannelID), v))
 	})
 }
 
@@ -110,167 +94,53 @@ func UserID(v uuid.UUID) predicate.Subscription {
 	})
 }
 
-// CreatedAtEQ applies the EQ predicate on the "created_at" field.
-func CreatedAtEQ(v time.Time) predicate.Subscription {
+// Role applies equality check predicate on the "role" field. It's identical to RoleEQ.
+func Role(v string) predicate.Subscription {
 	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldCreatedAt), v))
+		s.Where(sql.EQ(s.C(FieldRole), v))
 	})
 }
 
-// CreatedAtNEQ applies the NEQ predicate on the "created_at" field.
-func CreatedAtNEQ(v time.Time) predicate.Subscription {
+// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
+func Status(v string) predicate.Subscription {
 	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldCreatedAt), v))
+		s.Where(sql.EQ(s.C(FieldStatus), v))
 	})
 }
 
-// CreatedAtIn applies the In predicate on the "created_at" field.
-func CreatedAtIn(vs ...time.Time) predicate.Subscription {
+// ChannelIDEQ applies the EQ predicate on the "channel_id" field.
+func ChannelIDEQ(v uuid.UUID) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldChannelID), v))
+	})
+}
+
+// ChannelIDNEQ applies the NEQ predicate on the "channel_id" field.
+func ChannelIDNEQ(v uuid.UUID) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldChannelID), v))
+	})
+}
+
+// ChannelIDIn applies the In predicate on the "channel_id" field.
+func ChannelIDIn(vs ...uuid.UUID) predicate.Subscription {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
 	}
 	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.In(s.C(FieldCreatedAt), v...))
+		s.Where(sql.In(s.C(FieldChannelID), v...))
 	})
 }
 
-// CreatedAtNotIn applies the NotIn predicate on the "created_at" field.
-func CreatedAtNotIn(vs ...time.Time) predicate.Subscription {
+// ChannelIDNotIn applies the NotIn predicate on the "channel_id" field.
+func ChannelIDNotIn(vs ...uuid.UUID) predicate.Subscription {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
 	}
 	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.NotIn(s.C(FieldCreatedAt), v...))
-	})
-}
-
-// CreatedAtGT applies the GT predicate on the "created_at" field.
-func CreatedAtGT(v time.Time) predicate.Subscription {
-	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldCreatedAt), v))
-	})
-}
-
-// CreatedAtGTE applies the GTE predicate on the "created_at" field.
-func CreatedAtGTE(v time.Time) predicate.Subscription {
-	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldCreatedAt), v))
-	})
-}
-
-// CreatedAtLT applies the LT predicate on the "created_at" field.
-func CreatedAtLT(v time.Time) predicate.Subscription {
-	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldCreatedAt), v))
-	})
-}
-
-// CreatedAtLTE applies the LTE predicate on the "created_at" field.
-func CreatedAtLTE(v time.Time) predicate.Subscription {
-	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldCreatedAt), v))
-	})
-}
-
-// UpdatedAtEQ applies the EQ predicate on the "updated_at" field.
-func UpdatedAtEQ(v time.Time) predicate.Subscription {
-	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldUpdatedAt), v))
-	})
-}
-
-// UpdatedAtNEQ applies the NEQ predicate on the "updated_at" field.
-func UpdatedAtNEQ(v time.Time) predicate.Subscription {
-	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldUpdatedAt), v))
-	})
-}
-
-// UpdatedAtIn applies the In predicate on the "updated_at" field.
-func UpdatedAtIn(vs ...time.Time) predicate.Subscription {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.In(s.C(FieldUpdatedAt), v...))
-	})
-}
-
-// UpdatedAtNotIn applies the NotIn predicate on the "updated_at" field.
-func UpdatedAtNotIn(vs ...time.Time) predicate.Subscription {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.NotIn(s.C(FieldUpdatedAt), v...))
-	})
-}
-
-// UpdatedAtGT applies the GT predicate on the "updated_at" field.
-func UpdatedAtGT(v time.Time) predicate.Subscription {
-	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldUpdatedAt), v))
-	})
-}
-
-// UpdatedAtGTE applies the GTE predicate on the "updated_at" field.
-func UpdatedAtGTE(v time.Time) predicate.Subscription {
-	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldUpdatedAt), v))
-	})
-}
-
-// UpdatedAtLT applies the LT predicate on the "updated_at" field.
-func UpdatedAtLT(v time.Time) predicate.Subscription {
-	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldUpdatedAt), v))
-	})
-}
-
-// UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
-func UpdatedAtLTE(v time.Time) predicate.Subscription {
-	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldUpdatedAt), v))
-	})
-}
-
-// TopicIDEQ applies the EQ predicate on the "topic_id" field.
-func TopicIDEQ(v uuid.UUID) predicate.Subscription {
-	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldTopicID), v))
-	})
-}
-
-// TopicIDNEQ applies the NEQ predicate on the "topic_id" field.
-func TopicIDNEQ(v uuid.UUID) predicate.Subscription {
-	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldTopicID), v))
-	})
-}
-
-// TopicIDIn applies the In predicate on the "topic_id" field.
-func TopicIDIn(vs ...uuid.UUID) predicate.Subscription {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.In(s.C(FieldTopicID), v...))
-	})
-}
-
-// TopicIDNotIn applies the NotIn predicate on the "topic_id" field.
-func TopicIDNotIn(vs ...uuid.UUID) predicate.Subscription {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Subscription(func(s *sql.Selector) {
-		s.Where(sql.NotIn(s.C(FieldTopicID), v...))
+		s.Where(sql.NotIn(s.C(FieldChannelID), v...))
 	})
 }
 
@@ -310,25 +180,223 @@ func UserIDNotIn(vs ...uuid.UUID) predicate.Subscription {
 	})
 }
 
-// HasSubscriber applies the HasEdge predicate on the "subscriber" edge.
-func HasSubscriber() predicate.Subscription {
+// RoleEQ applies the EQ predicate on the "role" field.
+func RoleEQ(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldRole), v))
+	})
+}
+
+// RoleNEQ applies the NEQ predicate on the "role" field.
+func RoleNEQ(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldRole), v))
+	})
+}
+
+// RoleIn applies the In predicate on the "role" field.
+func RoleIn(vs ...string) predicate.Subscription {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.In(s.C(FieldRole), v...))
+	})
+}
+
+// RoleNotIn applies the NotIn predicate on the "role" field.
+func RoleNotIn(vs ...string) predicate.Subscription {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.NotIn(s.C(FieldRole), v...))
+	})
+}
+
+// RoleGT applies the GT predicate on the "role" field.
+func RoleGT(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldRole), v))
+	})
+}
+
+// RoleGTE applies the GTE predicate on the "role" field.
+func RoleGTE(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldRole), v))
+	})
+}
+
+// RoleLT applies the LT predicate on the "role" field.
+func RoleLT(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldRole), v))
+	})
+}
+
+// RoleLTE applies the LTE predicate on the "role" field.
+func RoleLTE(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldRole), v))
+	})
+}
+
+// RoleContains applies the Contains predicate on the "role" field.
+func RoleContains(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldRole), v))
+	})
+}
+
+// RoleHasPrefix applies the HasPrefix predicate on the "role" field.
+func RoleHasPrefix(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldRole), v))
+	})
+}
+
+// RoleHasSuffix applies the HasSuffix predicate on the "role" field.
+func RoleHasSuffix(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldRole), v))
+	})
+}
+
+// RoleEqualFold applies the EqualFold predicate on the "role" field.
+func RoleEqualFold(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldRole), v))
+	})
+}
+
+// RoleContainsFold applies the ContainsFold predicate on the "role" field.
+func RoleContainsFold(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldRole), v))
+	})
+}
+
+// StatusEQ applies the EQ predicate on the "status" field.
+func StatusEQ(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldStatus), v))
+	})
+}
+
+// StatusNEQ applies the NEQ predicate on the "status" field.
+func StatusNEQ(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldStatus), v))
+	})
+}
+
+// StatusIn applies the In predicate on the "status" field.
+func StatusIn(vs ...string) predicate.Subscription {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.In(s.C(FieldStatus), v...))
+	})
+}
+
+// StatusNotIn applies the NotIn predicate on the "status" field.
+func StatusNotIn(vs ...string) predicate.Subscription {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.NotIn(s.C(FieldStatus), v...))
+	})
+}
+
+// StatusGT applies the GT predicate on the "status" field.
+func StatusGT(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldStatus), v))
+	})
+}
+
+// StatusGTE applies the GTE predicate on the "status" field.
+func StatusGTE(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldStatus), v))
+	})
+}
+
+// StatusLT applies the LT predicate on the "status" field.
+func StatusLT(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldStatus), v))
+	})
+}
+
+// StatusLTE applies the LTE predicate on the "status" field.
+func StatusLTE(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldStatus), v))
+	})
+}
+
+// StatusContains applies the Contains predicate on the "status" field.
+func StatusContains(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldStatus), v))
+	})
+}
+
+// StatusHasPrefix applies the HasPrefix predicate on the "status" field.
+func StatusHasPrefix(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldStatus), v))
+	})
+}
+
+// StatusHasSuffix applies the HasSuffix predicate on the "status" field.
+func StatusHasSuffix(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldStatus), v))
+	})
+}
+
+// StatusEqualFold applies the EqualFold predicate on the "status" field.
+func StatusEqualFold(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldStatus), v))
+	})
+}
+
+// StatusContainsFold applies the ContainsFold predicate on the "status" field.
+func StatusContainsFold(v string) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldStatus), v))
+	})
+}
+
+// HasUser applies the HasEdge predicate on the "user" edge.
+func HasUser() predicate.Subscription {
 	return predicate.Subscription(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(SubscriberTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, SubscriberTable, SubscriberColumn),
+			sqlgraph.To(UserTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, UserTable, UserColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasSubscriberWith applies the HasEdge predicate on the "subscriber" edge with a given conditions (other predicates).
-func HasSubscriberWith(preds ...predicate.User) predicate.Subscription {
+// HasUserWith applies the HasEdge predicate on the "user" edge with a given conditions (other predicates).
+func HasUserWith(preds ...predicate.User) predicate.Subscription {
 	return predicate.Subscription(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(SubscriberInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, SubscriberTable, SubscriberColumn),
+			sqlgraph.To(UserInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, UserTable, UserColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
@@ -338,25 +406,25 @@ func HasSubscriberWith(preds ...predicate.User) predicate.Subscription {
 	})
 }
 
-// HasTopic applies the HasEdge predicate on the "topic" edge.
-func HasTopic() predicate.Subscription {
+// HasChannel applies the HasEdge predicate on the "channel" edge.
+func HasChannel() predicate.Subscription {
 	return predicate.Subscription(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(TopicTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, TopicTable, TopicColumn),
+			sqlgraph.To(ChannelTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, ChannelTable, ChannelColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasTopicWith applies the HasEdge predicate on the "topic" edge with a given conditions (other predicates).
-func HasTopicWith(preds ...predicate.Topic) predicate.Subscription {
+// HasChannelWith applies the HasEdge predicate on the "channel" edge with a given conditions (other predicates).
+func HasChannelWith(preds ...predicate.Channel) predicate.Subscription {
 	return predicate.Subscription(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(TopicInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, TopicTable, TopicColumn),
+			sqlgraph.To(ChannelInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, ChannelTable, ChannelColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

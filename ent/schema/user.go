@@ -19,24 +19,23 @@ func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.New()).
 			Default(uuid.New),
+		field.String("name"),
 		field.Time("created_at").Default(time.Now),
 		field.Time("updated_at").Default(time.Now()).UpdateDefault(time.Now),
 		field.String("state"),
 		field.Time("state_at"),
 		field.Time("last_seen").Optional(),
-		field.JSON("access", map[string]interface{}{}).Optional(),
-		field.JSON("public", map[string]interface{}{}).Optional(),
-		field.JSON("trusted", map[string]interface{}{}).Optional(),
-		field.JSON("tags", map[string]interface{}{}).Optional(),
 	}
 }
 
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("subscriptions", Subscription.Type),
 		edge.To("messages", Message.Type),
-		edge.To("topics", Topic.Type),
+		edge.To("recipient_messages", Message.Type).
+			Through("recipients", Recipient.Type),
 		edge.To("devices", Device.Type),
+		edge.To("channels", Channel.Type).
+			Through("subscriptions", Subscription.Type),
 	}
 }

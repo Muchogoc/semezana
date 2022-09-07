@@ -3,7 +3,6 @@
 package ent
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -18,6 +17,8 @@ type User struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -28,14 +29,6 @@ type User struct {
 	StateAt time.Time `json:"state_at,omitempty"`
 	// LastSeen holds the value of the "last_seen" field.
 	LastSeen time.Time `json:"last_seen,omitempty"`
-	// Access holds the value of the "access" field.
-	Access map[string]interface{} `json:"access,omitempty"`
-	// Public holds the value of the "public" field.
-	Public map[string]interface{} `json:"public,omitempty"`
-	// Trusted holds the value of the "trusted" field.
-	Trusted map[string]interface{} `json:"trusted,omitempty"`
-	// Tags holds the value of the "tags" field.
-	Tags map[string]interface{} `json:"tags,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges UserEdges `json:"edges"`
@@ -43,53 +36,75 @@ type User struct {
 
 // UserEdges holds the relations/edges for other nodes in the graph.
 type UserEdges struct {
-	// Subscriptions holds the value of the subscriptions edge.
-	Subscriptions []*Subscription `json:"subscriptions,omitempty"`
 	// Messages holds the value of the messages edge.
 	Messages []*Message `json:"messages,omitempty"`
-	// Topics holds the value of the topics edge.
-	Topics []*Topic `json:"topics,omitempty"`
+	// RecipientMessages holds the value of the recipient_messages edge.
+	RecipientMessages []*Message `json:"recipient_messages,omitempty"`
 	// Devices holds the value of the devices edge.
 	Devices []*Device `json:"devices,omitempty"`
+	// Channels holds the value of the channels edge.
+	Channels []*Channel `json:"channels,omitempty"`
+	// Recipients holds the value of the recipients edge.
+	Recipients []*Recipient `json:"recipients,omitempty"`
+	// Subscriptions holds the value of the subscriptions edge.
+	Subscriptions []*Subscription `json:"subscriptions,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
-}
-
-// SubscriptionsOrErr returns the Subscriptions value or an error if the edge
-// was not loaded in eager-loading.
-func (e UserEdges) SubscriptionsOrErr() ([]*Subscription, error) {
-	if e.loadedTypes[0] {
-		return e.Subscriptions, nil
-	}
-	return nil, &NotLoadedError{edge: "subscriptions"}
+	loadedTypes [6]bool
 }
 
 // MessagesOrErr returns the Messages value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) MessagesOrErr() ([]*Message, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[0] {
 		return e.Messages, nil
 	}
 	return nil, &NotLoadedError{edge: "messages"}
 }
 
-// TopicsOrErr returns the Topics value or an error if the edge
+// RecipientMessagesOrErr returns the RecipientMessages value or an error if the edge
 // was not loaded in eager-loading.
-func (e UserEdges) TopicsOrErr() ([]*Topic, error) {
-	if e.loadedTypes[2] {
-		return e.Topics, nil
+func (e UserEdges) RecipientMessagesOrErr() ([]*Message, error) {
+	if e.loadedTypes[1] {
+		return e.RecipientMessages, nil
 	}
-	return nil, &NotLoadedError{edge: "topics"}
+	return nil, &NotLoadedError{edge: "recipient_messages"}
 }
 
 // DevicesOrErr returns the Devices value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) DevicesOrErr() ([]*Device, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[2] {
 		return e.Devices, nil
 	}
 	return nil, &NotLoadedError{edge: "devices"}
+}
+
+// ChannelsOrErr returns the Channels value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ChannelsOrErr() ([]*Channel, error) {
+	if e.loadedTypes[3] {
+		return e.Channels, nil
+	}
+	return nil, &NotLoadedError{edge: "channels"}
+}
+
+// RecipientsOrErr returns the Recipients value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) RecipientsOrErr() ([]*Recipient, error) {
+	if e.loadedTypes[4] {
+		return e.Recipients, nil
+	}
+	return nil, &NotLoadedError{edge: "recipients"}
+}
+
+// SubscriptionsOrErr returns the Subscriptions value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) SubscriptionsOrErr() ([]*Subscription, error) {
+	if e.loadedTypes[5] {
+		return e.Subscriptions, nil
+	}
+	return nil, &NotLoadedError{edge: "subscriptions"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -97,9 +112,7 @@ func (*User) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldAccess, user.FieldPublic, user.FieldTrusted, user.FieldTags:
-			values[i] = new([]byte)
-		case user.FieldState:
+		case user.FieldName, user.FieldState:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldStateAt, user.FieldLastSeen:
 			values[i] = new(sql.NullTime)
@@ -125,6 +138,12 @@ func (u *User) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
 				u.ID = *value
+			}
+		case user.FieldName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field name", values[i])
+			} else if value.Valid {
+				u.Name = value.String
 			}
 		case user.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -156,46 +175,9 @@ func (u *User) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				u.LastSeen = value.Time
 			}
-		case user.FieldAccess:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field access", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &u.Access); err != nil {
-					return fmt.Errorf("unmarshal field access: %w", err)
-				}
-			}
-		case user.FieldPublic:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field public", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &u.Public); err != nil {
-					return fmt.Errorf("unmarshal field public: %w", err)
-				}
-			}
-		case user.FieldTrusted:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field trusted", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &u.Trusted); err != nil {
-					return fmt.Errorf("unmarshal field trusted: %w", err)
-				}
-			}
-		case user.FieldTags:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field tags", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &u.Tags); err != nil {
-					return fmt.Errorf("unmarshal field tags: %w", err)
-				}
-			}
 		}
 	}
 	return nil
-}
-
-// QuerySubscriptions queries the "subscriptions" edge of the User entity.
-func (u *User) QuerySubscriptions() *SubscriptionQuery {
-	return (&UserClient{config: u.config}).QuerySubscriptions(u)
 }
 
 // QueryMessages queries the "messages" edge of the User entity.
@@ -203,14 +185,29 @@ func (u *User) QueryMessages() *MessageQuery {
 	return (&UserClient{config: u.config}).QueryMessages(u)
 }
 
-// QueryTopics queries the "topics" edge of the User entity.
-func (u *User) QueryTopics() *TopicQuery {
-	return (&UserClient{config: u.config}).QueryTopics(u)
+// QueryRecipientMessages queries the "recipient_messages" edge of the User entity.
+func (u *User) QueryRecipientMessages() *MessageQuery {
+	return (&UserClient{config: u.config}).QueryRecipientMessages(u)
 }
 
 // QueryDevices queries the "devices" edge of the User entity.
 func (u *User) QueryDevices() *DeviceQuery {
 	return (&UserClient{config: u.config}).QueryDevices(u)
+}
+
+// QueryChannels queries the "channels" edge of the User entity.
+func (u *User) QueryChannels() *ChannelQuery {
+	return (&UserClient{config: u.config}).QueryChannels(u)
+}
+
+// QueryRecipients queries the "recipients" edge of the User entity.
+func (u *User) QueryRecipients() *RecipientQuery {
+	return (&UserClient{config: u.config}).QueryRecipients(u)
+}
+
+// QuerySubscriptions queries the "subscriptions" edge of the User entity.
+func (u *User) QuerySubscriptions() *SubscriptionQuery {
+	return (&UserClient{config: u.config}).QuerySubscriptions(u)
 }
 
 // Update returns a builder for updating this User.
@@ -236,6 +233,9 @@ func (u *User) String() string {
 	var builder strings.Builder
 	builder.WriteString("User(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", u.ID))
+	builder.WriteString("name=")
+	builder.WriteString(u.Name)
+	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(u.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
@@ -250,18 +250,6 @@ func (u *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("last_seen=")
 	builder.WriteString(u.LastSeen.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("access=")
-	builder.WriteString(fmt.Sprintf("%v", u.Access))
-	builder.WriteString(", ")
-	builder.WriteString("public=")
-	builder.WriteString(fmt.Sprintf("%v", u.Public))
-	builder.WriteString(", ")
-	builder.WriteString("trusted=")
-	builder.WriteString(fmt.Sprintf("%v", u.Trusted))
-	builder.WriteString(", ")
-	builder.WriteString("tags=")
-	builder.WriteString(fmt.Sprintf("%v", u.Tags))
 	builder.WriteByte(')')
 	return builder.String()
 }

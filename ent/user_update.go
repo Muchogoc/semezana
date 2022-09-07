@@ -11,11 +11,11 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Muchogoc/semezana/ent/channel"
 	"github.com/Muchogoc/semezana/ent/device"
 	"github.com/Muchogoc/semezana/ent/message"
 	"github.com/Muchogoc/semezana/ent/predicate"
 	"github.com/Muchogoc/semezana/ent/subscription"
-	"github.com/Muchogoc/semezana/ent/topic"
 	"github.com/Muchogoc/semezana/ent/user"
 	"github.com/google/uuid"
 )
@@ -30,6 +30,12 @@ type UserUpdate struct {
 // Where appends a list predicates to the UserUpdate builder.
 func (uu *UserUpdate) Where(ps ...predicate.User) *UserUpdate {
 	uu.mutation.Where(ps...)
+	return uu
+}
+
+// SetName sets the "name" field.
+func (uu *UserUpdate) SetName(s string) *UserUpdate {
+	uu.mutation.SetName(s)
 	return uu
 }
 
@@ -85,69 +91,6 @@ func (uu *UserUpdate) ClearLastSeen() *UserUpdate {
 	return uu
 }
 
-// SetAccess sets the "access" field.
-func (uu *UserUpdate) SetAccess(m map[string]interface{}) *UserUpdate {
-	uu.mutation.SetAccess(m)
-	return uu
-}
-
-// ClearAccess clears the value of the "access" field.
-func (uu *UserUpdate) ClearAccess() *UserUpdate {
-	uu.mutation.ClearAccess()
-	return uu
-}
-
-// SetPublic sets the "public" field.
-func (uu *UserUpdate) SetPublic(m map[string]interface{}) *UserUpdate {
-	uu.mutation.SetPublic(m)
-	return uu
-}
-
-// ClearPublic clears the value of the "public" field.
-func (uu *UserUpdate) ClearPublic() *UserUpdate {
-	uu.mutation.ClearPublic()
-	return uu
-}
-
-// SetTrusted sets the "trusted" field.
-func (uu *UserUpdate) SetTrusted(m map[string]interface{}) *UserUpdate {
-	uu.mutation.SetTrusted(m)
-	return uu
-}
-
-// ClearTrusted clears the value of the "trusted" field.
-func (uu *UserUpdate) ClearTrusted() *UserUpdate {
-	uu.mutation.ClearTrusted()
-	return uu
-}
-
-// SetTags sets the "tags" field.
-func (uu *UserUpdate) SetTags(m map[string]interface{}) *UserUpdate {
-	uu.mutation.SetTags(m)
-	return uu
-}
-
-// ClearTags clears the value of the "tags" field.
-func (uu *UserUpdate) ClearTags() *UserUpdate {
-	uu.mutation.ClearTags()
-	return uu
-}
-
-// AddSubscriptionIDs adds the "subscriptions" edge to the Subscription entity by IDs.
-func (uu *UserUpdate) AddSubscriptionIDs(ids ...uuid.UUID) *UserUpdate {
-	uu.mutation.AddSubscriptionIDs(ids...)
-	return uu
-}
-
-// AddSubscriptions adds the "subscriptions" edges to the Subscription entity.
-func (uu *UserUpdate) AddSubscriptions(s ...*Subscription) *UserUpdate {
-	ids := make([]uuid.UUID, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return uu.AddSubscriptionIDs(ids...)
-}
-
 // AddMessageIDs adds the "messages" edge to the Message entity by IDs.
 func (uu *UserUpdate) AddMessageIDs(ids ...uuid.UUID) *UserUpdate {
 	uu.mutation.AddMessageIDs(ids...)
@@ -163,19 +106,19 @@ func (uu *UserUpdate) AddMessages(m ...*Message) *UserUpdate {
 	return uu.AddMessageIDs(ids...)
 }
 
-// AddTopicIDs adds the "topics" edge to the Topic entity by IDs.
-func (uu *UserUpdate) AddTopicIDs(ids ...uuid.UUID) *UserUpdate {
-	uu.mutation.AddTopicIDs(ids...)
+// AddRecipientMessageIDs adds the "recipient_messages" edge to the Message entity by IDs.
+func (uu *UserUpdate) AddRecipientMessageIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.AddRecipientMessageIDs(ids...)
 	return uu
 }
 
-// AddTopics adds the "topics" edges to the Topic entity.
-func (uu *UserUpdate) AddTopics(t ...*Topic) *UserUpdate {
-	ids := make([]uuid.UUID, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+// AddRecipientMessages adds the "recipient_messages" edges to the Message entity.
+func (uu *UserUpdate) AddRecipientMessages(m ...*Message) *UserUpdate {
+	ids := make([]uuid.UUID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
 	}
-	return uu.AddTopicIDs(ids...)
+	return uu.AddRecipientMessageIDs(ids...)
 }
 
 // AddDeviceIDs adds the "devices" edge to the Device entity by IDs.
@@ -193,30 +136,39 @@ func (uu *UserUpdate) AddDevices(d ...*Device) *UserUpdate {
 	return uu.AddDeviceIDs(ids...)
 }
 
-// Mutation returns the UserMutation object of the builder.
-func (uu *UserUpdate) Mutation() *UserMutation {
-	return uu.mutation
-}
-
-// ClearSubscriptions clears all "subscriptions" edges to the Subscription entity.
-func (uu *UserUpdate) ClearSubscriptions() *UserUpdate {
-	uu.mutation.ClearSubscriptions()
+// AddChannelIDs adds the "channels" edge to the Channel entity by IDs.
+func (uu *UserUpdate) AddChannelIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.AddChannelIDs(ids...)
 	return uu
 }
 
-// RemoveSubscriptionIDs removes the "subscriptions" edge to Subscription entities by IDs.
-func (uu *UserUpdate) RemoveSubscriptionIDs(ids ...uuid.UUID) *UserUpdate {
-	uu.mutation.RemoveSubscriptionIDs(ids...)
+// AddChannels adds the "channels" edges to the Channel entity.
+func (uu *UserUpdate) AddChannels(c ...*Channel) *UserUpdate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uu.AddChannelIDs(ids...)
+}
+
+// AddSubscriptionIDs adds the "subscriptions" edge to the Subscription entity by IDs.
+func (uu *UserUpdate) AddSubscriptionIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.AddSubscriptionIDs(ids...)
 	return uu
 }
 
-// RemoveSubscriptions removes "subscriptions" edges to Subscription entities.
-func (uu *UserUpdate) RemoveSubscriptions(s ...*Subscription) *UserUpdate {
+// AddSubscriptions adds the "subscriptions" edges to the Subscription entity.
+func (uu *UserUpdate) AddSubscriptions(s ...*Subscription) *UserUpdate {
 	ids := make([]uuid.UUID, len(s))
 	for i := range s {
 		ids[i] = s[i].ID
 	}
-	return uu.RemoveSubscriptionIDs(ids...)
+	return uu.AddSubscriptionIDs(ids...)
+}
+
+// Mutation returns the UserMutation object of the builder.
+func (uu *UserUpdate) Mutation() *UserMutation {
+	return uu.mutation
 }
 
 // ClearMessages clears all "messages" edges to the Message entity.
@@ -240,25 +192,25 @@ func (uu *UserUpdate) RemoveMessages(m ...*Message) *UserUpdate {
 	return uu.RemoveMessageIDs(ids...)
 }
 
-// ClearTopics clears all "topics" edges to the Topic entity.
-func (uu *UserUpdate) ClearTopics() *UserUpdate {
-	uu.mutation.ClearTopics()
+// ClearRecipientMessages clears all "recipient_messages" edges to the Message entity.
+func (uu *UserUpdate) ClearRecipientMessages() *UserUpdate {
+	uu.mutation.ClearRecipientMessages()
 	return uu
 }
 
-// RemoveTopicIDs removes the "topics" edge to Topic entities by IDs.
-func (uu *UserUpdate) RemoveTopicIDs(ids ...uuid.UUID) *UserUpdate {
-	uu.mutation.RemoveTopicIDs(ids...)
+// RemoveRecipientMessageIDs removes the "recipient_messages" edge to Message entities by IDs.
+func (uu *UserUpdate) RemoveRecipientMessageIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.RemoveRecipientMessageIDs(ids...)
 	return uu
 }
 
-// RemoveTopics removes "topics" edges to Topic entities.
-func (uu *UserUpdate) RemoveTopics(t ...*Topic) *UserUpdate {
-	ids := make([]uuid.UUID, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+// RemoveRecipientMessages removes "recipient_messages" edges to Message entities.
+func (uu *UserUpdate) RemoveRecipientMessages(m ...*Message) *UserUpdate {
+	ids := make([]uuid.UUID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
 	}
-	return uu.RemoveTopicIDs(ids...)
+	return uu.RemoveRecipientMessageIDs(ids...)
 }
 
 // ClearDevices clears all "devices" edges to the Device entity.
@@ -280,6 +232,48 @@ func (uu *UserUpdate) RemoveDevices(d ...*Device) *UserUpdate {
 		ids[i] = d[i].ID
 	}
 	return uu.RemoveDeviceIDs(ids...)
+}
+
+// ClearChannels clears all "channels" edges to the Channel entity.
+func (uu *UserUpdate) ClearChannels() *UserUpdate {
+	uu.mutation.ClearChannels()
+	return uu
+}
+
+// RemoveChannelIDs removes the "channels" edge to Channel entities by IDs.
+func (uu *UserUpdate) RemoveChannelIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.RemoveChannelIDs(ids...)
+	return uu
+}
+
+// RemoveChannels removes "channels" edges to Channel entities.
+func (uu *UserUpdate) RemoveChannels(c ...*Channel) *UserUpdate {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uu.RemoveChannelIDs(ids...)
+}
+
+// ClearSubscriptions clears all "subscriptions" edges to the Subscription entity.
+func (uu *UserUpdate) ClearSubscriptions() *UserUpdate {
+	uu.mutation.ClearSubscriptions()
+	return uu
+}
+
+// RemoveSubscriptionIDs removes the "subscriptions" edge to Subscription entities by IDs.
+func (uu *UserUpdate) RemoveSubscriptionIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.RemoveSubscriptionIDs(ids...)
+	return uu
+}
+
+// RemoveSubscriptions removes "subscriptions" edges to Subscription entities.
+func (uu *UserUpdate) RemoveSubscriptions(s ...*Subscription) *UserUpdate {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return uu.RemoveSubscriptionIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -363,6 +357,13 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := uu.mutation.Name(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldName,
+		})
+	}
 	if value, ok := uu.mutation.CreatedAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
@@ -403,112 +404,6 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Type:   field.TypeTime,
 			Column: user.FieldLastSeen,
 		})
-	}
-	if value, ok := uu.mutation.Access(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: user.FieldAccess,
-		})
-	}
-	if uu.mutation.AccessCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Column: user.FieldAccess,
-		})
-	}
-	if value, ok := uu.mutation.Public(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: user.FieldPublic,
-		})
-	}
-	if uu.mutation.PublicCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Column: user.FieldPublic,
-		})
-	}
-	if value, ok := uu.mutation.Trusted(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: user.FieldTrusted,
-		})
-	}
-	if uu.mutation.TrustedCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Column: user.FieldTrusted,
-		})
-	}
-	if value, ok := uu.mutation.Tags(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: user.FieldTags,
-		})
-	}
-	if uu.mutation.TagsCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Column: user.FieldTags,
-		})
-	}
-	if uu.mutation.SubscriptionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.SubscriptionsTable,
-			Columns: []string{user.SubscriptionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: subscription.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.RemovedSubscriptionsIDs(); len(nodes) > 0 && !uu.mutation.SubscriptionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.SubscriptionsTable,
-			Columns: []string{user.SubscriptionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: subscription.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.SubscriptionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.SubscriptionsTable,
-			Columns: []string{user.SubscriptionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: subscription.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if uu.mutation.MessagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -564,33 +459,33 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if uu.mutation.TopicsCleared() {
+	if uu.mutation.RecipientMessagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   user.TopicsTable,
-			Columns: user.TopicsPrimaryKey,
+			Table:   user.RecipientMessagesTable,
+			Columns: user.RecipientMessagesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeUUID,
-					Column: topic.FieldID,
+					Column: message.FieldID,
 				},
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uu.mutation.RemovedTopicsIDs(); len(nodes) > 0 && !uu.mutation.TopicsCleared() {
+	if nodes := uu.mutation.RemovedRecipientMessagesIDs(); len(nodes) > 0 && !uu.mutation.RecipientMessagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   user.TopicsTable,
-			Columns: user.TopicsPrimaryKey,
+			Table:   user.RecipientMessagesTable,
+			Columns: user.RecipientMessagesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeUUID,
-					Column: topic.FieldID,
+					Column: message.FieldID,
 				},
 			},
 		}
@@ -599,17 +494,17 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uu.mutation.TopicsIDs(); len(nodes) > 0 {
+	if nodes := uu.mutation.RecipientMessagesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   user.TopicsTable,
-			Columns: user.TopicsPrimaryKey,
+			Table:   user.RecipientMessagesTable,
+			Columns: user.RecipientMessagesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeUUID,
-					Column: topic.FieldID,
+					Column: message.FieldID,
 				},
 			},
 		}
@@ -672,6 +567,135 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.ChannelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ChannelsTable,
+			Columns: user.ChannelsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: channel.FieldID,
+				},
+			},
+		}
+		createE := &SubscriptionCreate{config: uu.config, mutation: newSubscriptionMutation(uu.config, OpCreate)}
+		createE.defaults()
+		_, specE := createE.createSpec()
+		edge.Target.Fields = specE.Fields
+		if specE.ID.Value != nil {
+			edge.Target.Fields = append(edge.Target.Fields, specE.ID)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedChannelsIDs(); len(nodes) > 0 && !uu.mutation.ChannelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ChannelsTable,
+			Columns: user.ChannelsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: channel.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		createE := &SubscriptionCreate{config: uu.config, mutation: newSubscriptionMutation(uu.config, OpCreate)}
+		createE.defaults()
+		_, specE := createE.createSpec()
+		edge.Target.Fields = specE.Fields
+		if specE.ID.Value != nil {
+			edge.Target.Fields = append(edge.Target.Fields, specE.ID)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.ChannelsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ChannelsTable,
+			Columns: user.ChannelsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: channel.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		createE := &SubscriptionCreate{config: uu.config, mutation: newSubscriptionMutation(uu.config, OpCreate)}
+		createE.defaults()
+		_, specE := createE.createSpec()
+		edge.Target.Fields = specE.Fields
+		if specE.ID.Value != nil {
+			edge.Target.Fields = append(edge.Target.Fields, specE.ID)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.SubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.SubscriptionsTable,
+			Columns: []string{user.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: subscription.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedSubscriptionsIDs(); len(nodes) > 0 && !uu.mutation.SubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.SubscriptionsTable,
+			Columns: []string{user.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: subscription.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.SubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.SubscriptionsTable,
+			Columns: []string{user.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: subscription.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -689,6 +713,12 @@ type UserUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *UserMutation
+}
+
+// SetName sets the "name" field.
+func (uuo *UserUpdateOne) SetName(s string) *UserUpdateOne {
+	uuo.mutation.SetName(s)
+	return uuo
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -743,69 +773,6 @@ func (uuo *UserUpdateOne) ClearLastSeen() *UserUpdateOne {
 	return uuo
 }
 
-// SetAccess sets the "access" field.
-func (uuo *UserUpdateOne) SetAccess(m map[string]interface{}) *UserUpdateOne {
-	uuo.mutation.SetAccess(m)
-	return uuo
-}
-
-// ClearAccess clears the value of the "access" field.
-func (uuo *UserUpdateOne) ClearAccess() *UserUpdateOne {
-	uuo.mutation.ClearAccess()
-	return uuo
-}
-
-// SetPublic sets the "public" field.
-func (uuo *UserUpdateOne) SetPublic(m map[string]interface{}) *UserUpdateOne {
-	uuo.mutation.SetPublic(m)
-	return uuo
-}
-
-// ClearPublic clears the value of the "public" field.
-func (uuo *UserUpdateOne) ClearPublic() *UserUpdateOne {
-	uuo.mutation.ClearPublic()
-	return uuo
-}
-
-// SetTrusted sets the "trusted" field.
-func (uuo *UserUpdateOne) SetTrusted(m map[string]interface{}) *UserUpdateOne {
-	uuo.mutation.SetTrusted(m)
-	return uuo
-}
-
-// ClearTrusted clears the value of the "trusted" field.
-func (uuo *UserUpdateOne) ClearTrusted() *UserUpdateOne {
-	uuo.mutation.ClearTrusted()
-	return uuo
-}
-
-// SetTags sets the "tags" field.
-func (uuo *UserUpdateOne) SetTags(m map[string]interface{}) *UserUpdateOne {
-	uuo.mutation.SetTags(m)
-	return uuo
-}
-
-// ClearTags clears the value of the "tags" field.
-func (uuo *UserUpdateOne) ClearTags() *UserUpdateOne {
-	uuo.mutation.ClearTags()
-	return uuo
-}
-
-// AddSubscriptionIDs adds the "subscriptions" edge to the Subscription entity by IDs.
-func (uuo *UserUpdateOne) AddSubscriptionIDs(ids ...uuid.UUID) *UserUpdateOne {
-	uuo.mutation.AddSubscriptionIDs(ids...)
-	return uuo
-}
-
-// AddSubscriptions adds the "subscriptions" edges to the Subscription entity.
-func (uuo *UserUpdateOne) AddSubscriptions(s ...*Subscription) *UserUpdateOne {
-	ids := make([]uuid.UUID, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
-	}
-	return uuo.AddSubscriptionIDs(ids...)
-}
-
 // AddMessageIDs adds the "messages" edge to the Message entity by IDs.
 func (uuo *UserUpdateOne) AddMessageIDs(ids ...uuid.UUID) *UserUpdateOne {
 	uuo.mutation.AddMessageIDs(ids...)
@@ -821,19 +788,19 @@ func (uuo *UserUpdateOne) AddMessages(m ...*Message) *UserUpdateOne {
 	return uuo.AddMessageIDs(ids...)
 }
 
-// AddTopicIDs adds the "topics" edge to the Topic entity by IDs.
-func (uuo *UserUpdateOne) AddTopicIDs(ids ...uuid.UUID) *UserUpdateOne {
-	uuo.mutation.AddTopicIDs(ids...)
+// AddRecipientMessageIDs adds the "recipient_messages" edge to the Message entity by IDs.
+func (uuo *UserUpdateOne) AddRecipientMessageIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.AddRecipientMessageIDs(ids...)
 	return uuo
 }
 
-// AddTopics adds the "topics" edges to the Topic entity.
-func (uuo *UserUpdateOne) AddTopics(t ...*Topic) *UserUpdateOne {
-	ids := make([]uuid.UUID, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+// AddRecipientMessages adds the "recipient_messages" edges to the Message entity.
+func (uuo *UserUpdateOne) AddRecipientMessages(m ...*Message) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
 	}
-	return uuo.AddTopicIDs(ids...)
+	return uuo.AddRecipientMessageIDs(ids...)
 }
 
 // AddDeviceIDs adds the "devices" edge to the Device entity by IDs.
@@ -851,30 +818,39 @@ func (uuo *UserUpdateOne) AddDevices(d ...*Device) *UserUpdateOne {
 	return uuo.AddDeviceIDs(ids...)
 }
 
-// Mutation returns the UserMutation object of the builder.
-func (uuo *UserUpdateOne) Mutation() *UserMutation {
-	return uuo.mutation
-}
-
-// ClearSubscriptions clears all "subscriptions" edges to the Subscription entity.
-func (uuo *UserUpdateOne) ClearSubscriptions() *UserUpdateOne {
-	uuo.mutation.ClearSubscriptions()
+// AddChannelIDs adds the "channels" edge to the Channel entity by IDs.
+func (uuo *UserUpdateOne) AddChannelIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.AddChannelIDs(ids...)
 	return uuo
 }
 
-// RemoveSubscriptionIDs removes the "subscriptions" edge to Subscription entities by IDs.
-func (uuo *UserUpdateOne) RemoveSubscriptionIDs(ids ...uuid.UUID) *UserUpdateOne {
-	uuo.mutation.RemoveSubscriptionIDs(ids...)
+// AddChannels adds the "channels" edges to the Channel entity.
+func (uuo *UserUpdateOne) AddChannels(c ...*Channel) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uuo.AddChannelIDs(ids...)
+}
+
+// AddSubscriptionIDs adds the "subscriptions" edge to the Subscription entity by IDs.
+func (uuo *UserUpdateOne) AddSubscriptionIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.AddSubscriptionIDs(ids...)
 	return uuo
 }
 
-// RemoveSubscriptions removes "subscriptions" edges to Subscription entities.
-func (uuo *UserUpdateOne) RemoveSubscriptions(s ...*Subscription) *UserUpdateOne {
+// AddSubscriptions adds the "subscriptions" edges to the Subscription entity.
+func (uuo *UserUpdateOne) AddSubscriptions(s ...*Subscription) *UserUpdateOne {
 	ids := make([]uuid.UUID, len(s))
 	for i := range s {
 		ids[i] = s[i].ID
 	}
-	return uuo.RemoveSubscriptionIDs(ids...)
+	return uuo.AddSubscriptionIDs(ids...)
+}
+
+// Mutation returns the UserMutation object of the builder.
+func (uuo *UserUpdateOne) Mutation() *UserMutation {
+	return uuo.mutation
 }
 
 // ClearMessages clears all "messages" edges to the Message entity.
@@ -898,25 +874,25 @@ func (uuo *UserUpdateOne) RemoveMessages(m ...*Message) *UserUpdateOne {
 	return uuo.RemoveMessageIDs(ids...)
 }
 
-// ClearTopics clears all "topics" edges to the Topic entity.
-func (uuo *UserUpdateOne) ClearTopics() *UserUpdateOne {
-	uuo.mutation.ClearTopics()
+// ClearRecipientMessages clears all "recipient_messages" edges to the Message entity.
+func (uuo *UserUpdateOne) ClearRecipientMessages() *UserUpdateOne {
+	uuo.mutation.ClearRecipientMessages()
 	return uuo
 }
 
-// RemoveTopicIDs removes the "topics" edge to Topic entities by IDs.
-func (uuo *UserUpdateOne) RemoveTopicIDs(ids ...uuid.UUID) *UserUpdateOne {
-	uuo.mutation.RemoveTopicIDs(ids...)
+// RemoveRecipientMessageIDs removes the "recipient_messages" edge to Message entities by IDs.
+func (uuo *UserUpdateOne) RemoveRecipientMessageIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.RemoveRecipientMessageIDs(ids...)
 	return uuo
 }
 
-// RemoveTopics removes "topics" edges to Topic entities.
-func (uuo *UserUpdateOne) RemoveTopics(t ...*Topic) *UserUpdateOne {
-	ids := make([]uuid.UUID, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+// RemoveRecipientMessages removes "recipient_messages" edges to Message entities.
+func (uuo *UserUpdateOne) RemoveRecipientMessages(m ...*Message) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
 	}
-	return uuo.RemoveTopicIDs(ids...)
+	return uuo.RemoveRecipientMessageIDs(ids...)
 }
 
 // ClearDevices clears all "devices" edges to the Device entity.
@@ -938,6 +914,48 @@ func (uuo *UserUpdateOne) RemoveDevices(d ...*Device) *UserUpdateOne {
 		ids[i] = d[i].ID
 	}
 	return uuo.RemoveDeviceIDs(ids...)
+}
+
+// ClearChannels clears all "channels" edges to the Channel entity.
+func (uuo *UserUpdateOne) ClearChannels() *UserUpdateOne {
+	uuo.mutation.ClearChannels()
+	return uuo
+}
+
+// RemoveChannelIDs removes the "channels" edge to Channel entities by IDs.
+func (uuo *UserUpdateOne) RemoveChannelIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.RemoveChannelIDs(ids...)
+	return uuo
+}
+
+// RemoveChannels removes "channels" edges to Channel entities.
+func (uuo *UserUpdateOne) RemoveChannels(c ...*Channel) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return uuo.RemoveChannelIDs(ids...)
+}
+
+// ClearSubscriptions clears all "subscriptions" edges to the Subscription entity.
+func (uuo *UserUpdateOne) ClearSubscriptions() *UserUpdateOne {
+	uuo.mutation.ClearSubscriptions()
+	return uuo
+}
+
+// RemoveSubscriptionIDs removes the "subscriptions" edge to Subscription entities by IDs.
+func (uuo *UserUpdateOne) RemoveSubscriptionIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.RemoveSubscriptionIDs(ids...)
+	return uuo
+}
+
+// RemoveSubscriptions removes "subscriptions" edges to Subscription entities.
+func (uuo *UserUpdateOne) RemoveSubscriptions(s ...*Subscription) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return uuo.RemoveSubscriptionIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -1051,6 +1069,13 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			}
 		}
 	}
+	if value, ok := uuo.mutation.Name(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldName,
+		})
+	}
 	if value, ok := uuo.mutation.CreatedAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
@@ -1091,112 +1116,6 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Type:   field.TypeTime,
 			Column: user.FieldLastSeen,
 		})
-	}
-	if value, ok := uuo.mutation.Access(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: user.FieldAccess,
-		})
-	}
-	if uuo.mutation.AccessCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Column: user.FieldAccess,
-		})
-	}
-	if value, ok := uuo.mutation.Public(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: user.FieldPublic,
-		})
-	}
-	if uuo.mutation.PublicCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Column: user.FieldPublic,
-		})
-	}
-	if value, ok := uuo.mutation.Trusted(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: user.FieldTrusted,
-		})
-	}
-	if uuo.mutation.TrustedCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Column: user.FieldTrusted,
-		})
-	}
-	if value, ok := uuo.mutation.Tags(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: user.FieldTags,
-		})
-	}
-	if uuo.mutation.TagsCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Column: user.FieldTags,
-		})
-	}
-	if uuo.mutation.SubscriptionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.SubscriptionsTable,
-			Columns: []string{user.SubscriptionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: subscription.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.RemovedSubscriptionsIDs(); len(nodes) > 0 && !uuo.mutation.SubscriptionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.SubscriptionsTable,
-			Columns: []string{user.SubscriptionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: subscription.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.SubscriptionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.SubscriptionsTable,
-			Columns: []string{user.SubscriptionsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: subscription.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if uuo.mutation.MessagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1252,33 +1171,33 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if uuo.mutation.TopicsCleared() {
+	if uuo.mutation.RecipientMessagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   user.TopicsTable,
-			Columns: user.TopicsPrimaryKey,
+			Table:   user.RecipientMessagesTable,
+			Columns: user.RecipientMessagesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeUUID,
-					Column: topic.FieldID,
+					Column: message.FieldID,
 				},
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uuo.mutation.RemovedTopicsIDs(); len(nodes) > 0 && !uuo.mutation.TopicsCleared() {
+	if nodes := uuo.mutation.RemovedRecipientMessagesIDs(); len(nodes) > 0 && !uuo.mutation.RecipientMessagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   user.TopicsTable,
-			Columns: user.TopicsPrimaryKey,
+			Table:   user.RecipientMessagesTable,
+			Columns: user.RecipientMessagesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeUUID,
-					Column: topic.FieldID,
+					Column: message.FieldID,
 				},
 			},
 		}
@@ -1287,17 +1206,17 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uuo.mutation.TopicsIDs(); len(nodes) > 0 {
+	if nodes := uuo.mutation.RecipientMessagesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   user.TopicsTable,
-			Columns: user.TopicsPrimaryKey,
+			Table:   user.RecipientMessagesTable,
+			Columns: user.RecipientMessagesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeUUID,
-					Column: topic.FieldID,
+					Column: message.FieldID,
 				},
 			},
 		}
@@ -1352,6 +1271,135 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeUUID,
 					Column: device.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.ChannelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ChannelsTable,
+			Columns: user.ChannelsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: channel.FieldID,
+				},
+			},
+		}
+		createE := &SubscriptionCreate{config: uuo.config, mutation: newSubscriptionMutation(uuo.config, OpCreate)}
+		createE.defaults()
+		_, specE := createE.createSpec()
+		edge.Target.Fields = specE.Fields
+		if specE.ID.Value != nil {
+			edge.Target.Fields = append(edge.Target.Fields, specE.ID)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedChannelsIDs(); len(nodes) > 0 && !uuo.mutation.ChannelsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ChannelsTable,
+			Columns: user.ChannelsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: channel.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		createE := &SubscriptionCreate{config: uuo.config, mutation: newSubscriptionMutation(uuo.config, OpCreate)}
+		createE.defaults()
+		_, specE := createE.createSpec()
+		edge.Target.Fields = specE.Fields
+		if specE.ID.Value != nil {
+			edge.Target.Fields = append(edge.Target.Fields, specE.ID)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.ChannelsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   user.ChannelsTable,
+			Columns: user.ChannelsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: channel.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		createE := &SubscriptionCreate{config: uuo.config, mutation: newSubscriptionMutation(uuo.config, OpCreate)}
+		createE.defaults()
+		_, specE := createE.createSpec()
+		edge.Target.Fields = specE.Fields
+		if specE.ID.Value != nil {
+			edge.Target.Fields = append(edge.Target.Fields, specE.ID)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.SubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.SubscriptionsTable,
+			Columns: []string{user.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: subscription.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedSubscriptionsIDs(); len(nodes) > 0 && !uuo.mutation.SubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.SubscriptionsTable,
+			Columns: []string{user.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: subscription.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.SubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.SubscriptionsTable,
+			Columns: []string{user.SubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: subscription.FieldID,
 				},
 			},
 		}

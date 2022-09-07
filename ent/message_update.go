@@ -11,10 +11,11 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Muchogoc/semezana/ent/channel"
 	"github.com/Muchogoc/semezana/ent/message"
 	"github.com/Muchogoc/semezana/ent/predicate"
-	"github.com/Muchogoc/semezana/ent/topic"
 	"github.com/Muchogoc/semezana/ent/user"
+	"github.com/Muchogoc/semezana/semezana/models"
 	"github.com/google/uuid"
 )
 
@@ -31,9 +32,9 @@ func (mu *MessageUpdate) Where(ps ...predicate.Message) *MessageUpdate {
 	return mu
 }
 
-// SetTopicID sets the "topic_id" field.
-func (mu *MessageUpdate) SetTopicID(u uuid.UUID) *MessageUpdate {
-	mu.mutation.SetTopicID(u)
+// SetChannelID sets the "channel_id" field.
+func (mu *MessageUpdate) SetChannelID(u uuid.UUID) *MessageUpdate {
+	mu.mutation.SetChannelID(u)
 	return mu
 }
 
@@ -70,40 +71,47 @@ func (mu *MessageUpdate) AddSequence(i int) *MessageUpdate {
 	return mu
 }
 
-// SetContent sets the "content" field.
-func (mu *MessageUpdate) SetContent(m map[string]interface{}) *MessageUpdate {
-	mu.mutation.SetContent(m)
-	return mu
-}
-
 // SetHeader sets the "header" field.
 func (mu *MessageUpdate) SetHeader(m map[string]interface{}) *MessageUpdate {
 	mu.mutation.SetHeader(m)
 	return mu
 }
 
-// SetTopic sets the "topic" edge to the Topic entity.
-func (mu *MessageUpdate) SetTopic(t *Topic) *MessageUpdate {
-	return mu.SetTopicID(t.ID)
-}
-
-// SetSenderID sets the "sender" edge to the User entity by ID.
-func (mu *MessageUpdate) SetSenderID(id uuid.UUID) *MessageUpdate {
-	mu.mutation.SetSenderID(id)
+// SetContent sets the "content" field.
+func (mu *MessageUpdate) SetContent(mc models.MessageContent) *MessageUpdate {
+	mu.mutation.SetContent(mc)
 	return mu
 }
 
-// SetNillableSenderID sets the "sender" edge to the User entity by ID if the given value is not nil.
-func (mu *MessageUpdate) SetNillableSenderID(id *uuid.UUID) *MessageUpdate {
-	if id != nil {
-		mu = mu.SetSenderID(*id)
+// SetAuthorID sets the "author" edge to the User entity by ID.
+func (mu *MessageUpdate) SetAuthorID(id uuid.UUID) *MessageUpdate {
+	mu.mutation.SetAuthorID(id)
+	return mu
+}
+
+// SetAuthor sets the "author" edge to the User entity.
+func (mu *MessageUpdate) SetAuthor(u *User) *MessageUpdate {
+	return mu.SetAuthorID(u.ID)
+}
+
+// SetChannel sets the "channel" edge to the Channel entity.
+func (mu *MessageUpdate) SetChannel(c *Channel) *MessageUpdate {
+	return mu.SetChannelID(c.ID)
+}
+
+// AddMessageRecipientIDs adds the "message_recipients" edge to the User entity by IDs.
+func (mu *MessageUpdate) AddMessageRecipientIDs(ids ...uuid.UUID) *MessageUpdate {
+	mu.mutation.AddMessageRecipientIDs(ids...)
+	return mu
+}
+
+// AddMessageRecipients adds the "message_recipients" edges to the User entity.
+func (mu *MessageUpdate) AddMessageRecipients(u ...*User) *MessageUpdate {
+	ids := make([]uuid.UUID, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
 	}
-	return mu
-}
-
-// SetSender sets the "sender" edge to the User entity.
-func (mu *MessageUpdate) SetSender(u *User) *MessageUpdate {
-	return mu.SetSenderID(u.ID)
+	return mu.AddMessageRecipientIDs(ids...)
 }
 
 // Mutation returns the MessageMutation object of the builder.
@@ -111,16 +119,37 @@ func (mu *MessageUpdate) Mutation() *MessageMutation {
 	return mu.mutation
 }
 
-// ClearTopic clears the "topic" edge to the Topic entity.
-func (mu *MessageUpdate) ClearTopic() *MessageUpdate {
-	mu.mutation.ClearTopic()
+// ClearAuthor clears the "author" edge to the User entity.
+func (mu *MessageUpdate) ClearAuthor() *MessageUpdate {
+	mu.mutation.ClearAuthor()
 	return mu
 }
 
-// ClearSender clears the "sender" edge to the User entity.
-func (mu *MessageUpdate) ClearSender() *MessageUpdate {
-	mu.mutation.ClearSender()
+// ClearChannel clears the "channel" edge to the Channel entity.
+func (mu *MessageUpdate) ClearChannel() *MessageUpdate {
+	mu.mutation.ClearChannel()
 	return mu
+}
+
+// ClearMessageRecipients clears all "message_recipients" edges to the User entity.
+func (mu *MessageUpdate) ClearMessageRecipients() *MessageUpdate {
+	mu.mutation.ClearMessageRecipients()
+	return mu
+}
+
+// RemoveMessageRecipientIDs removes the "message_recipients" edge to User entities by IDs.
+func (mu *MessageUpdate) RemoveMessageRecipientIDs(ids ...uuid.UUID) *MessageUpdate {
+	mu.mutation.RemoveMessageRecipientIDs(ids...)
+	return mu
+}
+
+// RemoveMessageRecipients removes "message_recipients" edges to User entities.
+func (mu *MessageUpdate) RemoveMessageRecipients(u ...*User) *MessageUpdate {
+	ids := make([]uuid.UUID, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return mu.RemoveMessageRecipientIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -194,8 +223,11 @@ func (mu *MessageUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (mu *MessageUpdate) check() error {
-	if _, ok := mu.mutation.TopicID(); mu.mutation.TopicCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Message.topic"`)
+	if _, ok := mu.mutation.AuthorID(); mu.mutation.AuthorCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Message.author"`)
+	}
+	if _, ok := mu.mutation.ChannelID(); mu.mutation.ChannelCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Message.channel"`)
 	}
 	return nil
 }
@@ -246,13 +278,6 @@ func (mu *MessageUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: message.FieldSequence,
 		})
 	}
-	if value, ok := mu.mutation.Content(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: message.FieldContent,
-		})
-	}
 	if value, ok := mu.mutation.Header(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeJSON,
@@ -260,47 +285,19 @@ func (mu *MessageUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: message.FieldHeader,
 		})
 	}
-	if mu.mutation.TopicCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   message.TopicTable,
-			Columns: []string{message.TopicColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: topic.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	if value, ok := mu.mutation.Content(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: message.FieldContent,
+		})
 	}
-	if nodes := mu.mutation.TopicIDs(); len(nodes) > 0 {
+	if mu.mutation.AuthorCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   message.TopicTable,
-			Columns: []string{message.TopicColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: topic.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if mu.mutation.SenderCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   message.SenderTable,
-			Columns: []string{message.SenderColumn},
+			Table:   message.AuthorTable,
+			Columns: []string{message.AuthorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -311,12 +308,101 @@ func (mu *MessageUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := mu.mutation.SenderIDs(); len(nodes) > 0 {
+	if nodes := mu.mutation.AuthorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   message.SenderTable,
-			Columns: []string{message.SenderColumn},
+			Table:   message.AuthorTable,
+			Columns: []string{message.AuthorColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if mu.mutation.ChannelCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   message.ChannelTable,
+			Columns: []string{message.ChannelColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: channel.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := mu.mutation.ChannelIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   message.ChannelTable,
+			Columns: []string{message.ChannelColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: channel.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if mu.mutation.MessageRecipientsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   message.MessageRecipientsTable,
+			Columns: message.MessageRecipientsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: user.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := mu.mutation.RemovedMessageRecipientsIDs(); len(nodes) > 0 && !mu.mutation.MessageRecipientsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   message.MessageRecipientsTable,
+			Columns: message.MessageRecipientsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := mu.mutation.MessageRecipientsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   message.MessageRecipientsTable,
+			Columns: message.MessageRecipientsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -349,9 +435,9 @@ type MessageUpdateOne struct {
 	mutation *MessageMutation
 }
 
-// SetTopicID sets the "topic_id" field.
-func (muo *MessageUpdateOne) SetTopicID(u uuid.UUID) *MessageUpdateOne {
-	muo.mutation.SetTopicID(u)
+// SetChannelID sets the "channel_id" field.
+func (muo *MessageUpdateOne) SetChannelID(u uuid.UUID) *MessageUpdateOne {
+	muo.mutation.SetChannelID(u)
 	return muo
 }
 
@@ -388,40 +474,47 @@ func (muo *MessageUpdateOne) AddSequence(i int) *MessageUpdateOne {
 	return muo
 }
 
-// SetContent sets the "content" field.
-func (muo *MessageUpdateOne) SetContent(m map[string]interface{}) *MessageUpdateOne {
-	muo.mutation.SetContent(m)
-	return muo
-}
-
 // SetHeader sets the "header" field.
 func (muo *MessageUpdateOne) SetHeader(m map[string]interface{}) *MessageUpdateOne {
 	muo.mutation.SetHeader(m)
 	return muo
 }
 
-// SetTopic sets the "topic" edge to the Topic entity.
-func (muo *MessageUpdateOne) SetTopic(t *Topic) *MessageUpdateOne {
-	return muo.SetTopicID(t.ID)
-}
-
-// SetSenderID sets the "sender" edge to the User entity by ID.
-func (muo *MessageUpdateOne) SetSenderID(id uuid.UUID) *MessageUpdateOne {
-	muo.mutation.SetSenderID(id)
+// SetContent sets the "content" field.
+func (muo *MessageUpdateOne) SetContent(mc models.MessageContent) *MessageUpdateOne {
+	muo.mutation.SetContent(mc)
 	return muo
 }
 
-// SetNillableSenderID sets the "sender" edge to the User entity by ID if the given value is not nil.
-func (muo *MessageUpdateOne) SetNillableSenderID(id *uuid.UUID) *MessageUpdateOne {
-	if id != nil {
-		muo = muo.SetSenderID(*id)
+// SetAuthorID sets the "author" edge to the User entity by ID.
+func (muo *MessageUpdateOne) SetAuthorID(id uuid.UUID) *MessageUpdateOne {
+	muo.mutation.SetAuthorID(id)
+	return muo
+}
+
+// SetAuthor sets the "author" edge to the User entity.
+func (muo *MessageUpdateOne) SetAuthor(u *User) *MessageUpdateOne {
+	return muo.SetAuthorID(u.ID)
+}
+
+// SetChannel sets the "channel" edge to the Channel entity.
+func (muo *MessageUpdateOne) SetChannel(c *Channel) *MessageUpdateOne {
+	return muo.SetChannelID(c.ID)
+}
+
+// AddMessageRecipientIDs adds the "message_recipients" edge to the User entity by IDs.
+func (muo *MessageUpdateOne) AddMessageRecipientIDs(ids ...uuid.UUID) *MessageUpdateOne {
+	muo.mutation.AddMessageRecipientIDs(ids...)
+	return muo
+}
+
+// AddMessageRecipients adds the "message_recipients" edges to the User entity.
+func (muo *MessageUpdateOne) AddMessageRecipients(u ...*User) *MessageUpdateOne {
+	ids := make([]uuid.UUID, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
 	}
-	return muo
-}
-
-// SetSender sets the "sender" edge to the User entity.
-func (muo *MessageUpdateOne) SetSender(u *User) *MessageUpdateOne {
-	return muo.SetSenderID(u.ID)
+	return muo.AddMessageRecipientIDs(ids...)
 }
 
 // Mutation returns the MessageMutation object of the builder.
@@ -429,16 +522,37 @@ func (muo *MessageUpdateOne) Mutation() *MessageMutation {
 	return muo.mutation
 }
 
-// ClearTopic clears the "topic" edge to the Topic entity.
-func (muo *MessageUpdateOne) ClearTopic() *MessageUpdateOne {
-	muo.mutation.ClearTopic()
+// ClearAuthor clears the "author" edge to the User entity.
+func (muo *MessageUpdateOne) ClearAuthor() *MessageUpdateOne {
+	muo.mutation.ClearAuthor()
 	return muo
 }
 
-// ClearSender clears the "sender" edge to the User entity.
-func (muo *MessageUpdateOne) ClearSender() *MessageUpdateOne {
-	muo.mutation.ClearSender()
+// ClearChannel clears the "channel" edge to the Channel entity.
+func (muo *MessageUpdateOne) ClearChannel() *MessageUpdateOne {
+	muo.mutation.ClearChannel()
 	return muo
+}
+
+// ClearMessageRecipients clears all "message_recipients" edges to the User entity.
+func (muo *MessageUpdateOne) ClearMessageRecipients() *MessageUpdateOne {
+	muo.mutation.ClearMessageRecipients()
+	return muo
+}
+
+// RemoveMessageRecipientIDs removes the "message_recipients" edge to User entities by IDs.
+func (muo *MessageUpdateOne) RemoveMessageRecipientIDs(ids ...uuid.UUID) *MessageUpdateOne {
+	muo.mutation.RemoveMessageRecipientIDs(ids...)
+	return muo
+}
+
+// RemoveMessageRecipients removes "message_recipients" edges to User entities.
+func (muo *MessageUpdateOne) RemoveMessageRecipients(u ...*User) *MessageUpdateOne {
+	ids := make([]uuid.UUID, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return muo.RemoveMessageRecipientIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -525,8 +639,11 @@ func (muo *MessageUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (muo *MessageUpdateOne) check() error {
-	if _, ok := muo.mutation.TopicID(); muo.mutation.TopicCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Message.topic"`)
+	if _, ok := muo.mutation.AuthorID(); muo.mutation.AuthorCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Message.author"`)
+	}
+	if _, ok := muo.mutation.ChannelID(); muo.mutation.ChannelCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Message.channel"`)
 	}
 	return nil
 }
@@ -594,13 +711,6 @@ func (muo *MessageUpdateOne) sqlSave(ctx context.Context) (_node *Message, err e
 			Column: message.FieldSequence,
 		})
 	}
-	if value, ok := muo.mutation.Content(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: message.FieldContent,
-		})
-	}
 	if value, ok := muo.mutation.Header(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeJSON,
@@ -608,47 +718,19 @@ func (muo *MessageUpdateOne) sqlSave(ctx context.Context) (_node *Message, err e
 			Column: message.FieldHeader,
 		})
 	}
-	if muo.mutation.TopicCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   message.TopicTable,
-			Columns: []string{message.TopicColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: topic.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	if value, ok := muo.mutation.Content(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: message.FieldContent,
+		})
 	}
-	if nodes := muo.mutation.TopicIDs(); len(nodes) > 0 {
+	if muo.mutation.AuthorCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   message.TopicTable,
-			Columns: []string{message.TopicColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: topic.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if muo.mutation.SenderCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   message.SenderTable,
-			Columns: []string{message.SenderColumn},
+			Table:   message.AuthorTable,
+			Columns: []string{message.AuthorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -659,12 +741,101 @@ func (muo *MessageUpdateOne) sqlSave(ctx context.Context) (_node *Message, err e
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := muo.mutation.SenderIDs(); len(nodes) > 0 {
+	if nodes := muo.mutation.AuthorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   message.SenderTable,
-			Columns: []string{message.SenderColumn},
+			Table:   message.AuthorTable,
+			Columns: []string{message.AuthorColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if muo.mutation.ChannelCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   message.ChannelTable,
+			Columns: []string{message.ChannelColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: channel.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := muo.mutation.ChannelIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   message.ChannelTable,
+			Columns: []string{message.ChannelColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: channel.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if muo.mutation.MessageRecipientsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   message.MessageRecipientsTable,
+			Columns: message.MessageRecipientsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: user.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := muo.mutation.RemovedMessageRecipientsIDs(); len(nodes) > 0 && !muo.mutation.MessageRecipientsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   message.MessageRecipientsTable,
+			Columns: message.MessageRecipientsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := muo.mutation.MessageRecipientsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   message.MessageRecipientsTable,
+			Columns: message.MessageRecipientsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

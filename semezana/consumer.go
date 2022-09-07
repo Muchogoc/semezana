@@ -65,12 +65,12 @@ func (s *Session) HandleMessage(m *nsq.Message) error {
 	if request.Type == "message.new" {
 		response := &dto.ServerComMessage{
 			Data: &dto.MsgServerData{
-				Topic:     request.Message.ID.String(),
+				Channel:   request.Message.ChannelID.String(),
 				From:      request.Sender,
 				Timestamp: request.Message.CreatedAt,
 				SeqId:     request.Message.Sequence,
 				Head:      request.Message.Header,
-				Content:   request.Message.Content["content"],
+				Content:   request.Message.Content,
 			},
 			Control: &dto.MsgServerCtrl{
 				Code: http.StatusOK,

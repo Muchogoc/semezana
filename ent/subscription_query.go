@@ -10,9 +10,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Muchogoc/semezana/ent/channel"
 	"github.com/Muchogoc/semezana/ent/predicate"
 	"github.com/Muchogoc/semezana/ent/subscription"
-	"github.com/Muchogoc/semezana/ent/topic"
 	"github.com/Muchogoc/semezana/ent/user"
 	"github.com/google/uuid"
 )
@@ -20,14 +20,14 @@ import (
 // SubscriptionQuery is the builder for querying Subscription entities.
 type SubscriptionQuery struct {
 	config
-	limit          *int
-	offset         *int
-	unique         *bool
-	order          []OrderFunc
-	fields         []string
-	predicates     []predicate.Subscription
-	withSubscriber *UserQuery
-	withTopic      *TopicQuery
+	limit       *int
+	offset      *int
+	unique      *bool
+	order       []OrderFunc
+	fields      []string
+	predicates  []predicate.Subscription
+	withUser    *UserQuery
+	withChannel *ChannelQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -64,8 +64,8 @@ func (sq *SubscriptionQuery) Order(o ...OrderFunc) *SubscriptionQuery {
 	return sq
 }
 
-// QuerySubscriber chains the current query on the "subscriber" edge.
-func (sq *SubscriptionQuery) QuerySubscriber() *UserQuery {
+// QueryUser chains the current query on the "user" edge.
+func (sq *SubscriptionQuery) QueryUser() *UserQuery {
 	query := &UserQuery{config: sq.config}
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := sq.prepareQuery(ctx); err != nil {
@@ -78,7 +78,7 @@ func (sq *SubscriptionQuery) QuerySubscriber() *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(subscription.Table, subscription.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, subscription.SubscriberTable, subscription.SubscriberColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, subscription.UserTable, subscription.UserColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(sq.driver.Dialect(), step)
 		return fromU, nil
@@ -86,9 +86,9 @@ func (sq *SubscriptionQuery) QuerySubscriber() *UserQuery {
 	return query
 }
 
-// QueryTopic chains the current query on the "topic" edge.
-func (sq *SubscriptionQuery) QueryTopic() *TopicQuery {
-	query := &TopicQuery{config: sq.config}
+// QueryChannel chains the current query on the "channel" edge.
+func (sq *SubscriptionQuery) QueryChannel() *ChannelQuery {
+	query := &ChannelQuery{config: sq.config}
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := sq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -99,8 +99,8 @@ func (sq *SubscriptionQuery) QueryTopic() *TopicQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(subscription.Table, subscription.FieldID, selector),
-			sqlgraph.To(topic.Table, topic.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, subscription.TopicTable, subscription.TopicColumn),
+			sqlgraph.To(channel.Table, channel.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, subscription.ChannelTable, subscription.ChannelColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(sq.driver.Dialect(), step)
 		return fromU, nil
@@ -284,13 +284,13 @@ func (sq *SubscriptionQuery) Clone() *SubscriptionQuery {
 		return nil
 	}
 	return &SubscriptionQuery{
-		config:         sq.config,
-		limit:          sq.limit,
-		offset:         sq.offset,
-		order:          append([]OrderFunc{}, sq.order...),
-		predicates:     append([]predicate.Subscription{}, sq.predicates...),
-		withSubscriber: sq.withSubscriber.Clone(),
-		withTopic:      sq.withTopic.Clone(),
+		config:      sq.config,
+		limit:       sq.limit,
+		offset:      sq.offset,
+		order:       append([]OrderFunc{}, sq.order...),
+		predicates:  append([]predicate.Subscription{}, sq.predicates...),
+		withUser:    sq.withUser.Clone(),
+		withChannel: sq.withChannel.Clone(),
 		// clone intermediate query.
 		sql:    sq.sql.Clone(),
 		path:   sq.path,
@@ -298,25 +298,25 @@ func (sq *SubscriptionQuery) Clone() *SubscriptionQuery {
 	}
 }
 
-// WithSubscriber tells the query-builder to eager-load the nodes that are connected to
-// the "subscriber" edge. The optional arguments are used to configure the query builder of the edge.
-func (sq *SubscriptionQuery) WithSubscriber(opts ...func(*UserQuery)) *SubscriptionQuery {
+// WithUser tells the query-builder to eager-load the nodes that are connected to
+// the "user" edge. The optional arguments are used to configure the query builder of the edge.
+func (sq *SubscriptionQuery) WithUser(opts ...func(*UserQuery)) *SubscriptionQuery {
 	query := &UserQuery{config: sq.config}
 	for _, opt := range opts {
 		opt(query)
 	}
-	sq.withSubscriber = query
+	sq.withUser = query
 	return sq
 }
 
-// WithTopic tells the query-builder to eager-load the nodes that are connected to
-// the "topic" edge. The optional arguments are used to configure the query builder of the edge.
-func (sq *SubscriptionQuery) WithTopic(opts ...func(*TopicQuery)) *SubscriptionQuery {
-	query := &TopicQuery{config: sq.config}
+// WithChannel tells the query-builder to eager-load the nodes that are connected to
+// the "channel" edge. The optional arguments are used to configure the query builder of the edge.
+func (sq *SubscriptionQuery) WithChannel(opts ...func(*ChannelQuery)) *SubscriptionQuery {
+	query := &ChannelQuery{config: sq.config}
 	for _, opt := range opts {
 		opt(query)
 	}
-	sq.withTopic = query
+	sq.withChannel = query
 	return sq
 }
 
@@ -326,12 +326,12 @@ func (sq *SubscriptionQuery) WithTopic(opts ...func(*TopicQuery)) *SubscriptionQ
 // Example:
 //
 //	var v []struct {
-//		CreatedAt time.Time `json:"created_at,omitempty"`
+//		ChannelID uuid.UUID `json:"channel_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Subscription.Query().
-//		GroupBy(subscription.FieldCreatedAt).
+//		GroupBy(subscription.FieldChannelID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -355,11 +355,11 @@ func (sq *SubscriptionQuery) GroupBy(field string, fields ...string) *Subscripti
 // Example:
 //
 //	var v []struct {
-//		CreatedAt time.Time `json:"created_at,omitempty"`
+//		ChannelID uuid.UUID `json:"channel_id,omitempty"`
 //	}
 //
 //	client.Subscription.Query().
-//		Select(subscription.FieldCreatedAt).
+//		Select(subscription.FieldChannelID).
 //		Scan(ctx, &v)
 //
 func (sq *SubscriptionQuery) Select(fields ...string) *SubscriptionSelect {
@@ -391,8 +391,8 @@ func (sq *SubscriptionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 		nodes       = []*Subscription{}
 		_spec       = sq.querySpec()
 		loadedTypes = [2]bool{
-			sq.withSubscriber != nil,
-			sq.withTopic != nil,
+			sq.withUser != nil,
+			sq.withChannel != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
@@ -413,22 +413,22 @@ func (sq *SubscriptionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := sq.withSubscriber; query != nil {
-		if err := sq.loadSubscriber(ctx, query, nodes, nil,
-			func(n *Subscription, e *User) { n.Edges.Subscriber = e }); err != nil {
+	if query := sq.withUser; query != nil {
+		if err := sq.loadUser(ctx, query, nodes, nil,
+			func(n *Subscription, e *User) { n.Edges.User = e }); err != nil {
 			return nil, err
 		}
 	}
-	if query := sq.withTopic; query != nil {
-		if err := sq.loadTopic(ctx, query, nodes, nil,
-			func(n *Subscription, e *Topic) { n.Edges.Topic = e }); err != nil {
+	if query := sq.withChannel; query != nil {
+		if err := sq.loadChannel(ctx, query, nodes, nil,
+			func(n *Subscription, e *Channel) { n.Edges.Channel = e }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (sq *SubscriptionQuery) loadSubscriber(ctx context.Context, query *UserQuery, nodes []*Subscription, init func(*Subscription), assign func(*Subscription, *User)) error {
+func (sq *SubscriptionQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*Subscription, init func(*Subscription), assign func(*Subscription, *User)) error {
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*Subscription)
 	for i := range nodes {
@@ -454,17 +454,17 @@ func (sq *SubscriptionQuery) loadSubscriber(ctx context.Context, query *UserQuer
 	}
 	return nil
 }
-func (sq *SubscriptionQuery) loadTopic(ctx context.Context, query *TopicQuery, nodes []*Subscription, init func(*Subscription), assign func(*Subscription, *Topic)) error {
+func (sq *SubscriptionQuery) loadChannel(ctx context.Context, query *ChannelQuery, nodes []*Subscription, init func(*Subscription), assign func(*Subscription, *Channel)) error {
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*Subscription)
 	for i := range nodes {
-		fk := nodes[i].TopicID
+		fk := nodes[i].ChannelID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
 		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	query.Where(topic.IDIn(ids...))
+	query.Where(channel.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
@@ -472,7 +472,7 @@ func (sq *SubscriptionQuery) loadTopic(ctx context.Context, query *TopicQuery, n
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "topic_id" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "channel_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)

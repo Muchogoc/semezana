@@ -10,9 +10,10 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Muchogoc/semezana/ent/channel"
 	"github.com/Muchogoc/semezana/ent/message"
-	"github.com/Muchogoc/semezana/ent/topic"
 	"github.com/Muchogoc/semezana/ent/user"
+	"github.com/Muchogoc/semezana/semezana/models"
 	"github.com/google/uuid"
 )
 
@@ -23,9 +24,9 @@ type MessageCreate struct {
 	hooks    []Hook
 }
 
-// SetTopicID sets the "topic_id" field.
-func (mc *MessageCreate) SetTopicID(u uuid.UUID) *MessageCreate {
-	mc.mutation.SetTopicID(u)
+// SetChannelID sets the "channel_id" field.
+func (mc *MessageCreate) SetChannelID(u uuid.UUID) *MessageCreate {
+	mc.mutation.SetChannelID(u)
 	return mc
 }
 
@@ -63,15 +64,15 @@ func (mc *MessageCreate) SetSequence(i int) *MessageCreate {
 	return mc
 }
 
-// SetContent sets the "content" field.
-func (mc *MessageCreate) SetContent(m map[string]interface{}) *MessageCreate {
-	mc.mutation.SetContent(m)
-	return mc
-}
-
 // SetHeader sets the "header" field.
 func (mc *MessageCreate) SetHeader(m map[string]interface{}) *MessageCreate {
 	mc.mutation.SetHeader(m)
+	return mc
+}
+
+// SetContent sets the "content" field.
+func (mc *MessageCreate) SetContent(value models.MessageContent) *MessageCreate {
+	mc.mutation.SetContent(value)
 	return mc
 }
 
@@ -89,28 +90,35 @@ func (mc *MessageCreate) SetNillableID(u *uuid.UUID) *MessageCreate {
 	return mc
 }
 
-// SetTopic sets the "topic" edge to the Topic entity.
-func (mc *MessageCreate) SetTopic(t *Topic) *MessageCreate {
-	return mc.SetTopicID(t.ID)
-}
-
-// SetSenderID sets the "sender" edge to the User entity by ID.
-func (mc *MessageCreate) SetSenderID(id uuid.UUID) *MessageCreate {
-	mc.mutation.SetSenderID(id)
+// SetAuthorID sets the "author" edge to the User entity by ID.
+func (mc *MessageCreate) SetAuthorID(id uuid.UUID) *MessageCreate {
+	mc.mutation.SetAuthorID(id)
 	return mc
 }
 
-// SetNillableSenderID sets the "sender" edge to the User entity by ID if the given value is not nil.
-func (mc *MessageCreate) SetNillableSenderID(id *uuid.UUID) *MessageCreate {
-	if id != nil {
-		mc = mc.SetSenderID(*id)
+// SetAuthor sets the "author" edge to the User entity.
+func (mc *MessageCreate) SetAuthor(u *User) *MessageCreate {
+	return mc.SetAuthorID(u.ID)
+}
+
+// SetChannel sets the "channel" edge to the Channel entity.
+func (mc *MessageCreate) SetChannel(c *Channel) *MessageCreate {
+	return mc.SetChannelID(c.ID)
+}
+
+// AddMessageRecipientIDs adds the "message_recipients" edge to the User entity by IDs.
+func (mc *MessageCreate) AddMessageRecipientIDs(ids ...uuid.UUID) *MessageCreate {
+	mc.mutation.AddMessageRecipientIDs(ids...)
+	return mc
+}
+
+// AddMessageRecipients adds the "message_recipients" edges to the User entity.
+func (mc *MessageCreate) AddMessageRecipients(u ...*User) *MessageCreate {
+	ids := make([]uuid.UUID, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
 	}
-	return mc
-}
-
-// SetSender sets the "sender" edge to the User entity.
-func (mc *MessageCreate) SetSender(u *User) *MessageCreate {
-	return mc.SetSenderID(u.ID)
+	return mc.AddMessageRecipientIDs(ids...)
 }
 
 // Mutation returns the MessageMutation object of the builder.
@@ -206,8 +214,8 @@ func (mc *MessageCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (mc *MessageCreate) check() error {
-	if _, ok := mc.mutation.TopicID(); !ok {
-		return &ValidationError{Name: "topic_id", err: errors.New(`ent: missing required field "Message.topic_id"`)}
+	if _, ok := mc.mutation.ChannelID(); !ok {
+		return &ValidationError{Name: "channel_id", err: errors.New(`ent: missing required field "Message.channel_id"`)}
 	}
 	if _, ok := mc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Message.created_at"`)}
@@ -218,14 +226,17 @@ func (mc *MessageCreate) check() error {
 	if _, ok := mc.mutation.Sequence(); !ok {
 		return &ValidationError{Name: "sequence", err: errors.New(`ent: missing required field "Message.sequence"`)}
 	}
-	if _, ok := mc.mutation.Content(); !ok {
-		return &ValidationError{Name: "content", err: errors.New(`ent: missing required field "Message.content"`)}
-	}
 	if _, ok := mc.mutation.Header(); !ok {
 		return &ValidationError{Name: "header", err: errors.New(`ent: missing required field "Message.header"`)}
 	}
-	if _, ok := mc.mutation.TopicID(); !ok {
-		return &ValidationError{Name: "topic", err: errors.New(`ent: missing required edge "Message.topic"`)}
+	if _, ok := mc.mutation.Content(); !ok {
+		return &ValidationError{Name: "content", err: errors.New(`ent: missing required field "Message.content"`)}
+	}
+	if _, ok := mc.mutation.AuthorID(); !ok {
+		return &ValidationError{Name: "author", err: errors.New(`ent: missing required edge "Message.author"`)}
+	}
+	if _, ok := mc.mutation.ChannelID(); !ok {
+		return &ValidationError{Name: "channel", err: errors.New(`ent: missing required edge "Message.channel"`)}
 	}
 	return nil
 }
@@ -287,14 +298,6 @@ func (mc *MessageCreate) createSpec() (*Message, *sqlgraph.CreateSpec) {
 		})
 		_node.Sequence = value
 	}
-	if value, ok := mc.mutation.Content(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: message.FieldContent,
-		})
-		_node.Content = value
-	}
 	if value, ok := mc.mutation.Header(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeJSON,
@@ -303,32 +306,20 @@ func (mc *MessageCreate) createSpec() (*Message, *sqlgraph.CreateSpec) {
 		})
 		_node.Header = value
 	}
-	if nodes := mc.mutation.TopicIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   message.TopicTable,
-			Columns: []string{message.TopicColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeUUID,
-					Column: topic.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.TopicID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
+	if value, ok := mc.mutation.Content(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: message.FieldContent,
+		})
+		_node.Content = value
 	}
-	if nodes := mc.mutation.SenderIDs(); len(nodes) > 0 {
+	if nodes := mc.mutation.AuthorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   message.SenderTable,
-			Columns: []string{message.SenderColumn},
+			Table:   message.AuthorTable,
+			Columns: []string{message.AuthorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -341,6 +332,45 @@ func (mc *MessageCreate) createSpec() (*Message, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.user_messages = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := mc.mutation.ChannelIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   message.ChannelTable,
+			Columns: []string{message.ChannelColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: channel.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.ChannelID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := mc.mutation.MessageRecipientsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   message.MessageRecipientsTable,
+			Columns: message.MessageRecipientsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

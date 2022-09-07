@@ -13,30 +13,25 @@ type User struct {
 	Abstract
 }
 
-type Topic struct {
+type Channel struct {
 	Abstract
 
-	// State of the topic: normal (ok), suspended, deleted
+	// State of the channel: normal (ok), suspended, deleted
 	State   ObjState
 	StateAt *time.Time
 }
 
-// A subscription to a topic
+// A subscription to a channel
 type Subscription struct {
 	Abstract
 
-	// User who has relationship with the topic
+	// User who has relationship with the channel
 	User string
-	// Topic subscribed to
-	Topic string
+	// Channel subscribed to
+	Channel string
 }
 
 // Represents a single message sent between users
-type Message struct {
-	Abstract
-	SeqID     int
-	Topic     string
-	From      string
-	Content   interface{}
-	DeletedAt *time.Time
+type MessageContent struct {
+	Text string `json:"text"`
 }

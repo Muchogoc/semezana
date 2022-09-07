@@ -11,10 +11,11 @@ import (
 	"github.com/Muchogoc/semezana/ent/migrate"
 	"github.com/google/uuid"
 
+	"github.com/Muchogoc/semezana/ent/channel"
 	"github.com/Muchogoc/semezana/ent/device"
 	"github.com/Muchogoc/semezana/ent/message"
+	"github.com/Muchogoc/semezana/ent/recipient"
 	"github.com/Muchogoc/semezana/ent/subscription"
-	"github.com/Muchogoc/semezana/ent/topic"
 	"github.com/Muchogoc/semezana/ent/user"
 
 	"entgo.io/ent/dialect"
@@ -27,14 +28,16 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Channel is the client for interacting with the Channel builders.
+	Channel *ChannelClient
 	// Device is the client for interacting with the Device builders.
 	Device *DeviceClient
 	// Message is the client for interacting with the Message builders.
 	Message *MessageClient
+	// Recipient is the client for interacting with the Recipient builders.
+	Recipient *RecipientClient
 	// Subscription is the client for interacting with the Subscription builders.
 	Subscription *SubscriptionClient
-	// Topic is the client for interacting with the Topic builders.
-	Topic *TopicClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 }
@@ -50,10 +53,11 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Channel = NewChannelClient(c.config)
 	c.Device = NewDeviceClient(c.config)
 	c.Message = NewMessageClient(c.config)
+	c.Recipient = NewRecipientClient(c.config)
 	c.Subscription = NewSubscriptionClient(c.config)
-	c.Topic = NewTopicClient(c.config)
 	c.User = NewUserClient(c.config)
 }
 
@@ -88,10 +92,11 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:          ctx,
 		config:       cfg,
+		Channel:      NewChannelClient(cfg),
 		Device:       NewDeviceClient(cfg),
 		Message:      NewMessageClient(cfg),
+		Recipient:    NewRecipientClient(cfg),
 		Subscription: NewSubscriptionClient(cfg),
-		Topic:        NewTopicClient(cfg),
 		User:         NewUserClient(cfg),
 	}, nil
 }
@@ -112,10 +117,11 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	return &Tx{
 		ctx:          ctx,
 		config:       cfg,
+		Channel:      NewChannelClient(cfg),
 		Device:       NewDeviceClient(cfg),
 		Message:      NewMessageClient(cfg),
+		Recipient:    NewRecipientClient(cfg),
 		Subscription: NewSubscriptionClient(cfg),
-		Topic:        NewTopicClient(cfg),
 		User:         NewUserClient(cfg),
 	}, nil
 }
@@ -123,7 +129,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Device.
+//		Channel.
 //		Query().
 //		Count(ctx)
 //
@@ -146,11 +152,150 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.Channel.Use(hooks...)
 	c.Device.Use(hooks...)
 	c.Message.Use(hooks...)
+	c.Recipient.Use(hooks...)
 	c.Subscription.Use(hooks...)
-	c.Topic.Use(hooks...)
 	c.User.Use(hooks...)
+}
+
+// ChannelClient is a client for the Channel schema.
+type ChannelClient struct {
+	config
+}
+
+// NewChannelClient returns a client for the Channel from the given config.
+func NewChannelClient(c config) *ChannelClient {
+	return &ChannelClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `channel.Hooks(f(g(h())))`.
+func (c *ChannelClient) Use(hooks ...Hook) {
+	c.hooks.Channel = append(c.hooks.Channel, hooks...)
+}
+
+// Create returns a builder for creating a Channel entity.
+func (c *ChannelClient) Create() *ChannelCreate {
+	mutation := newChannelMutation(c.config, OpCreate)
+	return &ChannelCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Channel entities.
+func (c *ChannelClient) CreateBulk(builders ...*ChannelCreate) *ChannelCreateBulk {
+	return &ChannelCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Channel.
+func (c *ChannelClient) Update() *ChannelUpdate {
+	mutation := newChannelMutation(c.config, OpUpdate)
+	return &ChannelUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ChannelClient) UpdateOne(ch *Channel) *ChannelUpdateOne {
+	mutation := newChannelMutation(c.config, OpUpdateOne, withChannel(ch))
+	return &ChannelUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ChannelClient) UpdateOneID(id uuid.UUID) *ChannelUpdateOne {
+	mutation := newChannelMutation(c.config, OpUpdateOne, withChannelID(id))
+	return &ChannelUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Channel.
+func (c *ChannelClient) Delete() *ChannelDelete {
+	mutation := newChannelMutation(c.config, OpDelete)
+	return &ChannelDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ChannelClient) DeleteOne(ch *Channel) *ChannelDeleteOne {
+	return c.DeleteOneID(ch.ID)
+}
+
+// DeleteOne returns a builder for deleting the given entity by its id.
+func (c *ChannelClient) DeleteOneID(id uuid.UUID) *ChannelDeleteOne {
+	builder := c.Delete().Where(channel.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ChannelDeleteOne{builder}
+}
+
+// Query returns a query builder for Channel.
+func (c *ChannelClient) Query() *ChannelQuery {
+	return &ChannelQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Channel entity by its id.
+func (c *ChannelClient) Get(ctx context.Context, id uuid.UUID) (*Channel, error) {
+	return c.Query().Where(channel.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ChannelClient) GetX(ctx context.Context, id uuid.UUID) *Channel {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryMessages queries the messages edge of a Channel.
+func (c *ChannelClient) QueryMessages(ch *Channel) *MessageQuery {
+	query := &MessageQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := ch.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(channel.Table, channel.FieldID, id),
+			sqlgraph.To(message.Table, message.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, channel.MessagesTable, channel.MessagesColumn),
+		)
+		fromV = sqlgraph.Neighbors(ch.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryMembers queries the members edge of a Channel.
+func (c *ChannelClient) QueryMembers(ch *Channel) *UserQuery {
+	query := &UserQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := ch.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(channel.Table, channel.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, channel.MembersTable, channel.MembersPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(ch.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySubscriptions queries the subscriptions edge of a Channel.
+func (c *ChannelClient) QuerySubscriptions(ch *Channel) *SubscriptionQuery {
+	query := &SubscriptionQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := ch.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(channel.Table, channel.FieldID, id),
+			sqlgraph.To(subscription.Table, subscription.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, channel.SubscriptionsTable, channel.SubscriptionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(ch.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ChannelClient) Hooks() []Hook {
+	return c.hooks.Channel
 }
 
 // DeviceClient is a client for the Device schema.
@@ -344,15 +489,15 @@ func (c *MessageClient) GetX(ctx context.Context, id uuid.UUID) *Message {
 	return obj
 }
 
-// QueryTopic queries the topic edge of a Message.
-func (c *MessageClient) QueryTopic(m *Message) *TopicQuery {
-	query := &TopicQuery{config: c.config}
+// QueryAuthor queries the author edge of a Message.
+func (c *MessageClient) QueryAuthor(m *Message) *UserQuery {
+	query := &UserQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
 		id := m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(message.Table, message.FieldID, id),
-			sqlgraph.To(topic.Table, topic.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, message.TopicTable, message.TopicColumn),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, message.AuthorTable, message.AuthorColumn),
 		)
 		fromV = sqlgraph.Neighbors(m.driver.Dialect(), step)
 		return fromV, nil
@@ -360,15 +505,47 @@ func (c *MessageClient) QueryTopic(m *Message) *TopicQuery {
 	return query
 }
 
-// QuerySender queries the sender edge of a Message.
-func (c *MessageClient) QuerySender(m *Message) *UserQuery {
+// QueryChannel queries the channel edge of a Message.
+func (c *MessageClient) QueryChannel(m *Message) *ChannelQuery {
+	query := &ChannelQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(message.Table, message.FieldID, id),
+			sqlgraph.To(channel.Table, channel.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, message.ChannelTable, message.ChannelColumn),
+		)
+		fromV = sqlgraph.Neighbors(m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryMessageRecipients queries the message_recipients edge of a Message.
+func (c *MessageClient) QueryMessageRecipients(m *Message) *UserQuery {
 	query := &UserQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
 		id := m.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(message.Table, message.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, message.SenderTable, message.SenderColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, message.MessageRecipientsTable, message.MessageRecipientsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRecipients queries the recipients edge of a Message.
+func (c *MessageClient) QueryRecipients(m *Message) *RecipientQuery {
+	query := &RecipientQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(message.Table, message.FieldID, id),
+			sqlgraph.To(recipient.Table, recipient.MessageColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, message.RecipientsTable, message.RecipientsColumn),
 		)
 		fromV = sqlgraph.Neighbors(m.driver.Dialect(), step)
 		return fromV, nil
@@ -379,6 +556,79 @@ func (c *MessageClient) QuerySender(m *Message) *UserQuery {
 // Hooks returns the client hooks.
 func (c *MessageClient) Hooks() []Hook {
 	return c.hooks.Message
+}
+
+// RecipientClient is a client for the Recipient schema.
+type RecipientClient struct {
+	config
+}
+
+// NewRecipientClient returns a client for the Recipient from the given config.
+func NewRecipientClient(c config) *RecipientClient {
+	return &RecipientClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `recipient.Hooks(f(g(h())))`.
+func (c *RecipientClient) Use(hooks ...Hook) {
+	c.hooks.Recipient = append(c.hooks.Recipient, hooks...)
+}
+
+// Create returns a builder for creating a Recipient entity.
+func (c *RecipientClient) Create() *RecipientCreate {
+	mutation := newRecipientMutation(c.config, OpCreate)
+	return &RecipientCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Recipient entities.
+func (c *RecipientClient) CreateBulk(builders ...*RecipientCreate) *RecipientCreateBulk {
+	return &RecipientCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Recipient.
+func (c *RecipientClient) Update() *RecipientUpdate {
+	mutation := newRecipientMutation(c.config, OpUpdate)
+	return &RecipientUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *RecipientClient) UpdateOne(r *Recipient) *RecipientUpdateOne {
+	mutation := newRecipientMutation(c.config, OpUpdateOne)
+	mutation.user = &r.UserID
+	mutation.message = &r.MessageID
+	return &RecipientUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Recipient.
+func (c *RecipientClient) Delete() *RecipientDelete {
+	mutation := newRecipientMutation(c.config, OpDelete)
+	return &RecipientDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Query returns a query builder for Recipient.
+func (c *RecipientClient) Query() *RecipientQuery {
+	return &RecipientQuery{
+		config: c.config,
+	}
+}
+
+// QueryUser queries the user edge of a Recipient.
+func (c *RecipientClient) QueryUser(r *Recipient) *UserQuery {
+	return c.Query().
+		Where(recipient.UserID(r.UserID), recipient.MessageID(r.MessageID)).
+		QueryUser()
+}
+
+// QueryMessage queries the message edge of a Recipient.
+func (c *RecipientClient) QueryMessage(r *Recipient) *MessageQuery {
+	return c.Query().
+		Where(recipient.UserID(r.UserID), recipient.MessageID(r.MessageID)).
+		QueryMessage()
+}
+
+// Hooks returns the client hooks.
+func (c *RecipientClient) Hooks() []Hook {
+	return c.hooks.Recipient
 }
 
 // SubscriptionClient is a client for the Subscription schema.
@@ -466,15 +716,15 @@ func (c *SubscriptionClient) GetX(ctx context.Context, id uuid.UUID) *Subscripti
 	return obj
 }
 
-// QuerySubscriber queries the subscriber edge of a Subscription.
-func (c *SubscriptionClient) QuerySubscriber(s *Subscription) *UserQuery {
+// QueryUser queries the user edge of a Subscription.
+func (c *SubscriptionClient) QueryUser(s *Subscription) *UserQuery {
 	query := &UserQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
 		id := s.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(subscription.Table, subscription.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, subscription.SubscriberTable, subscription.SubscriberColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, subscription.UserTable, subscription.UserColumn),
 		)
 		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
 		return fromV, nil
@@ -482,15 +732,15 @@ func (c *SubscriptionClient) QuerySubscriber(s *Subscription) *UserQuery {
 	return query
 }
 
-// QueryTopic queries the topic edge of a Subscription.
-func (c *SubscriptionClient) QueryTopic(s *Subscription) *TopicQuery {
-	query := &TopicQuery{config: c.config}
+// QueryChannel queries the channel edge of a Subscription.
+func (c *SubscriptionClient) QueryChannel(s *Subscription) *ChannelQuery {
+	query := &ChannelQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
 		id := s.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(subscription.Table, subscription.FieldID, id),
-			sqlgraph.To(topic.Table, topic.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, subscription.TopicTable, subscription.TopicColumn),
+			sqlgraph.To(channel.Table, channel.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, subscription.ChannelTable, subscription.ChannelColumn),
 		)
 		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
 		return fromV, nil
@@ -501,144 +751,6 @@ func (c *SubscriptionClient) QueryTopic(s *Subscription) *TopicQuery {
 // Hooks returns the client hooks.
 func (c *SubscriptionClient) Hooks() []Hook {
 	return c.hooks.Subscription
-}
-
-// TopicClient is a client for the Topic schema.
-type TopicClient struct {
-	config
-}
-
-// NewTopicClient returns a client for the Topic from the given config.
-func NewTopicClient(c config) *TopicClient {
-	return &TopicClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `topic.Hooks(f(g(h())))`.
-func (c *TopicClient) Use(hooks ...Hook) {
-	c.hooks.Topic = append(c.hooks.Topic, hooks...)
-}
-
-// Create returns a builder for creating a Topic entity.
-func (c *TopicClient) Create() *TopicCreate {
-	mutation := newTopicMutation(c.config, OpCreate)
-	return &TopicCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Topic entities.
-func (c *TopicClient) CreateBulk(builders ...*TopicCreate) *TopicCreateBulk {
-	return &TopicCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Topic.
-func (c *TopicClient) Update() *TopicUpdate {
-	mutation := newTopicMutation(c.config, OpUpdate)
-	return &TopicUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *TopicClient) UpdateOne(t *Topic) *TopicUpdateOne {
-	mutation := newTopicMutation(c.config, OpUpdateOne, withTopic(t))
-	return &TopicUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *TopicClient) UpdateOneID(id uuid.UUID) *TopicUpdateOne {
-	mutation := newTopicMutation(c.config, OpUpdateOne, withTopicID(id))
-	return &TopicUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Topic.
-func (c *TopicClient) Delete() *TopicDelete {
-	mutation := newTopicMutation(c.config, OpDelete)
-	return &TopicDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *TopicClient) DeleteOne(t *Topic) *TopicDeleteOne {
-	return c.DeleteOneID(t.ID)
-}
-
-// DeleteOne returns a builder for deleting the given entity by its id.
-func (c *TopicClient) DeleteOneID(id uuid.UUID) *TopicDeleteOne {
-	builder := c.Delete().Where(topic.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &TopicDeleteOne{builder}
-}
-
-// Query returns a query builder for Topic.
-func (c *TopicClient) Query() *TopicQuery {
-	return &TopicQuery{
-		config: c.config,
-	}
-}
-
-// Get returns a Topic entity by its id.
-func (c *TopicClient) Get(ctx context.Context, id uuid.UUID) (*Topic, error) {
-	return c.Query().Where(topic.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *TopicClient) GetX(ctx context.Context, id uuid.UUID) *Topic {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryMessages queries the messages edge of a Topic.
-func (c *TopicClient) QueryMessages(t *Topic) *MessageQuery {
-	query := &MessageQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(topic.Table, topic.FieldID, id),
-			sqlgraph.To(message.Table, message.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, topic.MessagesTable, topic.MessagesColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QuerySubscriptions queries the subscriptions edge of a Topic.
-func (c *TopicClient) QuerySubscriptions(t *Topic) *SubscriptionQuery {
-	query := &SubscriptionQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(topic.Table, topic.FieldID, id),
-			sqlgraph.To(subscription.Table, subscription.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, topic.SubscriptionsTable, topic.SubscriptionsColumn),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryOwner queries the owner edge of a Topic.
-func (c *TopicClient) QueryOwner(t *Topic) *UserQuery {
-	query := &UserQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := t.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(topic.Table, topic.FieldID, id),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, topic.OwnerTable, topic.OwnerPrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *TopicClient) Hooks() []Hook {
-	return c.hooks.Topic
 }
 
 // UserClient is a client for the User schema.
@@ -726,22 +838,6 @@ func (c *UserClient) GetX(ctx context.Context, id uuid.UUID) *User {
 	return obj
 }
 
-// QuerySubscriptions queries the subscriptions edge of a User.
-func (c *UserClient) QuerySubscriptions(u *User) *SubscriptionQuery {
-	query := &SubscriptionQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := u.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(subscription.Table, subscription.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.SubscriptionsTable, user.SubscriptionsColumn),
-		)
-		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // QueryMessages queries the messages edge of a User.
 func (c *UserClient) QueryMessages(u *User) *MessageQuery {
 	query := &MessageQuery{config: c.config}
@@ -758,15 +854,15 @@ func (c *UserClient) QueryMessages(u *User) *MessageQuery {
 	return query
 }
 
-// QueryTopics queries the topics edge of a User.
-func (c *UserClient) QueryTopics(u *User) *TopicQuery {
-	query := &TopicQuery{config: c.config}
+// QueryRecipientMessages queries the recipient_messages edge of a User.
+func (c *UserClient) QueryRecipientMessages(u *User) *MessageQuery {
+	query := &MessageQuery{config: c.config}
 	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
 		id := u.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(topic.Table, topic.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, user.TopicsTable, user.TopicsPrimaryKey...),
+			sqlgraph.To(message.Table, message.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, user.RecipientMessagesTable, user.RecipientMessagesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -783,6 +879,54 @@ func (c *UserClient) QueryDevices(u *User) *DeviceQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(device.Table, device.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.DevicesTable, user.DevicesColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryChannels queries the channels edge of a User.
+func (c *UserClient) QueryChannels(u *User) *ChannelQuery {
+	query := &ChannelQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(channel.Table, channel.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, user.ChannelsTable, user.ChannelsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRecipients queries the recipients edge of a User.
+func (c *UserClient) QueryRecipients(u *User) *RecipientQuery {
+	query := &RecipientQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(recipient.Table, recipient.UserColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.RecipientsTable, user.RecipientsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySubscriptions queries the subscriptions edge of a User.
+func (c *UserClient) QuerySubscriptions(u *User) *SubscriptionQuery {
+	query := &SubscriptionQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(subscription.Table, subscription.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.SubscriptionsTable, user.SubscriptionsColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil

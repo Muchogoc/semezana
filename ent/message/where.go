@@ -82,10 +82,10 @@ func IDLTE(id uuid.UUID) predicate.Message {
 	})
 }
 
-// TopicID applies equality check predicate on the "topic_id" field. It's identical to TopicIDEQ.
-func TopicID(v uuid.UUID) predicate.Message {
+// ChannelID applies equality check predicate on the "channel_id" field. It's identical to ChannelIDEQ.
+func ChannelID(v uuid.UUID) predicate.Message {
 	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldTopicID), v))
+		s.Where(sql.EQ(s.C(FieldChannelID), v))
 	})
 }
 
@@ -110,39 +110,39 @@ func Sequence(v int) predicate.Message {
 	})
 }
 
-// TopicIDEQ applies the EQ predicate on the "topic_id" field.
-func TopicIDEQ(v uuid.UUID) predicate.Message {
+// ChannelIDEQ applies the EQ predicate on the "channel_id" field.
+func ChannelIDEQ(v uuid.UUID) predicate.Message {
 	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldTopicID), v))
+		s.Where(sql.EQ(s.C(FieldChannelID), v))
 	})
 }
 
-// TopicIDNEQ applies the NEQ predicate on the "topic_id" field.
-func TopicIDNEQ(v uuid.UUID) predicate.Message {
+// ChannelIDNEQ applies the NEQ predicate on the "channel_id" field.
+func ChannelIDNEQ(v uuid.UUID) predicate.Message {
 	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldTopicID), v))
+		s.Where(sql.NEQ(s.C(FieldChannelID), v))
 	})
 }
 
-// TopicIDIn applies the In predicate on the "topic_id" field.
-func TopicIDIn(vs ...uuid.UUID) predicate.Message {
+// ChannelIDIn applies the In predicate on the "channel_id" field.
+func ChannelIDIn(vs ...uuid.UUID) predicate.Message {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
 	}
 	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.In(s.C(FieldTopicID), v...))
+		s.Where(sql.In(s.C(FieldChannelID), v...))
 	})
 }
 
-// TopicIDNotIn applies the NotIn predicate on the "topic_id" field.
-func TopicIDNotIn(vs ...uuid.UUID) predicate.Message {
+// ChannelIDNotIn applies the NotIn predicate on the "channel_id" field.
+func ChannelIDNotIn(vs ...uuid.UUID) predicate.Message {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
 	}
 	return predicate.Message(func(s *sql.Selector) {
-		s.Where(sql.NotIn(s.C(FieldTopicID), v...))
+		s.Where(sql.NotIn(s.C(FieldChannelID), v...))
 	})
 }
 
@@ -338,25 +338,25 @@ func SequenceLTE(v int) predicate.Message {
 	})
 }
 
-// HasTopic applies the HasEdge predicate on the "topic" edge.
-func HasTopic() predicate.Message {
+// HasAuthor applies the HasEdge predicate on the "author" edge.
+func HasAuthor() predicate.Message {
 	return predicate.Message(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(TopicTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, TopicTable, TopicColumn),
+			sqlgraph.To(AuthorTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, AuthorTable, AuthorColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasTopicWith applies the HasEdge predicate on the "topic" edge with a given conditions (other predicates).
-func HasTopicWith(preds ...predicate.Topic) predicate.Message {
+// HasAuthorWith applies the HasEdge predicate on the "author" edge with a given conditions (other predicates).
+func HasAuthorWith(preds ...predicate.User) predicate.Message {
 	return predicate.Message(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(TopicInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, TopicTable, TopicColumn),
+			sqlgraph.To(AuthorInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, AuthorTable, AuthorColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
@@ -366,25 +366,81 @@ func HasTopicWith(preds ...predicate.Topic) predicate.Message {
 	})
 }
 
-// HasSender applies the HasEdge predicate on the "sender" edge.
-func HasSender() predicate.Message {
+// HasChannel applies the HasEdge predicate on the "channel" edge.
+func HasChannel() predicate.Message {
 	return predicate.Message(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(SenderTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, SenderTable, SenderColumn),
+			sqlgraph.To(ChannelTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ChannelTable, ChannelColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasSenderWith applies the HasEdge predicate on the "sender" edge with a given conditions (other predicates).
-func HasSenderWith(preds ...predicate.User) predicate.Message {
+// HasChannelWith applies the HasEdge predicate on the "channel" edge with a given conditions (other predicates).
+func HasChannelWith(preds ...predicate.Channel) predicate.Message {
 	return predicate.Message(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(SenderInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, SenderTable, SenderColumn),
+			sqlgraph.To(ChannelInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ChannelTable, ChannelColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasMessageRecipients applies the HasEdge predicate on the "message_recipients" edge.
+func HasMessageRecipients() predicate.Message {
+	return predicate.Message(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(MessageRecipientsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, MessageRecipientsTable, MessageRecipientsPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasMessageRecipientsWith applies the HasEdge predicate on the "message_recipients" edge with a given conditions (other predicates).
+func HasMessageRecipientsWith(preds ...predicate.User) predicate.Message {
+	return predicate.Message(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(MessageRecipientsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, MessageRecipientsTable, MessageRecipientsPrimaryKey...),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasRecipients applies the HasEdge predicate on the "recipients" edge.
+func HasRecipients() predicate.Message {
+	return predicate.Message(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(RecipientsTable, RecipientsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, RecipientsTable, RecipientsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasRecipientsWith applies the HasEdge predicate on the "recipients" edge with a given conditions (other predicates).
+func HasRecipientsWith(preds ...predicate.Recipient) predicate.Message {
+	return predicate.Message(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(RecipientsInverseTable, RecipientsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, RecipientsTable, RecipientsColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

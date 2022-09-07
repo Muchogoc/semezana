@@ -4,15 +4,17 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Muchogoc/semezana/ent/channel"
 	"github.com/Muchogoc/semezana/ent/message"
 	"github.com/Muchogoc/semezana/ent/predicate"
-	"github.com/Muchogoc/semezana/ent/topic"
+	"github.com/Muchogoc/semezana/ent/recipient"
 	"github.com/Muchogoc/semezana/ent/user"
 	"github.com/google/uuid"
 )
@@ -20,15 +22,17 @@ import (
 // MessageQuery is the builder for querying Message entities.
 type MessageQuery struct {
 	config
-	limit      *int
-	offset     *int
-	unique     *bool
-	order      []OrderFunc
-	fields     []string
-	predicates []predicate.Message
-	withTopic  *TopicQuery
-	withSender *UserQuery
-	withFKs    bool
+	limit                 *int
+	offset                *int
+	unique                *bool
+	order                 []OrderFunc
+	fields                []string
+	predicates            []predicate.Message
+	withAuthor            *UserQuery
+	withChannel           *ChannelQuery
+	withMessageRecipients *UserQuery
+	withRecipients        *RecipientQuery
+	withFKs               bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -65,30 +69,8 @@ func (mq *MessageQuery) Order(o ...OrderFunc) *MessageQuery {
 	return mq
 }
 
-// QueryTopic chains the current query on the "topic" edge.
-func (mq *MessageQuery) QueryTopic() *TopicQuery {
-	query := &TopicQuery{config: mq.config}
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := mq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := mq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(message.Table, message.FieldID, selector),
-			sqlgraph.To(topic.Table, topic.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, message.TopicTable, message.TopicColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(mq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QuerySender chains the current query on the "sender" edge.
-func (mq *MessageQuery) QuerySender() *UserQuery {
+// QueryAuthor chains the current query on the "author" edge.
+func (mq *MessageQuery) QueryAuthor() *UserQuery {
 	query := &UserQuery{config: mq.config}
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := mq.prepareQuery(ctx); err != nil {
@@ -101,7 +83,73 @@ func (mq *MessageQuery) QuerySender() *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(message.Table, message.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, message.SenderTable, message.SenderColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, message.AuthorTable, message.AuthorColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(mq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryChannel chains the current query on the "channel" edge.
+func (mq *MessageQuery) QueryChannel() *ChannelQuery {
+	query := &ChannelQuery{config: mq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := mq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := mq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(message.Table, message.FieldID, selector),
+			sqlgraph.To(channel.Table, channel.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, message.ChannelTable, message.ChannelColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(mq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryMessageRecipients chains the current query on the "message_recipients" edge.
+func (mq *MessageQuery) QueryMessageRecipients() *UserQuery {
+	query := &UserQuery{config: mq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := mq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := mq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(message.Table, message.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, message.MessageRecipientsTable, message.MessageRecipientsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(mq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryRecipients chains the current query on the "recipients" edge.
+func (mq *MessageQuery) QueryRecipients() *RecipientQuery {
+	query := &RecipientQuery{config: mq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := mq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := mq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(message.Table, message.FieldID, selector),
+			sqlgraph.To(recipient.Table, recipient.MessageColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, message.RecipientsTable, message.RecipientsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(mq.driver.Dialect(), step)
 		return fromU, nil
@@ -285,13 +333,15 @@ func (mq *MessageQuery) Clone() *MessageQuery {
 		return nil
 	}
 	return &MessageQuery{
-		config:     mq.config,
-		limit:      mq.limit,
-		offset:     mq.offset,
-		order:      append([]OrderFunc{}, mq.order...),
-		predicates: append([]predicate.Message{}, mq.predicates...),
-		withTopic:  mq.withTopic.Clone(),
-		withSender: mq.withSender.Clone(),
+		config:                mq.config,
+		limit:                 mq.limit,
+		offset:                mq.offset,
+		order:                 append([]OrderFunc{}, mq.order...),
+		predicates:            append([]predicate.Message{}, mq.predicates...),
+		withAuthor:            mq.withAuthor.Clone(),
+		withChannel:           mq.withChannel.Clone(),
+		withMessageRecipients: mq.withMessageRecipients.Clone(),
+		withRecipients:        mq.withRecipients.Clone(),
 		// clone intermediate query.
 		sql:    mq.sql.Clone(),
 		path:   mq.path,
@@ -299,25 +349,47 @@ func (mq *MessageQuery) Clone() *MessageQuery {
 	}
 }
 
-// WithTopic tells the query-builder to eager-load the nodes that are connected to
-// the "topic" edge. The optional arguments are used to configure the query builder of the edge.
-func (mq *MessageQuery) WithTopic(opts ...func(*TopicQuery)) *MessageQuery {
-	query := &TopicQuery{config: mq.config}
-	for _, opt := range opts {
-		opt(query)
-	}
-	mq.withTopic = query
-	return mq
-}
-
-// WithSender tells the query-builder to eager-load the nodes that are connected to
-// the "sender" edge. The optional arguments are used to configure the query builder of the edge.
-func (mq *MessageQuery) WithSender(opts ...func(*UserQuery)) *MessageQuery {
+// WithAuthor tells the query-builder to eager-load the nodes that are connected to
+// the "author" edge. The optional arguments are used to configure the query builder of the edge.
+func (mq *MessageQuery) WithAuthor(opts ...func(*UserQuery)) *MessageQuery {
 	query := &UserQuery{config: mq.config}
 	for _, opt := range opts {
 		opt(query)
 	}
-	mq.withSender = query
+	mq.withAuthor = query
+	return mq
+}
+
+// WithChannel tells the query-builder to eager-load the nodes that are connected to
+// the "channel" edge. The optional arguments are used to configure the query builder of the edge.
+func (mq *MessageQuery) WithChannel(opts ...func(*ChannelQuery)) *MessageQuery {
+	query := &ChannelQuery{config: mq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	mq.withChannel = query
+	return mq
+}
+
+// WithMessageRecipients tells the query-builder to eager-load the nodes that are connected to
+// the "message_recipients" edge. The optional arguments are used to configure the query builder of the edge.
+func (mq *MessageQuery) WithMessageRecipients(opts ...func(*UserQuery)) *MessageQuery {
+	query := &UserQuery{config: mq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	mq.withMessageRecipients = query
+	return mq
+}
+
+// WithRecipients tells the query-builder to eager-load the nodes that are connected to
+// the "recipients" edge. The optional arguments are used to configure the query builder of the edge.
+func (mq *MessageQuery) WithRecipients(opts ...func(*RecipientQuery)) *MessageQuery {
+	query := &RecipientQuery{config: mq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	mq.withRecipients = query
 	return mq
 }
 
@@ -327,12 +399,12 @@ func (mq *MessageQuery) WithSender(opts ...func(*UserQuery)) *MessageQuery {
 // Example:
 //
 //	var v []struct {
-//		TopicID uuid.UUID `json:"topic_id,omitempty"`
+//		ChannelID uuid.UUID `json:"channel_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Message.Query().
-//		GroupBy(message.FieldTopicID).
+//		GroupBy(message.FieldChannelID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -356,11 +428,11 @@ func (mq *MessageQuery) GroupBy(field string, fields ...string) *MessageGroupBy 
 // Example:
 //
 //	var v []struct {
-//		TopicID uuid.UUID `json:"topic_id,omitempty"`
+//		ChannelID uuid.UUID `json:"channel_id,omitempty"`
 //	}
 //
 //	client.Message.Query().
-//		Select(message.FieldTopicID).
+//		Select(message.FieldChannelID).
 //		Scan(ctx, &v)
 //
 func (mq *MessageQuery) Select(fields ...string) *MessageSelect {
@@ -392,12 +464,14 @@ func (mq *MessageQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Mess
 		nodes       = []*Message{}
 		withFKs     = mq.withFKs
 		_spec       = mq.querySpec()
-		loadedTypes = [2]bool{
-			mq.withTopic != nil,
-			mq.withSender != nil,
+		loadedTypes = [4]bool{
+			mq.withAuthor != nil,
+			mq.withChannel != nil,
+			mq.withMessageRecipients != nil,
+			mq.withRecipients != nil,
 		}
 	)
-	if mq.withTopic != nil || mq.withSender != nil {
+	if mq.withAuthor != nil || mq.withChannel != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -421,48 +495,36 @@ func (mq *MessageQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Mess
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := mq.withTopic; query != nil {
-		if err := mq.loadTopic(ctx, query, nodes, nil,
-			func(n *Message, e *Topic) { n.Edges.Topic = e }); err != nil {
+	if query := mq.withAuthor; query != nil {
+		if err := mq.loadAuthor(ctx, query, nodes, nil,
+			func(n *Message, e *User) { n.Edges.Author = e }); err != nil {
 			return nil, err
 		}
 	}
-	if query := mq.withSender; query != nil {
-		if err := mq.loadSender(ctx, query, nodes, nil,
-			func(n *Message, e *User) { n.Edges.Sender = e }); err != nil {
+	if query := mq.withChannel; query != nil {
+		if err := mq.loadChannel(ctx, query, nodes, nil,
+			func(n *Message, e *Channel) { n.Edges.Channel = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := mq.withMessageRecipients; query != nil {
+		if err := mq.loadMessageRecipients(ctx, query, nodes,
+			func(n *Message) { n.Edges.MessageRecipients = []*User{} },
+			func(n *Message, e *User) { n.Edges.MessageRecipients = append(n.Edges.MessageRecipients, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := mq.withRecipients; query != nil {
+		if err := mq.loadRecipients(ctx, query, nodes,
+			func(n *Message) { n.Edges.Recipients = []*Recipient{} },
+			func(n *Message, e *Recipient) { n.Edges.Recipients = append(n.Edges.Recipients, e) }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (mq *MessageQuery) loadTopic(ctx context.Context, query *TopicQuery, nodes []*Message, init func(*Message), assign func(*Message, *Topic)) error {
-	ids := make([]uuid.UUID, 0, len(nodes))
-	nodeids := make(map[uuid.UUID][]*Message)
-	for i := range nodes {
-		fk := nodes[i].TopicID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	query.Where(topic.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "topic_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (mq *MessageQuery) loadSender(ctx context.Context, query *UserQuery, nodes []*Message, init func(*Message), assign func(*Message, *User)) error {
+func (mq *MessageQuery) loadAuthor(ctx context.Context, query *UserQuery, nodes []*Message, init func(*Message), assign func(*Message, *User)) error {
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*Message)
 	for i := range nodes {
@@ -488,6 +550,117 @@ func (mq *MessageQuery) loadSender(ctx context.Context, query *UserQuery, nodes 
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (mq *MessageQuery) loadChannel(ctx context.Context, query *ChannelQuery, nodes []*Message, init func(*Message), assign func(*Message, *Channel)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Message)
+	for i := range nodes {
+		fk := nodes[i].ChannelID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	query.Where(channel.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "channel_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (mq *MessageQuery) loadMessageRecipients(ctx context.Context, query *UserQuery, nodes []*Message, init func(*Message), assign func(*Message, *User)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[uuid.UUID]*Message)
+	nids := make(map[uuid.UUID]map[*Message]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(message.MessageRecipientsTable)
+		s.Join(joinT).On(s.C(user.FieldID), joinT.C(message.MessageRecipientsPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(message.MessageRecipientsPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(message.MessageRecipientsPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+		assign := spec.Assign
+		values := spec.ScanValues
+		spec.ScanValues = func(columns []string) ([]interface{}, error) {
+			values, err := values(columns[1:])
+			if err != nil {
+				return nil, err
+			}
+			return append([]interface{}{new(uuid.UUID)}, values...), nil
+		}
+		spec.Assign = func(columns []string, values []interface{}) error {
+			outValue := *values[0].(*uuid.UUID)
+			inValue := *values[1].(*uuid.UUID)
+			if nids[inValue] == nil {
+				nids[inValue] = map[*Message]struct{}{byID[outValue]: struct{}{}}
+				return assign(columns[1:], values[1:])
+			}
+			nids[inValue][byID[outValue]] = struct{}{}
+			return nil
+		}
+	})
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "message_recipients" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (mq *MessageQuery) loadRecipients(ctx context.Context, query *RecipientQuery, nodes []*Message, init func(*Message), assign func(*Message, *Recipient)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Message)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.Where(predicate.Recipient(func(s *sql.Selector) {
+		s.Where(sql.InValues(message.RecipientsColumn, fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.MessageID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "message_id" returned %v for node %v`, fk, n)
+		}
+		assign(node, n)
 	}
 	return nil
 }

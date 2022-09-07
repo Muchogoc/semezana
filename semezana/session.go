@@ -28,13 +28,13 @@ type Session struct {
 
 	// messageLock *sync.Mutex
 
-	// detach - channel for detaching session from topic, buffered.
-	// Content is topic name to detach from.
+	// detach - channel for detaching session from channel, buffered.
+	// Content is channel name to detach from.
 	detach chan string
 
 	// ID of the current user. Could be empty if session is not authenticated
 	uid string
-	// Map of topic subscriptions, indexed by topic name.
+	// Map of channel subscriptions, indexed by channel name.
 	// Don't access directly. Use getters/setters.
 	// subscriptions map[string]*Subscription
 	// subsLock      sync.RWMutex
@@ -75,7 +75,7 @@ func (s *Session) queueOut(msg *dto.ServerComMessage) bool {
 	select {
 	case s.send <- msg:
 	default:
-		// Never block here since it may also block the topic's run() goroutine.
+		// Never block here since it may also block the channel's run() goroutine.
 		return false
 	}
 
