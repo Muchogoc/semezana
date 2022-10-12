@@ -19,8 +19,10 @@ func (Subscription) Fields() []ent.Field {
 			Default(uuid.New),
 		field.UUID("channel_id", uuid.New()),
 		field.UUID("user_id", uuid.New()),
-		field.String("role").Comment("Authorizations in channel"),
-		field.String("status").Comment("Access to channel"),
+		field.String("role").Comment("Authorizations in channel i.e admin, moderator etc"),
+		field.String("status").Comment("Access to channel i.e ok, banned"),
+		field.Bool("pinned"),
+		field.Time("pinned_at"),
 	}
 }
 
