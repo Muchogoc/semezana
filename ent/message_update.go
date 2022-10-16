@@ -14,8 +14,8 @@ import (
 	"github.com/Muchogoc/semezana/ent/channel"
 	"github.com/Muchogoc/semezana/ent/message"
 	"github.com/Muchogoc/semezana/ent/predicate"
+	"github.com/Muchogoc/semezana/ent/schema"
 	"github.com/Muchogoc/semezana/ent/user"
-	"github.com/Muchogoc/semezana/semezana/models"
 	"github.com/google/uuid"
 )
 
@@ -72,14 +72,14 @@ func (mu *MessageUpdate) AddSequence(i int) *MessageUpdate {
 }
 
 // SetHeader sets the "header" field.
-func (mu *MessageUpdate) SetHeader(m map[string]interface{}) *MessageUpdate {
-	mu.mutation.SetHeader(m)
+func (mu *MessageUpdate) SetHeader(sh schema.MessageHeaders) *MessageUpdate {
+	mu.mutation.SetHeader(sh)
 	return mu
 }
 
 // SetContent sets the "content" field.
-func (mu *MessageUpdate) SetContent(mc models.MessageContent) *MessageUpdate {
-	mu.mutation.SetContent(mc)
+func (mu *MessageUpdate) SetContent(sc schema.MessageContent) *MessageUpdate {
+	mu.mutation.SetContent(sc)
 	return mu
 }
 
@@ -475,14 +475,14 @@ func (muo *MessageUpdateOne) AddSequence(i int) *MessageUpdateOne {
 }
 
 // SetHeader sets the "header" field.
-func (muo *MessageUpdateOne) SetHeader(m map[string]interface{}) *MessageUpdateOne {
-	muo.mutation.SetHeader(m)
+func (muo *MessageUpdateOne) SetHeader(sh schema.MessageHeaders) *MessageUpdateOne {
+	muo.mutation.SetHeader(sh)
 	return muo
 }
 
 // SetContent sets the "content" field.
-func (muo *MessageUpdateOne) SetContent(mc models.MessageContent) *MessageUpdateOne {
-	muo.mutation.SetContent(mc)
+func (muo *MessageUpdateOne) SetContent(sc schema.MessageContent) *MessageUpdateOne {
+	muo.mutation.SetContent(sc)
 	return muo
 }
 

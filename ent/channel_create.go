@@ -58,6 +58,12 @@ func (cc *ChannelCreate) SetName(s string) *ChannelCreate {
 	return cc
 }
 
+// SetDescription sets the "description" field.
+func (cc *ChannelCreate) SetDescription(s string) *ChannelCreate {
+	cc.mutation.SetDescription(s)
+	return cc
+}
+
 // SetType sets the "type" field.
 func (cc *ChannelCreate) SetType(s string) *ChannelCreate {
 	cc.mutation.SetType(s)
@@ -273,6 +279,9 @@ func (cc *ChannelCreate) check() error {
 	if _, ok := cc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Channel.name"`)}
 	}
+	if _, ok := cc.mutation.Description(); !ok {
+		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "Channel.description"`)}
+	}
 	if _, ok := cc.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Channel.type"`)}
 	}
@@ -347,6 +356,14 @@ func (cc *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 			Column: channel.FieldName,
 		})
 		_node.Name = value
+	}
+	if value, ok := cc.mutation.Description(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: channel.FieldDescription,
+		})
+		_node.Description = value
 	}
 	if value, ok := cc.mutation.GetType(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

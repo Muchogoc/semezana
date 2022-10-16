@@ -3,7 +3,7 @@ package dto
 import (
 	"time"
 
-	"github.com/Muchogoc/semezana/semezana/models"
+	"github.com/Muchogoc/semezana/ent/schema"
 )
 
 // MsgServerCtrl is a server control message {ctrl}.
@@ -17,12 +17,12 @@ type MsgServerCtrl struct {
 
 // MsgServerData is a server {data} message.
 type MsgServerData struct {
-	Channel   string                 `json:"channel"`
-	From      string                 `json:"from,omitempty"`
-	Timestamp time.Time              `json:"timestamp"`
-	SeqId     int                    `json:"sequence"`
-	Head      map[string]interface{} `json:"head,omitempty"`
-	Content   models.MessageContent  `json:"content"`
+	Channel   string                `json:"channel"`
+	From      string                `json:"from,omitempty"`
+	Timestamp time.Time             `json:"timestamp"`
+	SeqId     int                   `json:"sequence"`
+	Head      schema.MessageHeaders `json:"head,omitempty"`
+	Content   schema.MessageContent `json:"content"`
 }
 
 // MsgServerPres is presence notification {pres} (authoritative update).

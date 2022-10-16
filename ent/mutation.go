@@ -14,9 +14,9 @@ import (
 	"github.com/Muchogoc/semezana/ent/message"
 	"github.com/Muchogoc/semezana/ent/predicate"
 	"github.com/Muchogoc/semezana/ent/recipient"
+	"github.com/Muchogoc/semezana/ent/schema"
 	"github.com/Muchogoc/semezana/ent/subscription"
 	"github.com/Muchogoc/semezana/ent/user"
-	"github.com/Muchogoc/semezana/semezana/models"
 	"github.com/google/uuid"
 
 	"entgo.io/ent"
@@ -48,6 +48,7 @@ type ChannelMutation struct {
 	created_at           *time.Time
 	updated_at           *time.Time
 	name                 *string
+	description          *string
 	_type                *string
 	state                *string
 	state_at             *time.Time
@@ -279,6 +280,42 @@ func (m *ChannelMutation) OldName(ctx context.Context) (v string, err error) {
 // ResetName resets all changes to the "name" field.
 func (m *ChannelMutation) ResetName() {
 	m.name = nil
+}
+
+// SetDescription sets the "description" field.
+func (m *ChannelMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *ChannelMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the Channel entity.
+// If the Channel object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *ChannelMutation) ResetDescription() {
+	m.description = nil
 }
 
 // SetType sets the "type" field.
@@ -662,7 +699,7 @@ func (m *ChannelMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ChannelMutation) Fields() []string {
-	fields := make([]string, 0, 8)
+	fields := make([]string, 0, 9)
 	if m.created_at != nil {
 		fields = append(fields, channel.FieldCreatedAt)
 	}
@@ -671,6 +708,9 @@ func (m *ChannelMutation) Fields() []string {
 	}
 	if m.name != nil {
 		fields = append(fields, channel.FieldName)
+	}
+	if m.description != nil {
+		fields = append(fields, channel.FieldDescription)
 	}
 	if m._type != nil {
 		fields = append(fields, channel.FieldType)
@@ -701,6 +741,8 @@ func (m *ChannelMutation) Field(name string) (ent.Value, bool) {
 		return m.UpdatedAt()
 	case channel.FieldName:
 		return m.Name()
+	case channel.FieldDescription:
+		return m.Description()
 	case channel.FieldType:
 		return m.GetType()
 	case channel.FieldState:
@@ -726,6 +768,8 @@ func (m *ChannelMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldUpdatedAt(ctx)
 	case channel.FieldName:
 		return m.OldName(ctx)
+	case channel.FieldDescription:
+		return m.OldDescription(ctx)
 	case channel.FieldType:
 		return m.OldType(ctx)
 	case channel.FieldState:
@@ -765,6 +809,13 @@ func (m *ChannelMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetName(v)
+		return nil
+	case channel.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
 		return nil
 	case channel.FieldType:
 		v, ok := value.(string)
@@ -873,6 +924,9 @@ func (m *ChannelMutation) ResetField(name string) error {
 		return nil
 	case channel.FieldName:
 		m.ResetName()
+		return nil
+	case channel.FieldDescription:
+		m.ResetDescription()
 		return nil
 	case channel.FieldType:
 		m.ResetType()
@@ -1749,8 +1803,8 @@ type MessageMutation struct {
 	updated_at                *time.Time
 	sequence                  *int
 	addsequence               *int
-	header                    *map[string]interface{}
-	content                   *models.MessageContent
+	header                    *schema.MessageHeaders
+	content                   *schema.MessageContent
 	clearedFields             map[string]struct{}
 	author                    *uuid.UUID
 	clearedauthor             bool
@@ -2033,12 +2087,12 @@ func (m *MessageMutation) ResetSequence() {
 }
 
 // SetHeader sets the "header" field.
-func (m *MessageMutation) SetHeader(value map[string]interface{}) {
-	m.header = &value
+func (m *MessageMutation) SetHeader(sh schema.MessageHeaders) {
+	m.header = &sh
 }
 
 // Header returns the value of the "header" field in the mutation.
-func (m *MessageMutation) Header() (r map[string]interface{}, exists bool) {
+func (m *MessageMutation) Header() (r schema.MessageHeaders, exists bool) {
 	v := m.header
 	if v == nil {
 		return
@@ -2049,7 +2103,7 @@ func (m *MessageMutation) Header() (r map[string]interface{}, exists bool) {
 // OldHeader returns the old "header" field's value of the Message entity.
 // If the Message object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *MessageMutation) OldHeader(ctx context.Context) (v map[string]interface{}, err error) {
+func (m *MessageMutation) OldHeader(ctx context.Context) (v schema.MessageHeaders, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldHeader is only allowed on UpdateOne operations")
 	}
@@ -2069,12 +2123,12 @@ func (m *MessageMutation) ResetHeader() {
 }
 
 // SetContent sets the "content" field.
-func (m *MessageMutation) SetContent(mc models.MessageContent) {
-	m.content = &mc
+func (m *MessageMutation) SetContent(sc schema.MessageContent) {
+	m.content = &sc
 }
 
 // Content returns the value of the "content" field in the mutation.
-func (m *MessageMutation) Content() (r models.MessageContent, exists bool) {
+func (m *MessageMutation) Content() (r schema.MessageContent, exists bool) {
 	v := m.content
 	if v == nil {
 		return
@@ -2085,7 +2139,7 @@ func (m *MessageMutation) Content() (r models.MessageContent, exists bool) {
 // OldContent returns the old "content" field's value of the Message entity.
 // If the Message object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *MessageMutation) OldContent(ctx context.Context) (v models.MessageContent, err error) {
+func (m *MessageMutation) OldContent(ctx context.Context) (v schema.MessageContent, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldContent is only allowed on UpdateOne operations")
 	}
@@ -2340,14 +2394,14 @@ func (m *MessageMutation) SetField(name string, value ent.Value) error {
 		m.SetSequence(v)
 		return nil
 	case message.FieldHeader:
-		v, ok := value.(map[string]interface{})
+		v, ok := value.(schema.MessageHeaders)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetHeader(v)
 		return nil
 	case message.FieldContent:
-		v, ok := value.(models.MessageContent)
+		v, ok := value.(schema.MessageContent)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -3077,6 +3131,8 @@ type SubscriptionMutation struct {
 	id             *uuid.UUID
 	role           *string
 	status         *string
+	pinned         *bool
+	pinned_at      *time.Time
 	clearedFields  map[string]struct{}
 	user           *uuid.UUID
 	cleareduser    bool
@@ -3335,6 +3391,78 @@ func (m *SubscriptionMutation) ResetStatus() {
 	m.status = nil
 }
 
+// SetPinned sets the "pinned" field.
+func (m *SubscriptionMutation) SetPinned(b bool) {
+	m.pinned = &b
+}
+
+// Pinned returns the value of the "pinned" field in the mutation.
+func (m *SubscriptionMutation) Pinned() (r bool, exists bool) {
+	v := m.pinned
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPinned returns the old "pinned" field's value of the Subscription entity.
+// If the Subscription object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SubscriptionMutation) OldPinned(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPinned is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPinned requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPinned: %w", err)
+	}
+	return oldValue.Pinned, nil
+}
+
+// ResetPinned resets all changes to the "pinned" field.
+func (m *SubscriptionMutation) ResetPinned() {
+	m.pinned = nil
+}
+
+// SetPinnedAt sets the "pinned_at" field.
+func (m *SubscriptionMutation) SetPinnedAt(t time.Time) {
+	m.pinned_at = &t
+}
+
+// PinnedAt returns the value of the "pinned_at" field in the mutation.
+func (m *SubscriptionMutation) PinnedAt() (r time.Time, exists bool) {
+	v := m.pinned_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPinnedAt returns the old "pinned_at" field's value of the Subscription entity.
+// If the Subscription object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SubscriptionMutation) OldPinnedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPinnedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPinnedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPinnedAt: %w", err)
+	}
+	return oldValue.PinnedAt, nil
+}
+
+// ResetPinnedAt resets all changes to the "pinned_at" field.
+func (m *SubscriptionMutation) ResetPinnedAt() {
+	m.pinned_at = nil
+}
+
 // ClearUser clears the "user" edge to the User entity.
 func (m *SubscriptionMutation) ClearUser() {
 	m.cleareduser = true
@@ -3406,7 +3534,7 @@ func (m *SubscriptionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *SubscriptionMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 6)
 	if m.channel != nil {
 		fields = append(fields, subscription.FieldChannelID)
 	}
@@ -3418,6 +3546,12 @@ func (m *SubscriptionMutation) Fields() []string {
 	}
 	if m.status != nil {
 		fields = append(fields, subscription.FieldStatus)
+	}
+	if m.pinned != nil {
+		fields = append(fields, subscription.FieldPinned)
+	}
+	if m.pinned_at != nil {
+		fields = append(fields, subscription.FieldPinnedAt)
 	}
 	return fields
 }
@@ -3435,6 +3569,10 @@ func (m *SubscriptionMutation) Field(name string) (ent.Value, bool) {
 		return m.Role()
 	case subscription.FieldStatus:
 		return m.Status()
+	case subscription.FieldPinned:
+		return m.Pinned()
+	case subscription.FieldPinnedAt:
+		return m.PinnedAt()
 	}
 	return nil, false
 }
@@ -3452,6 +3590,10 @@ func (m *SubscriptionMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldRole(ctx)
 	case subscription.FieldStatus:
 		return m.OldStatus(ctx)
+	case subscription.FieldPinned:
+		return m.OldPinned(ctx)
+	case subscription.FieldPinnedAt:
+		return m.OldPinnedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown Subscription field %s", name)
 }
@@ -3488,6 +3630,20 @@ func (m *SubscriptionMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetStatus(v)
+		return nil
+	case subscription.FieldPinned:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPinned(v)
+		return nil
+	case subscription.FieldPinnedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPinnedAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Subscription field %s", name)
@@ -3549,6 +3705,12 @@ func (m *SubscriptionMutation) ResetField(name string) error {
 		return nil
 	case subscription.FieldStatus:
 		m.ResetStatus()
+		return nil
+	case subscription.FieldPinned:
+		m.ResetPinned()
+		return nil
+	case subscription.FieldPinnedAt:
+		m.ResetPinnedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Subscription field %s", name)

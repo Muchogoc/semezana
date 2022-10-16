@@ -14,6 +14,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString},
 		{Name: "type", Type: field.TypeString},
 		{Name: "state", Type: field.TypeString},
 		{Name: "state_at", Type: field.TypeTime},
@@ -130,6 +131,8 @@ var (
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "role", Type: field.TypeString},
 		{Name: "status", Type: field.TypeString},
+		{Name: "pinned", Type: field.TypeBool},
+		{Name: "pinned_at", Type: field.TypeTime},
 		{Name: "user_id", Type: field.TypeUUID},
 		{Name: "channel_id", Type: field.TypeUUID},
 	}
@@ -141,13 +144,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "subscriptions_users_user",
-				Columns:    []*schema.Column{SubscriptionsColumns[3]},
+				Columns:    []*schema.Column{SubscriptionsColumns[5]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "subscriptions_channels_channel",
-				Columns:    []*schema.Column{SubscriptionsColumns[4]},
+				Columns:    []*schema.Column{SubscriptionsColumns[6]},
 				RefColumns: []*schema.Column{ChannelsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -156,7 +159,7 @@ var (
 			{
 				Name:    "subscription_user_id_channel_id",
 				Unique:  true,
-				Columns: []*schema.Column{SubscriptionsColumns[3], SubscriptionsColumns[4]},
+				Columns: []*schema.Column{SubscriptionsColumns[5], SubscriptionsColumns[6]},
 			},
 		},
 	}

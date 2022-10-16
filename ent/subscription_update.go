@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -51,6 +52,18 @@ func (su *SubscriptionUpdate) SetRole(s string) *SubscriptionUpdate {
 // SetStatus sets the "status" field.
 func (su *SubscriptionUpdate) SetStatus(s string) *SubscriptionUpdate {
 	su.mutation.SetStatus(s)
+	return su
+}
+
+// SetPinned sets the "pinned" field.
+func (su *SubscriptionUpdate) SetPinned(b bool) *SubscriptionUpdate {
+	su.mutation.SetPinned(b)
+	return su
+}
+
+// SetPinnedAt sets the "pinned_at" field.
+func (su *SubscriptionUpdate) SetPinnedAt(t time.Time) *SubscriptionUpdate {
+	su.mutation.SetPinnedAt(t)
 	return su
 }
 
@@ -184,6 +197,20 @@ func (su *SubscriptionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: subscription.FieldStatus,
 		})
 	}
+	if value, ok := su.mutation.Pinned(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: subscription.FieldPinned,
+		})
+	}
+	if value, ok := su.mutation.PinnedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: subscription.FieldPinnedAt,
+		})
+	}
 	if su.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -294,6 +321,18 @@ func (suo *SubscriptionUpdateOne) SetRole(s string) *SubscriptionUpdateOne {
 // SetStatus sets the "status" field.
 func (suo *SubscriptionUpdateOne) SetStatus(s string) *SubscriptionUpdateOne {
 	suo.mutation.SetStatus(s)
+	return suo
+}
+
+// SetPinned sets the "pinned" field.
+func (suo *SubscriptionUpdateOne) SetPinned(b bool) *SubscriptionUpdateOne {
+	suo.mutation.SetPinned(b)
+	return suo
+}
+
+// SetPinnedAt sets the "pinned_at" field.
+func (suo *SubscriptionUpdateOne) SetPinnedAt(t time.Time) *SubscriptionUpdateOne {
+	suo.mutation.SetPinnedAt(t)
 	return suo
 }
 
@@ -455,6 +494,20 @@ func (suo *SubscriptionUpdateOne) sqlSave(ctx context.Context) (_node *Subscript
 			Type:   field.TypeString,
 			Value:  value,
 			Column: subscription.FieldStatus,
+		})
+	}
+	if value, ok := suo.mutation.Pinned(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: subscription.FieldPinned,
+		})
+	}
+	if value, ok := suo.mutation.PinnedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: subscription.FieldPinnedAt,
 		})
 	}
 	if suo.mutation.UserCleared() {

@@ -8,11 +8,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Muchogoc/semezana/domain/chat"
 	"github.com/Muchogoc/semezana/ent"
 	"github.com/Muchogoc/semezana/ent/channel"
+	"github.com/Muchogoc/semezana/ent/schema"
 	"github.com/Muchogoc/semezana/ent/subscription"
 	"github.com/Muchogoc/semezana/semezana/dto"
-	"github.com/Muchogoc/semezana/semezana/models"
 	"github.com/google/uuid"
 )
 
@@ -72,7 +73,7 @@ func (s *Session) accountHandler(ctx context.Context, msg *dto.ClientComMessage)
 		user, err := globals.client.User.
 			Create().
 			SetName("Test User").
-			SetState(models.StateOK.String()).
+			SetState("OK").
 			SetStateAt(msg.Timestamp).
 			Save(ctx)
 		if err != nil {
@@ -259,8 +260,8 @@ func (s *Session) subscriptionHandler(ctx context.Context, msg *dto.ClientComMes
 		// create channel
 		channel, err := globals.client.Channel.Create().
 			SetName("Test Topic").
-			SetType(string(models.ChannelCategoryP2P)).
-			SetState(models.StateOK.String()).
+			SetType(string(chat.ChannelCategoryP2P)).
+			SetState(chat.StateOK.String()).
 			SetStateAt(time.Now()).
 			Save(ctx)
 		if err != nil {
@@ -370,8 +371,8 @@ func (s *Session) publishHandler(ctx context.Context, msg *dto.ClientComMessage)
 	message, err := globals.client.Message.Create().
 		SetAuthorID(uid).
 		SetChannel(channel).
-		SetHeader(msg.Publish.Head).
-		SetContent(models.MessageContent{
+		SetHeader(schema.MessageHeaders{}).
+		SetContent(schema.MessageContent{
 			Text: msg.Publish.Content.(string),
 		}).
 		SetSequence(sequence).

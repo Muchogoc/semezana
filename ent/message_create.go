@@ -12,8 +12,8 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/Muchogoc/semezana/ent/channel"
 	"github.com/Muchogoc/semezana/ent/message"
+	"github.com/Muchogoc/semezana/ent/schema"
 	"github.com/Muchogoc/semezana/ent/user"
-	"github.com/Muchogoc/semezana/semezana/models"
 	"github.com/google/uuid"
 )
 
@@ -65,14 +65,14 @@ func (mc *MessageCreate) SetSequence(i int) *MessageCreate {
 }
 
 // SetHeader sets the "header" field.
-func (mc *MessageCreate) SetHeader(m map[string]interface{}) *MessageCreate {
-	mc.mutation.SetHeader(m)
+func (mc *MessageCreate) SetHeader(sh schema.MessageHeaders) *MessageCreate {
+	mc.mutation.SetHeader(sh)
 	return mc
 }
 
 // SetContent sets the "content" field.
-func (mc *MessageCreate) SetContent(value models.MessageContent) *MessageCreate {
-	mc.mutation.SetContent(value)
+func (mc *MessageCreate) SetContent(sc schema.MessageContent) *MessageCreate {
+	mc.mutation.SetContent(sc)
 	return mc
 }
 

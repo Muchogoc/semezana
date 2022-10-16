@@ -58,6 +58,12 @@ func (cu *ChannelUpdate) SetName(s string) *ChannelUpdate {
 	return cu
 }
 
+// SetDescription sets the "description" field.
+func (cu *ChannelUpdate) SetDescription(s string) *ChannelUpdate {
+	cu.mutation.SetDescription(s)
+	return cu
+}
+
 // SetType sets the "type" field.
 func (cu *ChannelUpdate) SetType(s string) *ChannelUpdate {
 	cu.mutation.SetType(s)
@@ -324,6 +330,13 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Type:   field.TypeString,
 			Value:  value,
 			Column: channel.FieldName,
+		})
+	}
+	if value, ok := cu.mutation.Description(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: channel.FieldDescription,
 		})
 	}
 	if value, ok := cu.mutation.GetType(); ok {
@@ -593,6 +606,12 @@ func (cuo *ChannelUpdateOne) SetUpdatedAt(t time.Time) *ChannelUpdateOne {
 // SetName sets the "name" field.
 func (cuo *ChannelUpdateOne) SetName(s string) *ChannelUpdateOne {
 	cuo.mutation.SetName(s)
+	return cuo
+}
+
+// SetDescription sets the "description" field.
+func (cuo *ChannelUpdateOne) SetDescription(s string) *ChannelUpdateOne {
+	cuo.mutation.SetDescription(s)
 	return cuo
 }
 
@@ -892,6 +911,13 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 			Type:   field.TypeString,
 			Value:  value,
 			Column: channel.FieldName,
+		})
+	}
+	if value, ok := cuo.mutation.Description(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: channel.FieldDescription,
 		})
 	}
 	if value, ok := cuo.mutation.GetType(); ok {

@@ -11,8 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/Muchogoc/semezana/ent/channel"
 	"github.com/Muchogoc/semezana/ent/message"
+	"github.com/Muchogoc/semezana/ent/schema"
 	"github.com/Muchogoc/semezana/ent/user"
-	"github.com/Muchogoc/semezana/semezana/models"
 	"github.com/google/uuid"
 )
 
@@ -30,9 +30,9 @@ type Message struct {
 	// Sequence holds the value of the "sequence" field.
 	Sequence int `json:"sequence,omitempty"`
 	// The message header
-	Header map[string]interface{} `json:"header,omitempty"`
+	Header schema.MessageHeaders `json:"header,omitempty"`
 	// The message data
-	Content models.MessageContent `json:"content,omitempty"`
+	Content schema.MessageContent `json:"content,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the MessageQuery when eager-loading is set.
 	Edges         MessageEdges `json:"edges"`

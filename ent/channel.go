@@ -23,6 +23,8 @@ type Channel struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
+	// Description holds the value of the "description" field.
+	Description string `json:"description,omitempty"`
 	// Type holds the value of the "type" field.
 	Type string `json:"type,omitempty"`
 	// State holds the value of the "state" field.
@@ -85,7 +87,7 @@ func (*Channel) scanValues(columns []string) ([]interface{}, error) {
 		switch columns[i] {
 		case channel.FieldSequence:
 			values[i] = new(sql.NullInt64)
-		case channel.FieldName, channel.FieldType, channel.FieldState:
+		case channel.FieldName, channel.FieldDescription, channel.FieldType, channel.FieldState:
 			values[i] = new(sql.NullString)
 		case channel.FieldCreatedAt, channel.FieldUpdatedAt, channel.FieldStateAt, channel.FieldTouched:
 			values[i] = new(sql.NullTime)
@@ -129,6 +131,12 @@ func (c *Channel) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				c.Name = value.String
+			}
+		case channel.FieldDescription:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field description", values[i])
+			} else if value.Valid {
+				c.Description = value.String
 			}
 		case channel.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -211,6 +219,9 @@ func (c *Channel) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(c.Name)
+	builder.WriteString(", ")
+	builder.WriteString("description=")
+	builder.WriteString(c.Description)
 	builder.WriteString(", ")
 	builder.WriteString("type=")
 	builder.WriteString(c.Type)

@@ -3,6 +3,8 @@
 package subscription
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/Muchogoc/semezana/ent/predicate"
@@ -105,6 +107,20 @@ func Role(v string) predicate.Subscription {
 func Status(v string) predicate.Subscription {
 	return predicate.Subscription(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldStatus), v))
+	})
+}
+
+// Pinned applies equality check predicate on the "pinned" field. It's identical to PinnedEQ.
+func Pinned(v bool) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldPinned), v))
+	})
+}
+
+// PinnedAt applies equality check predicate on the "pinned_at" field. It's identical to PinnedAtEQ.
+func PinnedAt(v time.Time) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldPinnedAt), v))
 	})
 }
 
@@ -375,6 +391,84 @@ func StatusEqualFold(v string) predicate.Subscription {
 func StatusContainsFold(v string) predicate.Subscription {
 	return predicate.Subscription(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldStatus), v))
+	})
+}
+
+// PinnedEQ applies the EQ predicate on the "pinned" field.
+func PinnedEQ(v bool) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldPinned), v))
+	})
+}
+
+// PinnedNEQ applies the NEQ predicate on the "pinned" field.
+func PinnedNEQ(v bool) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldPinned), v))
+	})
+}
+
+// PinnedAtEQ applies the EQ predicate on the "pinned_at" field.
+func PinnedAtEQ(v time.Time) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldPinnedAt), v))
+	})
+}
+
+// PinnedAtNEQ applies the NEQ predicate on the "pinned_at" field.
+func PinnedAtNEQ(v time.Time) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldPinnedAt), v))
+	})
+}
+
+// PinnedAtIn applies the In predicate on the "pinned_at" field.
+func PinnedAtIn(vs ...time.Time) predicate.Subscription {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.In(s.C(FieldPinnedAt), v...))
+	})
+}
+
+// PinnedAtNotIn applies the NotIn predicate on the "pinned_at" field.
+func PinnedAtNotIn(vs ...time.Time) predicate.Subscription {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.NotIn(s.C(FieldPinnedAt), v...))
+	})
+}
+
+// PinnedAtGT applies the GT predicate on the "pinned_at" field.
+func PinnedAtGT(v time.Time) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldPinnedAt), v))
+	})
+}
+
+// PinnedAtGTE applies the GTE predicate on the "pinned_at" field.
+func PinnedAtGTE(v time.Time) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldPinnedAt), v))
+	})
+}
+
+// PinnedAtLT applies the LT predicate on the "pinned_at" field.
+func PinnedAtLT(v time.Time) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldPinnedAt), v))
+	})
+}
+
+// PinnedAtLTE applies the LTE predicate on the "pinned_at" field.
+func PinnedAtLTE(v time.Time) predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldPinnedAt), v))
 	})
 }
 

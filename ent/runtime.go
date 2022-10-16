@@ -31,11 +31,11 @@ func init() {
 	// channel.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	channel.UpdateDefaultUpdatedAt = channelDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// channelDescSequence is the schema descriptor for sequence field.
-	channelDescSequence := channelFields[7].Descriptor()
+	channelDescSequence := channelFields[8].Descriptor()
 	// channel.DefaultSequence holds the default value on creation for the sequence field.
 	channel.DefaultSequence = channelDescSequence.Default.(int)
 	// channelDescTouched is the schema descriptor for touched field.
-	channelDescTouched := channelFields[8].Descriptor()
+	channelDescTouched := channelFields[9].Descriptor()
 	// channel.DefaultTouched holds the default value on creation for the touched field.
 	channel.DefaultTouched = channelDescTouched.Default.(time.Time)
 	// channelDescID is the schema descriptor for id field.

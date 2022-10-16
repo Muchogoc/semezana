@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/Muchogoc/semezana/ent/channel"
@@ -22,10 +23,14 @@ type Subscription struct {
 	ChannelID uuid.UUID `json:"channel_id,omitempty"`
 	// UserID holds the value of the "user_id" field.
 	UserID uuid.UUID `json:"user_id,omitempty"`
-	// Authorizations in channel
+	// Authorizations in channel i.e admin, moderator etc
 	Role string `json:"role,omitempty"`
-	// Access to channel
+	// Access to channel i.e ok, banned
 	Status string `json:"status,omitempty"`
+	// Pinned holds the value of the "pinned" field.
+	Pinned bool `json:"pinned,omitempty"`
+	// PinnedAt holds the value of the "pinned_at" field.
+	PinnedAt time.Time `json:"pinned_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the SubscriptionQuery when eager-loading is set.
 	Edges SubscriptionEdges `json:"edges"`
@@ -73,8 +78,12 @@ func (*Subscription) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case subscription.FieldPinned:
+			values[i] = new(sql.NullBool)
 		case subscription.FieldRole, subscription.FieldStatus:
 			values[i] = new(sql.NullString)
+		case subscription.FieldPinnedAt:
+			values[i] = new(sql.NullTime)
 		case subscription.FieldID, subscription.FieldChannelID, subscription.FieldUserID:
 			values[i] = new(uuid.UUID)
 		default:
@@ -121,6 +130,18 @@ func (s *Subscription) assignValues(columns []string, values []interface{}) erro
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
 				s.Status = value.String
+			}
+		case subscription.FieldPinned:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field pinned", values[i])
+			} else if value.Valid {
+				s.Pinned = value.Bool
+			}
+		case subscription.FieldPinnedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field pinned_at", values[i])
+			} else if value.Valid {
+				s.PinnedAt = value.Time
 			}
 		}
 	}
@@ -171,6 +192,12 @@ func (s *Subscription) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(s.Status)
+	builder.WriteString(", ")
+	builder.WriteString("pinned=")
+	builder.WriteString(fmt.Sprintf("%v", s.Pinned))
+	builder.WriteString(", ")
+	builder.WriteString("pinned_at=")
+	builder.WriteString(s.PinnedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

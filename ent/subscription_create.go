@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -43,6 +44,18 @@ func (sc *SubscriptionCreate) SetRole(s string) *SubscriptionCreate {
 // SetStatus sets the "status" field.
 func (sc *SubscriptionCreate) SetStatus(s string) *SubscriptionCreate {
 	sc.mutation.SetStatus(s)
+	return sc
+}
+
+// SetPinned sets the "pinned" field.
+func (sc *SubscriptionCreate) SetPinned(b bool) *SubscriptionCreate {
+	sc.mutation.SetPinned(b)
+	return sc
+}
+
+// SetPinnedAt sets the "pinned_at" field.
+func (sc *SubscriptionCreate) SetPinnedAt(t time.Time) *SubscriptionCreate {
+	sc.mutation.SetPinnedAt(t)
 	return sc
 }
 
@@ -167,6 +180,12 @@ func (sc *SubscriptionCreate) check() error {
 	if _, ok := sc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Subscription.status"`)}
 	}
+	if _, ok := sc.mutation.Pinned(); !ok {
+		return &ValidationError{Name: "pinned", err: errors.New(`ent: missing required field "Subscription.pinned"`)}
+	}
+	if _, ok := sc.mutation.PinnedAt(); !ok {
+		return &ValidationError{Name: "pinned_at", err: errors.New(`ent: missing required field "Subscription.pinned_at"`)}
+	}
 	if _, ok := sc.mutation.UserID(); !ok {
 		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "Subscription.user"`)}
 	}
@@ -224,6 +243,22 @@ func (sc *SubscriptionCreate) createSpec() (*Subscription, *sqlgraph.CreateSpec)
 			Column: subscription.FieldStatus,
 		})
 		_node.Status = value
+	}
+	if value, ok := sc.mutation.Pinned(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: subscription.FieldPinned,
+		})
+		_node.Pinned = value
+	}
+	if value, ok := sc.mutation.PinnedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: subscription.FieldPinnedAt,
+		})
+		_node.PinnedAt = value
 	}
 	if nodes := sc.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

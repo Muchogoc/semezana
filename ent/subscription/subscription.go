@@ -19,6 +19,10 @@ const (
 	FieldRole = "role"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldPinned holds the string denoting the pinned field in the database.
+	FieldPinned = "pinned"
+	// FieldPinnedAt holds the string denoting the pinned_at field in the database.
+	FieldPinnedAt = "pinned_at"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
 	// EdgeChannel holds the string denoting the channel edge name in mutations.
@@ -48,6 +52,8 @@ var Columns = []string{
 	FieldUserID,
 	FieldRole,
 	FieldStatus,
+	FieldPinned,
+	FieldPinnedAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).

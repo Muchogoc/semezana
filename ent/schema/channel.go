@@ -24,6 +24,7 @@ func (Channel) Fields() []ent.Field {
 		field.Time("updated_at").
 			Default(time.Now()).UpdateDefault(time.Now),
 		field.String("name"),
+		field.String("description"),
 		field.String("type"),
 		field.String("state"),
 		field.Time("state_at"),

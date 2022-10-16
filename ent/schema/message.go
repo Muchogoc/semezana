@@ -7,7 +7,6 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
-	"github.com/Muchogoc/semezana/semezana/models"
 	"github.com/google/uuid"
 )
 
@@ -30,12 +29,18 @@ func (Message) Fields() []ent.Field {
 			Default(time.Now()).
 			UpdateDefault(time.Now),
 		field.Int("sequence"),
-		field.JSON("header", map[string]interface{}{}).
+		field.JSON("header", MessageHeaders{}).
 			Comment("The message header"),
-		field.JSON("content", models.MessageContent{}).
+		field.JSON("content", MessageContent{}).
 			Comment("The message data"),
 	}
 }
+
+type MessageContent struct {
+	Text string `json:"text"`
+}
+
+type MessageHeaders struct{}
 
 // Edges of the Message.
 func (Message) Edges() []ent.Edge {
