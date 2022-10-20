@@ -1,17 +1,18 @@
-package semezana
+package ports
 
 import (
 	"log"
 	"sync"
 
-	"github.com/google/uuid"
+	"github.com/Muchogoc/semezana/app"
+	"github.com/Muchogoc/semezana/ports/session"
 	"github.com/gorilla/websocket"
 )
 
 // NewSessionStore initializes a session store.
 func NewSessionStore() *SessionStore {
 	store := &SessionStore{
-		sessions: make(map[string]*Session),
+		sessions: make(map[string]*session.Session),
 	}
 
 	return store
@@ -21,40 +22,29 @@ func NewSessionStore() *SessionStore {
 type SessionStore struct {
 	lock sync.Mutex
 	// All sessions indexed by session ID
-	sessions map[string]*Session
+	sessions map[string]*session.Session
 }
 
 // NewSession creates a new session and saves it to the session store.
-func (s *SessionStore) NewSession(conn *websocket.Conn) (*Session, int) {
-	var session Session
-
-	session.sid = uuid.NewString()
+func (s *SessionStore) NewWebsocketSession(conn *websocket.Conn, app *app.ChatService) (*session.Session, int) {
+	session := session.NewWebsocketSession(conn, app)
 
 	s.lock.Lock()
-	if _, found := s.sessions[session.sid]; found {
-		log.Fatalln("ERROR! duplicate session ID", session.sid)
+
+	if _, found := s.sessions[session.ID()]; found {
+		log.Fatalln("ERROR! duplicate session ID", session.ID())
 	}
-	s.lock.Unlock()
 
-	session.ws = conn
-	session.subscriptions = &sync.Map{}
-	session.send = make(chan interface{}, sendQueueLimit+32)
-	session.stop = make(chan interface{}, 1)
-	session.detach = make(chan string, 64)
-	// session.messageLock = &sync.Mutex{}
-
-	s.lock.Lock()
-
-	s.sessions[session.sid] = &session
+	s.sessions[session.ID()] = session
 	numSessions := len(s.sessions)
 
 	s.lock.Unlock()
 
-	return &session, numSessions
+	return session, numSessions
 }
 
 // Get fetches a session from store by session ID.
-func (s *SessionStore) Get(id string) *Session {
+func (s *SessionStore) Get(id string) *session.Session {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -66,11 +56,11 @@ func (s *SessionStore) Get(id string) *Session {
 }
 
 // Delete removes session from store.
-func (s *SessionStore) Delete(session *Session) {
+func (s *SessionStore) Delete(session *session.Session) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	delete(s.sessions, session.sid)
+	delete(s.sessions, session.ID())
 }
 
 // Shutdown terminates sessionStore.
@@ -79,6 +69,6 @@ func (s *SessionStore) Shutdown() {
 	defer s.lock.Unlock()
 
 	for _, session := range s.sessions {
-		session.stopSession(1)
+		session.StopSession(1)
 	}
 }

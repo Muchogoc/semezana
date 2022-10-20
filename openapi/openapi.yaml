@@ -1,0 +1,358 @@
+openapi: '3.0.2'
+info:
+  title: Semezana API Developer Documentation
+  description: |
+    A chat server
+  version: 0.0.1
+  contact:
+    name: Charles Muchogo
+servers:
+  - url: https://api.sandbox.semezana.io
+    description: |
+      Sandbox API
+tags:
+  - name: Auth
+    description: |
+      Authentication.
+  - name: Users
+    description: |
+      Users
+  - name: Channels
+    description: |
+      Channels
+  - name: Messages
+    description: |
+      Messages
+  - name: Graphql
+    description: |
+      Messages
+paths:
+  /v1/graphql:
+    post:
+      operationId: useGraphQL
+      summary: Exposes a graphql API endpoint
+      tags:
+        - Graphql
+      description: |
+        graphql API
+      security:
+        - apiKeyAuth: []
+      responses:
+        '200':
+          description: |
+            Success
+        '401':
+          description: |
+            Missing or incorrect access credentials.
+        '5XX':
+          description: |
+            Unexpected server error.
+  /v1/stream:
+    get:
+      operationId: connectWebsocket
+      tags: 
+       - Users
+      summary: Opens a WebSocket connection
+      description: |
+        websocket connection
+      security:
+        - apiKeyAuth: []
+      responses:
+        '200':
+          description: |
+            Success
+        '5XX':
+          description: |
+            Unexpected server error.
+  /v1/channels:
+    post:
+      operationId: createChannel
+      tags: 
+       - Channels
+      summary: Create a channel
+      description: |
+        create a channel
+      security:
+        - apiKeyAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewChannel'
+      responses:
+        '201':
+          description: |
+            Success creating channel
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponseFormat'
+                  - type: object
+                    properties:
+                      status:
+                        example: success
+                      message:
+                        example: OK
+                      data:
+                        $ref: '#/components/schemas/Channel'
+        '401':
+          description: |
+            Missing or incorrect access credentials.
+        '5XX':
+          description: |
+            Unexpected server error.
+  /v1/channels/{channelID}:
+    get:
+      operationId: getChannelById
+      tags: 
+       - Channels
+      summary: Retrieve a channel
+      description: |
+        retrieve a channel
+      security:
+        - apiKeyAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: channelID
+          in: path
+          description: /
+            remove a channel
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: |
+            Success retrieving channel
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponseFormat'
+                  - type: object
+                    properties:
+                      status:
+                        example: success
+                      message:
+                        example: OK
+                      data:
+                        $ref: '#/components/schemas/Channel'
+        '401':
+          description: |
+            Missing or incorrect access credentials.
+        '404':
+          description: |
+            Channel with the provided ID not found.
+        '5XX':
+          description: |
+            Unexpected server error.
+    delete:
+      operationId: deleteChannelById
+      tags: 
+       - Channels
+      summary: Delete a channel
+      description: |
+        delete a channel
+      security:
+        - apiKeyAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: channelID
+          in: path
+          description: /
+            remove a channel
+          schema:
+            type: string
+          required: true
+        
+      responses:
+        '200':
+          description: |
+            Success deleting channel
+        '401':
+          description: |
+            Missing or incorrect access credentials.
+        '404':
+          description: |
+            Channel with the provided ID not found.
+        '5XX':
+          description: |
+            Unexpected server error.
+  /v1/users:
+    post:
+      operationId: createUser
+      tags: 
+       - Users
+      summary: Create a user
+      description: |
+        create a user
+      security:
+        - apiKeyAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUser'
+      responses:
+        '201':
+          description: |
+            Success creating user
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponseFormat'
+                  - type: object
+                    properties:
+                      status:
+                        example: success
+                      message:
+                        example: OK
+                      data:
+                        $ref: '#/components/schemas/User'
+        '401':
+          description: |
+            Missing or incorrect access credentials.
+        '5XX':
+          description: |
+            Unexpected server error.
+  /v1/users/{userID}:
+    get:
+      operationId: getUserById
+      tags: 
+       - Users
+      summary: Retrieve a user
+      description: |
+        retrieve a user
+      security:
+        - apiKeyAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: userID
+          in: path
+          description: /
+            remove a user
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: |
+            Success retrieving user
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponseFormat'
+                  - type: object
+                    properties:
+                      status:
+                        example: success
+                      message:
+                        example: OK
+                      data:
+                        $ref: '#/components/schemas/User'
+        '401':
+          description: |
+            Missing or incorrect access credentials.
+        '404':
+          description: |
+            User with the provided ID not found.
+        '5XX':
+          description: |
+            Unexpected server error.
+    delete:
+      operationId: deleteUserById
+      tags: 
+       - Users
+      summary: Delete a user
+      description: |
+        delete a user
+      security:
+        - apiKeyAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: userID
+          in: path
+          description: /
+            remove a user
+          schema:
+            type: string
+          required: true
+        
+      responses:
+        '200':
+          description: |
+            Success deleting user
+        '401':
+          description: |
+            Missing or incorrect access credentials.
+        '404':
+          description: |
+            User with the provided ID not found.
+        '5XX':
+          description: |
+            Unexpected server error.
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-SEMEZANA-KEY
+    apiSecretAuth:
+      type: apiKey
+      in: header
+      name: X-SEMEZANA-SECRET
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    APIResponseFormat:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+            - failure
+            - error
+          description: |
+            API Response Status:
+              * `success` - Used when the request was processed successfully. Typically `2XX`.
+              * `failure` - Used when it's the client's fault i.e.
+                          They can change the request parameters and retry. Typically `4XX`.
+              * `error` - Used for unexpected server errors. Typically `5XX`.
+        message:
+          type: string
+        data:
+          type: object
+      required:
+        - status
+        - message
+        - data
+    Channel:
+      type: object
+      properties:
+        id:
+          type: string
+    NewChannel:
+      type: object
+      properties:
+        name:
+          type: string
+    NewUser:
+      type: object
+      properties:
+        name:
+          type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: string

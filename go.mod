@@ -4,6 +4,10 @@ go 1.18
 
 require (
 	entgo.io/ent v0.11.2
+	github.com/deepmap/oapi-codegen v1.11.0
+	github.com/go-chi/chi/v5 v5.0.7
+	github.com/go-chi/cors v1.2.1
+	github.com/go-chi/render v1.0.2
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/lib/pq v1.10.5
@@ -14,6 +18,7 @@ require (
 require (
 	ariga.io/atlas v0.5.1-0.20220717122844-8593d7eb1a8e // indirect
 	github.com/agext/levenshtein v1.2.1 // indirect
+	github.com/ajg/form v1.5.1 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/go-openapi/inflect v0.19.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect

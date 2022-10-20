@@ -1,15 +1,14 @@
-package semezana
+package session
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"log"
-	"net/http"
 	"time"
 
-	"github.com/Muchogoc/semezana/semezana/dto"
+	"github.com/Muchogoc/semezana/dto"
 	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -27,13 +26,13 @@ func (s *Session) closeWebsocket() {
 	s.ws.Close()
 }
 
-func (s *Session) reader(ctx context.Context) {
+func (s *Session) Reader() {
 	defer func() {
 		s.closeWebsocket()
 		s.cleanUp()
 	}()
 
-	s.ws.SetReadLimit(globals.maxMessageSize)
+	// s.ws.SetReadLimit(globals.maxMessageSize)
 	s.ws.SetReadDeadline(time.Now().Add(pongWait))
 	s.ws.SetPongHandler(
 		func(string) error {
@@ -47,11 +46,11 @@ func (s *Session) reader(ctx context.Context) {
 		if err != nil {
 			return
 		}
-		s.dispatchRaw(ctx, raw)
+		s.dispatchRaw(context.Background(), raw)
 	}
 }
 
-func (s *Session) writer(ctx context.Context) {
+func (s *Session) Writer() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
@@ -66,19 +65,22 @@ func (s *Session) writer(ctx context.Context) {
 			}
 
 			switch v := msg.(type) {
-			case []*dto.ServerComMessage:
+			case []*dto.ServerResponse:
 				for _, msg := range v {
 					if err := wsWrite(s.ws, websocket.TextMessage, msg); err != nil {
 						return
 					}
 				}
-			case *dto.ServerComMessage:
+			case *dto.ServerResponse:
 				if err := wsWrite(s.ws, websocket.TextMessage, v); err != nil {
 					return
 				}
 			default:
 				return
 			}
+
+		case msg := <-s.sub:
+			logrus.Println(msg)
 
 		case <-s.stop:
 			return
@@ -106,35 +108,4 @@ func wsWrite(ws *websocket.Conn, messageType int, msg interface{}) error {
 	ws.SetWriteDeadline(time.Now().Add(writeWait))
 
 	return ws.WriteMessage(messageType, buf.Bytes())
-}
-
-func serveWebSocket(w http.ResponseWriter, r *http.Request) {
-	// Handles websocket requests from peers.
-	var upgrader = websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-		// Allow connections from any Origin
-		CheckOrigin: func(r *http.Request) bool { return true },
-	}
-
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		log.Println("ws: Invalid HTTP method", r.Method)
-		return
-	}
-
-	ws, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println("ws: failed to Upgrade ", err)
-		return
-	}
-
-	session, _ := globals.sessionStore.NewSession(ws)
-
-	session.remoteAddress = r.RemoteAddr
-
-	ctx := context.Background()
-
-	go session.writer(ctx)
-	go session.reader(ctx)
 }

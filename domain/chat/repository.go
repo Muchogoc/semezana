@@ -21,7 +21,7 @@ type Repository interface {
 		updateFn func(h *Membership) (*Membership, error),
 	) error
 
-	CreateMessage(ctx context.Context, message Message) error
+	CreateMessage(ctx context.Context, message Message, userID, channelID string) error
 
 	CreateMessageAudience(ctx context.Context, audience Audience) error
 }
