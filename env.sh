@@ -11,3 +11,4 @@ export NSQ_ADDRESS="nsqd:4150"
 export NSQ_LOOKUP_ADDRESS="nsqlookupd:4161"
 
 export CORS_ALLOWED_ORIGINS="*"
+export SECRET_KEY="something is cooking"
