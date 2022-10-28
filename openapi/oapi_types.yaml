@@ -1,4 +1,4 @@
-package: ports
+package: dto
 generate:
   models: true
   chi-server: false

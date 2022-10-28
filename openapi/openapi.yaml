@@ -7,7 +7,7 @@ info:
   contact:
     name: Charles Muchogo
 servers:
-  - url: https://api.sandbox.semezana.io
+  - url: http://localhost:8080
     description: |
       Sandbox API
 tags:
@@ -23,40 +23,17 @@ tags:
   - name: Messages
     description: |
       Messages
-  - name: Graphql
-    description: |
-      Messages
 paths:
-  /v1/graphql:
-    post:
-      operationId: useGraphQL
-      summary: Exposes a graphql API endpoint
-      tags:
-        - Graphql
-      description: |
-        graphql API
-      security:
-        - apiKeyAuth: []
-      responses:
-        '200':
-          description: |
-            Success
-        '401':
-          description: |
-            Missing or incorrect access credentials.
-        '5XX':
-          description: |
-            Unexpected server error.
   /v1/stream:
     get:
-      operationId: connectWebsocket
+      operationId: websocket
       tags: 
        - Users
       summary: Opens a WebSocket connection
       description: |
         websocket connection
-      security:
-        - apiKeyAuth: []
+      # security:
+      #   - apiKeyAuth: []
       responses:
         '200':
           description: |
@@ -65,6 +42,41 @@ paths:
           description: |
             Unexpected server error.
   /v1/channels:
+    get:
+      operationId: getChannels
+      tags: 
+       - Channels
+      summary: Retrieve all channels
+      description: |
+        list all channels
+      # security:
+      #   - apiKeyAuth: []
+      #     bearerAuth: []
+      responses:
+        '200':
+          description: |
+            Success listing channels
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponseFormat'
+                  - type: object
+                    properties:
+                      status:
+                        example: success
+                      message:
+                        example: OK
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Channel'
+        '401':
+          description: |
+            Missing or incorrect access credentials.
+        '5XX':
+          description: |
+            Unexpected server error.
     post:
       operationId: createChannel
       tags: 
@@ -72,9 +84,9 @@ paths:
       summary: Create a channel
       description: |
         create a channel
-      security:
-        - apiKeyAuth: []
-        - bearerAuth: []
+      # security:
+      #   - apiKeyAuth: []
+      #     bearerAuth: []
       requestBody:
         required: true
         content:
@@ -112,9 +124,9 @@ paths:
       summary: Retrieve a channel
       description: |
         retrieve a channel
-      security:
-        - apiKeyAuth: []
-        - bearerAuth: []
+      # security:
+      #   - apiKeyAuth: []
+      #     bearerAuth: []
       parameters:
         - name: channelID
           in: path
@@ -156,9 +168,9 @@ paths:
       summary: Delete a channel
       description: |
         delete a channel
-      security:
-        - apiKeyAuth: []
-        - bearerAuth: []
+      # security:
+      #   - apiKeyAuth: []
+      #     bearerAuth: []
       parameters:
         - name: channelID
           in: path
@@ -181,7 +193,181 @@ paths:
         '5XX':
           description: |
             Unexpected server error.
+  /v1/channels/{channelID}/memberships:
+    post:
+      operationId: createMembership
+      parameters:
+        - name: channelID
+          in: path
+          description: /
+            specifies the channel
+          schema:
+            type: string
+          required: true
+      tags: 
+       - Channels
+      summary: Create a membership
+      description: |
+        create a membership
+      # security:
+      #   - apiKeyAuth: []
+      #     bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewMembership'
+      responses:
+        '201':
+          description: |
+            Success creating a membership
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponseFormat'
+                  - type: object
+                    properties:
+                      status:
+                        example: success
+                      message:
+                        example: OK
+                      data:
+                        $ref: '#/components/schemas/Membership'
+        '401':
+          description: |
+            Missing or incorrect access credentials.
+        '5XX':
+          description: |
+            Unexpected server error.
+  /v1/channels/{channelID}/memberships/{membershipID}:
+    get:
+      operationId: getMembershipById
+      tags: 
+       - Channels
+      summary: Retrieve a membership
+      description: |
+        retrieve a membership
+      # security:
+      #   - apiKeyAuth: []
+      #     bearerAuth: []
+      parameters:
+        - name: channelID
+          in: path
+          description: /
+            specifies the channel
+          schema:
+            type: string
+          required: true
+        - name: membershipID
+          in: path
+          description: /
+            specifies the membership
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: |
+            Success retrieving membership
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponseFormat'
+                  - type: object
+                    properties:
+                      status:
+                        example: success
+                      message:
+                        example: OK
+                      data:
+                        $ref: '#/components/schemas/Membership'
+        '401':
+          description: |
+            Missing or incorrect access credentials.
+        '404':
+          description: |
+            Channel with the provided ID not found.
+        '5XX':
+          description: |
+            Unexpected server error.
+    delete:
+      operationId: deleteMembershipById
+      tags: 
+       - Channels
+      summary: Remove a membership
+      description: |
+        delete a channel
+      # security:
+      #   - apiKeyAuth: []
+      #     bearerAuth: []
+      parameters:
+        - name: channelID
+          in: path
+          description: /
+            specifies the channel
+          schema:
+            type: string
+          required: true
+        - name: membershipID
+          in: path
+          description: /
+            specifies the membership
+          schema:
+            type: string
+          required: true
+        
+      responses:
+        '200':
+          description: |
+            Success deleting channel
+        '401':
+          description: |
+            Missing or incorrect access credentials.
+        '404':
+          description: |
+            Channel with the provided ID not found.
+        '5XX':
+          description: |
+            Unexpected server error.
   /v1/users:
+    get:
+      operationId: getUsers
+      tags: 
+       - Users
+      summary: Retrieve all users
+      description: |
+        listing users
+      # security:
+      #   - apiKeyAuth: []
+      #     bearerAuth: []
+      responses:
+        '200':
+          description: |
+            Success creating user
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponseFormat'
+                  - type: object
+                    properties:
+                      status:
+                        example: success
+                      message:
+                        example: OK
+                      data:
+                        type: array
+                        items: 
+                          $ref: '#/components/schemas/User'
+        '401':
+          description: |
+            Missing or incorrect access credentials.
+        '5XX':
+          description: |
+            Unexpected server error.
     post:
       operationId: createUser
       tags: 
@@ -189,9 +375,9 @@ paths:
       summary: Create a user
       description: |
         create a user
-      security:
-        - apiKeyAuth: []
-        - bearerAuth: []
+      # security:
+      #   - apiKeyAuth: []
+      #     bearerAuth: []
       requestBody:
         required: true
         content:
@@ -229,9 +415,9 @@ paths:
       summary: Retrieve a user
       description: |
         retrieve a user
-      security:
-        - apiKeyAuth: []
-        - bearerAuth: []
+      # security:
+      #   - apiKeyAuth: []
+      #     bearerAuth: []
       parameters:
         - name: userID
           in: path
@@ -273,9 +459,9 @@ paths:
       summary: Delete a user
       description: |
         delete a user
-      security:
-        - apiKeyAuth: []
-        - bearerAuth: []
+      # security:
+      #   - apiKeyAuth: []
+      #     bearerAuth: []
       parameters:
         - name: userID
           in: path
@@ -304,14 +490,23 @@ components:
       type: apiKey
       in: header
       name: X-SEMEZANA-KEY
+      x-go-type: dto.ApiKeyAuthScopes
+      x-go-type-import:
+        path: github.com/Muchogoc/semezana/dto
     apiSecretAuth:
       type: apiKey
       in: header
       name: X-SEMEZANA-SECRET
+      x-go-type: dto.ApiKeyAuthScopes
+      x-go-type-import:
+        path: github.com/Muchogoc/semezana/dto
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      x-go-type: dto.BearerAuthScopes
+      x-go-type-import:
+        path: github.com/Muchogoc/semezana/dto
   schemas:
     APIResponseFormat:
       type: object
@@ -341,18 +536,70 @@ components:
       properties:
         id:
           type: string
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum:
+            - PEER
+            - GROUP
+            - CHANNEL
+      required:
+        - id
+        - name
+        - category
     NewChannel:
       type: object
       properties:
         name:
           type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum:
+            - PEER
+            - GROUP
+            - CHANNEL
+      required:
+        - name
+        - category
     NewUser:
       type: object
       properties:
         name:
           type: string
+      required:
+        - name
     User:
       type: object
       properties:
         id:
           type: string
+        name:
+          type: string
+      required:
+        - id
+        - name
+    NewMembership:
+      type: object
+      properties:
+        userID:
+          type: string
+        channelID:
+          type: string
+      required:
+        - id
+    Membership:
+      type: object
+      properties:
+        id:
+          type: string
+        userID:
+          type: string
+        channelID:
+          type: string
+      required:
+        - id

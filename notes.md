@@ -7,7 +7,7 @@
 go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.11.0
 oapi-codegen --output-config --old-config-style  --package=ports --generate="types,gorilla" openapi.yaml
 oapi-codegen --config openapi/oapi_server.yaml openapi/openapi.yaml > ports/openapi_server.gen.go
-oapi-codegen --config openapi/oapi_types.yaml openapi/openapi.yaml > ports/openapi_types.gen.go
+oapi-codegen --config openapi/oapi_types.yaml openapi/openapi.yaml > dto/openapi_types.gen.go
 ```
 
 Use of Pub/Sub

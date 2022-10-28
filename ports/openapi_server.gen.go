@@ -4,7 +4,6 @@
 package ports
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
@@ -14,6 +13,9 @@ import (
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Retrieve all channels
+	// (GET /v1/channels)
+	GetChannels(w http.ResponseWriter, r *http.Request)
 	// Create a channel
 	// (POST /v1/channels)
 	CreateChannel(w http.ResponseWriter, r *http.Request)
@@ -23,12 +25,21 @@ type ServerInterface interface {
 	// Retrieve a channel
 	// (GET /v1/channels/{channelID})
 	GetChannelById(w http.ResponseWriter, r *http.Request, channelID string)
-	// Exposes a graphql API endpoint
-	// (POST /v1/graphql)
-	UseGraphQL(w http.ResponseWriter, r *http.Request)
+	// Create a membership
+	// (POST /v1/channels/{channelID}/memberships)
+	CreateMembership(w http.ResponseWriter, r *http.Request, channelID string)
+	// Remove a membership
+	// (DELETE /v1/channels/{channelID}/memberships/{membershipID})
+	DeleteMembershipById(w http.ResponseWriter, r *http.Request, channelID string, membershipID string)
+	// Retrieve a membership
+	// (GET /v1/channels/{channelID}/memberships/{membershipID})
+	GetMembershipById(w http.ResponseWriter, r *http.Request, channelID string, membershipID string)
 	// Opens a WebSocket connection
 	// (GET /v1/stream)
-	ConnectWebsocket(w http.ResponseWriter, r *http.Request)
+	Websocket(w http.ResponseWriter, r *http.Request)
+	// Retrieve all users
+	// (GET /v1/users)
+	GetUsers(w http.ResponseWriter, r *http.Request)
 	// Create a user
 	// (POST /v1/users)
 	CreateUser(w http.ResponseWriter, r *http.Request)
@@ -49,13 +60,24 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc func(http.HandlerFunc) http.HandlerFunc
 
+// GetChannels operation middleware
+func (siw *ServerInterfaceWrapper) GetChannels(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler = func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetChannels(w, r)
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler(w, r.WithContext(ctx))
+}
+
 // CreateChannel operation middleware
 func (siw *ServerInterfaceWrapper) CreateChannel(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-
-	ctx = context.WithValue(ctx, ApiKeyAuthScopes, []string{""})
-
-	ctx = context.WithValue(ctx, BearerAuthScopes, []string{""})
 
 	var handler = func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateChannel(w, r)
@@ -83,10 +105,6 @@ func (siw *ServerInterfaceWrapper) DeleteChannelById(w http.ResponseWriter, r *h
 		return
 	}
 
-	ctx = context.WithValue(ctx, ApiKeyAuthScopes, []string{""})
-
-	ctx = context.WithValue(ctx, BearerAuthScopes, []string{""})
-
 	var handler = func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.DeleteChannelById(w, r, channelID)
 	}
@@ -113,10 +131,6 @@ func (siw *ServerInterfaceWrapper) GetChannelById(w http.ResponseWriter, r *http
 		return
 	}
 
-	ctx = context.WithValue(ctx, ApiKeyAuthScopes, []string{""})
-
-	ctx = context.WithValue(ctx, BearerAuthScopes, []string{""})
-
 	var handler = func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetChannelById(w, r, channelID)
 	}
@@ -128,14 +142,23 @@ func (siw *ServerInterfaceWrapper) GetChannelById(w http.ResponseWriter, r *http
 	handler(w, r.WithContext(ctx))
 }
 
-// UseGraphQL operation middleware
-func (siw *ServerInterfaceWrapper) UseGraphQL(w http.ResponseWriter, r *http.Request) {
+// CreateMembership operation middleware
+func (siw *ServerInterfaceWrapper) CreateMembership(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	ctx = context.WithValue(ctx, ApiKeyAuthScopes, []string{""})
+	var err error
+
+	// ------------- Path parameter "channelID" -------------
+	var channelID string
+
+	err = runtime.BindStyledParameter("simple", false, "channelID", chi.URLParam(r, "channelID"), &channelID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "channelID", Err: err})
+		return
+	}
 
 	var handler = func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.UseGraphQL(w, r)
+		siw.Handler.CreateMembership(w, r, channelID)
 	}
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -145,14 +168,97 @@ func (siw *ServerInterfaceWrapper) UseGraphQL(w http.ResponseWriter, r *http.Req
 	handler(w, r.WithContext(ctx))
 }
 
-// ConnectWebsocket operation middleware
-func (siw *ServerInterfaceWrapper) ConnectWebsocket(w http.ResponseWriter, r *http.Request) {
+// DeleteMembershipById operation middleware
+func (siw *ServerInterfaceWrapper) DeleteMembershipById(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	ctx = context.WithValue(ctx, ApiKeyAuthScopes, []string{""})
+	var err error
+
+	// ------------- Path parameter "channelID" -------------
+	var channelID string
+
+	err = runtime.BindStyledParameter("simple", false, "channelID", chi.URLParam(r, "channelID"), &channelID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "channelID", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "membershipID" -------------
+	var membershipID string
+
+	err = runtime.BindStyledParameter("simple", false, "membershipID", chi.URLParam(r, "membershipID"), &membershipID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "membershipID", Err: err})
+		return
+	}
 
 	var handler = func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.ConnectWebsocket(w, r)
+		siw.Handler.DeleteMembershipById(w, r, channelID, membershipID)
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler(w, r.WithContext(ctx))
+}
+
+// GetMembershipById operation middleware
+func (siw *ServerInterfaceWrapper) GetMembershipById(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "channelID" -------------
+	var channelID string
+
+	err = runtime.BindStyledParameter("simple", false, "channelID", chi.URLParam(r, "channelID"), &channelID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "channelID", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "membershipID" -------------
+	var membershipID string
+
+	err = runtime.BindStyledParameter("simple", false, "membershipID", chi.URLParam(r, "membershipID"), &membershipID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "membershipID", Err: err})
+		return
+	}
+
+	var handler = func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetMembershipById(w, r, channelID, membershipID)
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler(w, r.WithContext(ctx))
+}
+
+// Websocket operation middleware
+func (siw *ServerInterfaceWrapper) Websocket(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler = func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.Websocket(w, r)
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler(w, r.WithContext(ctx))
+}
+
+// GetUsers operation middleware
+func (siw *ServerInterfaceWrapper) GetUsers(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler = func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetUsers(w, r)
 	}
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -165,10 +271,6 @@ func (siw *ServerInterfaceWrapper) ConnectWebsocket(w http.ResponseWriter, r *ht
 // CreateUser operation middleware
 func (siw *ServerInterfaceWrapper) CreateUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-
-	ctx = context.WithValue(ctx, ApiKeyAuthScopes, []string{""})
-
-	ctx = context.WithValue(ctx, BearerAuthScopes, []string{""})
 
 	var handler = func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateUser(w, r)
@@ -196,10 +298,6 @@ func (siw *ServerInterfaceWrapper) DeleteUserById(w http.ResponseWriter, r *http
 		return
 	}
 
-	ctx = context.WithValue(ctx, ApiKeyAuthScopes, []string{""})
-
-	ctx = context.WithValue(ctx, BearerAuthScopes, []string{""})
-
 	var handler = func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.DeleteUserById(w, r, userID)
 	}
@@ -225,10 +323,6 @@ func (siw *ServerInterfaceWrapper) GetUserById(w http.ResponseWriter, r *http.Re
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userID", Err: err})
 		return
 	}
-
-	ctx = context.WithValue(ctx, ApiKeyAuthScopes, []string{""})
-
-	ctx = context.WithValue(ctx, BearerAuthScopes, []string{""})
 
 	var handler = func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetUserById(w, r, userID)
@@ -355,6 +449,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	}
 
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/channels", wrapper.GetChannels)
+	})
+	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/v1/channels", wrapper.CreateChannel)
 	})
 	r.Group(func(r chi.Router) {
@@ -364,10 +461,19 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/v1/channels/{channelID}", wrapper.GetChannelById)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/v1/graphql", wrapper.UseGraphQL)
+		r.Post(options.BaseURL+"/v1/channels/{channelID}/memberships", wrapper.CreateMembership)
 	})
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/v1/stream", wrapper.ConnectWebsocket)
+		r.Delete(options.BaseURL+"/v1/channels/{channelID}/memberships/{membershipID}", wrapper.DeleteMembershipById)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/channels/{channelID}/memberships/{membershipID}", wrapper.GetMembershipById)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/stream", wrapper.Websocket)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/users", wrapper.GetUsers)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/v1/users", wrapper.CreateUser)

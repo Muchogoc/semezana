@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Muchogoc/semezana/domain/chat"
+	"github.com/Muchogoc/semezana/domain/user"
 	"github.com/Muchogoc/semezana/ent"
 	"github.com/Muchogoc/semezana/ent/schema"
 	"github.com/Muchogoc/semezana/ent/subscription"
@@ -14,17 +15,25 @@ import (
 type EntRepository struct {
 	client      *ent.Client
 	chatFactory chat.Factory
+	userFactory user.Factory
 }
 
-func NewEntRepository(client *ent.Client, chatFactory chat.Factory) *EntRepository {
+func NewEntRepository(client *ent.Client, chatFactory chat.Factory, userFactory user.Factory) *EntRepository {
 	return &EntRepository{
 		client:      client,
 		chatFactory: chatFactory,
+		userFactory: userFactory,
 	}
 }
 
-func (e EntRepository) CreateChannel(ctx context.Context, channel chat.Channel) error {
-	_, err := e.client.Channel.Create().
+func (e EntRepository) CreateChannel(ctx context.Context, channel *chat.Channel) error {
+	cid, err := uuid.Parse(channel.ID())
+	if err != nil {
+		return err
+	}
+
+	nch, err := e.client.Channel.Create().
+		SetID(cid).
 		SetName(channel.Name()).
 		SetDescription(channel.Description()).
 		SetType(channel.Category().String()).
@@ -34,6 +43,20 @@ func (e EntRepository) CreateChannel(ctx context.Context, channel chat.Channel) 
 	if err != nil {
 		return err
 	}
+
+	newChannel, err := e.chatFactory.UnmarshalChannelFromDatabase(
+		nch.ID.String(),
+		nch.Description,
+		nch.Name,
+		chat.ChannelState(nch.State),
+		chat.ChannelCategory(nch.Type),
+	)
+	if err != nil {
+		return err
+	}
+
+	channel = newChannel
+
 	return nil
 
 }
@@ -58,6 +81,32 @@ func (e EntRepository) GetChannel(ctx context.Context, id string) (*chat.Channel
 	)
 }
 
+func (e EntRepository) GetChannels(ctx context.Context) (*[]chat.Channel, error) {
+	chnls, err := e.client.Channel.Query().All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var channels []chat.Channel
+
+	for _, chnl := range chnls {
+		channel, err := e.chatFactory.UnmarshalChannelFromDatabase(
+			chnl.ID.String(),
+			chnl.Description,
+			chnl.Name,
+			chat.ChannelState(chnl.State),
+			chat.ChannelCategory(chnl.Type),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		channels = append(channels, *channel)
+	}
+
+	return &channels, nil
+}
+
 func (e EntRepository) UpdateChannel(
 	ctx context.Context,
 	id string,
@@ -67,7 +116,7 @@ func (e EntRepository) UpdateChannel(
 	return nil
 }
 
-func (e EntRepository) CreateMembership(ctx context.Context, membership chat.Membership) error {
+func (e EntRepository) CreateMembership(ctx context.Context, membership *chat.Membership) error {
 	user := membership.User()
 	uid, err := uuid.Parse(user.ID())
 	if err != nil {
@@ -125,7 +174,7 @@ func (e EntRepository) UpdateMembership(
 	return nil
 }
 
-func (e EntRepository) CreateMessage(ctx context.Context, message chat.Message, userID, channelID string) error {
+func (e EntRepository) CreateMessage(ctx context.Context, message *chat.Message, userID, channelID string) error {
 	author := message.Author()
 	uid, err := uuid.Parse(author.ID())
 	if err != nil {
@@ -156,6 +205,73 @@ func (e EntRepository) CreateMessage(ctx context.Context, message chat.Message, 
 	return nil
 }
 
-func (e EntRepository) CreateMessageAudience(ctx context.Context, audience chat.Audience) error {
+func (e EntRepository) CreateMessageAudience(ctx context.Context, audience *chat.Audience) error {
 	return nil
+}
+
+func (e EntRepository) CreateUser(ctx context.Context, user *user.User) error {
+	uid, err := uuid.Parse(user.ID())
+	if err != nil {
+		return err
+	}
+
+	usr, err := e.client.User.
+		Create().
+		SetID(uid).
+		SetName(user.Name()).
+		SetState("OK").
+		SetStateAt(time.Now()).
+		Save(ctx)
+	if err != nil {
+		return err
+	}
+
+	new, err := e.userFactory.UnmarshalUserFromDatabase(
+		usr.ID.String(), usr.Name,
+	)
+	if err != nil {
+		return err
+	}
+
+	user = new
+
+	return nil
+}
+
+func (e EntRepository) GetUser(ctx context.Context, id string) (*user.User, error) {
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		return nil, err
+	}
+
+	usr, err := e.client.User.Get(ctx, uid)
+	if err != nil {
+		return nil, err
+	}
+
+	return e.userFactory.UnmarshalUserFromDatabase(
+		usr.ID.String(), usr.Name,
+	)
+
+}
+
+func (e EntRepository) GetUsers(ctx context.Context) (*[]user.User, error) {
+	usrs, err := e.client.User.Query().All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var users []user.User
+	for _, usr := range usrs {
+		user, err := e.userFactory.UnmarshalUserFromDatabase(
+			usr.ID.String(), usr.Name,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		users = append(users, *user)
+	}
+
+	return &users, nil
 }

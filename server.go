@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -14,11 +15,13 @@ import (
 	"github.com/Muchogoc/semezana/adapters"
 	"github.com/Muchogoc/semezana/app"
 	"github.com/Muchogoc/semezana/domain/chat"
+	"github.com/Muchogoc/semezana/domain/user"
 	"github.com/Muchogoc/semezana/ent"
 	"github.com/Muchogoc/semezana/ports"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/go-chi/httplog"
 	_ "github.com/lib/pq"
 	"github.com/nsqio/go-nsq"
 	"github.com/sirupsen/logrus"
@@ -38,8 +41,8 @@ var (
 )
 
 var (
-	PORT  = "8080"
-	DEBUG = false
+	PORT     = os.Getenv("PORT")
+	DEBUG, _ = strconv.ParseBool(os.Getenv("DEBUG"))
 )
 
 func main() {
@@ -69,7 +72,7 @@ func main() {
 
 	if DEBUG {
 		producer.SetLogger(log.Default(), nsq.LogLevelDebug)
-		client.Debug()
+		client = client.Debug()
 	}
 
 	chatFactory, err := chat.NewFactory()
@@ -77,7 +80,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	db := adapters.NewEntRepository(client, chatFactory)
+	userFactory, err := user.NewFactory()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	db := adapters.NewEntRepository(client, chatFactory, userFactory)
 	publisher := adapters.NewNSQPublisher(producer)
 	subscriber := adapters.NewNSQSubscriber(NSQ_LOOKUP_ADDRESS)
 
@@ -93,7 +101,7 @@ func main() {
 	}
 
 	go func() {
-		logrus.Info("Server running at port %v", PORT)
+		logrus.Infof("Server running at port :%s", PORT)
 		if err := server.ListenAndServe(); err != nil {
 			logrus.Println("HTTP server failed to listen and server", err)
 		}
@@ -119,7 +127,18 @@ func service(service app.ChatService, store *ports.SessionStore) http.Handler {
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+
+	// r.Use(middleware.Heartbeat("/ping"))
+	logger := httplog.NewLogger("httplog", httplog.Options{
+		JSON:    !DEBUG,
+		Concise: DEBUG,
+	})
+	r.Use(httplog.RequestLogger(logger))
+
 	r.Use(middleware.Recoverer)
+
+	// r.Mount("/debug", middleware.Profiler())
 
 	addCorsMiddleware(r)
 
