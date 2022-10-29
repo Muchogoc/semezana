@@ -6,6 +6,7 @@ import (
 	"github.com/Muchogoc/semezana/domain/chat"
 	"github.com/Muchogoc/semezana/domain/user"
 	"github.com/Muchogoc/semezana/dto"
+	"github.com/Muchogoc/semezana/internal/auth"
 	"github.com/google/uuid"
 )
 
@@ -44,6 +45,22 @@ func NewChatService(
 		publisher:  publisher,
 		subscriber: subscriber,
 	}
+}
+
+func (c ChatService) GenerateAccessToken(ctx context.Context, creds dto.NewToken) (*dto.TokenResponse, error) {
+	user, err := c.userRepo.GetUser(ctx, creds.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := auth.CreateToken(user.ID())
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.TokenResponse{
+		Access: token,
+	}, nil
 }
 
 func (c ChatService) CreateUser(ctx context.Context, newUser dto.NewUser) (*dto.User, error) {

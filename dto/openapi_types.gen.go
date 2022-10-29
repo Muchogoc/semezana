@@ -78,9 +78,19 @@ type NewMembership struct {
 	UserID    *string `json:"userID,omitempty"`
 }
 
+// NewToken defines model for NewToken.
+type NewToken struct {
+	UserID string `json:"userID"`
+}
+
 // NewUser defines model for NewUser.
 type NewUser struct {
 	Name string `json:"name"`
+}
+
+// TokenResponse defines model for TokenResponse.
+type TokenResponse struct {
+	Access string `json:"access"`
 }
 
 // User defines model for User.
@@ -88,6 +98,9 @@ type User struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 }
+
+// GetUserAccessTokenJSONBody defines parameters for GetUserAccessToken.
+type GetUserAccessTokenJSONBody = NewToken
 
 // CreateChannelJSONBody defines parameters for CreateChannel.
 type CreateChannelJSONBody = NewChannel
@@ -97,6 +110,9 @@ type CreateMembershipJSONBody = NewMembership
 
 // CreateUserJSONBody defines parameters for CreateUser.
 type CreateUserJSONBody = NewUser
+
+// GetUserAccessTokenJSONRequestBody defines body for GetUserAccessToken for application/json ContentType.
+type GetUserAccessTokenJSONRequestBody = GetUserAccessTokenJSONBody
 
 // CreateChannelJSONRequestBody defines body for CreateChannel for application/json ContentType.
 type CreateChannelJSONRequestBody = CreateChannelJSONBody

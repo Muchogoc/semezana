@@ -24,6 +24,43 @@ tags:
     description: |
       Messages
 paths:
+  /auth/token/:
+    post:
+      tags:
+        - Auth
+      summary: Login to the API
+      description: |
+        The API requires a user id.
+      operationId: getUserAccessToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewToken'
+      responses:
+        '200':
+          description: |
+            After a successful login, the API returns an access token. 
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponseFormat'
+                  - type: object
+                    properties:
+                      status:
+                        example: success
+                      message:
+                        example: OK
+                      data:
+                        $ref: '#/components/schemas/TokenResponse'                 
+        '400':
+          description: |
+            Input Validation Failure.
+        '5XX':
+          description: |
+            Unexpected server error.
   /v1/stream:
     get:
       operationId: websocket
@@ -603,3 +640,18 @@ components:
           type: string
       required:
         - id
+    NewToken:
+      type: object
+      properties:
+        userID:
+          type: string
+      required:
+        - userID
+    TokenResponse:
+      type: object
+      properties:
+        access:
+          type: string
+          format: JWT
+      required:
+        - access

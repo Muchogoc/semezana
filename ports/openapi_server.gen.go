@@ -13,6 +13,9 @@ import (
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Login to the API
+	// (POST /auth/token/)
+	GetUserAccessToken(w http.ResponseWriter, r *http.Request)
 	// Retrieve all channels
 	// (GET /v1/channels)
 	GetChannels(w http.ResponseWriter, r *http.Request)
@@ -59,6 +62,21 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.HandlerFunc) http.HandlerFunc
+
+// GetUserAccessToken operation middleware
+func (siw *ServerInterfaceWrapper) GetUserAccessToken(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler = func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetUserAccessToken(w, r)
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler(w, r.WithContext(ctx))
+}
 
 // GetChannels operation middleware
 func (siw *ServerInterfaceWrapper) GetChannels(w http.ResponseWriter, r *http.Request) {
@@ -448,6 +466,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/auth/token/", wrapper.GetUserAccessToken)
+	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/v1/channels", wrapper.GetChannels)
 	})

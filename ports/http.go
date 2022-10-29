@@ -23,7 +23,34 @@ func NewHttpServer(service app.ChatService, sessionStore *SessionStore) HttpServ
 	}
 }
 
-// Retrieve all channels
+func (h HttpServer) GetUserAccessToken(w http.ResponseWriter, r *http.Request) {
+	creds := dto.NewToken{}
+	if err := render.Decode(r, &creds); err != nil {
+		render.Render(w, r, nil)
+		return
+	}
+
+	token, err := h.service.GenerateAccessToken(r.Context(), creds)
+	if err != nil {
+		render.Render(w, r, nil)
+		render.Status(r, http.StatusInternalServerError)
+		return
+	}
+
+	data := map[string]interface{}{}
+	mapstructure.Decode(token, &data)
+
+	response := dto.APIResponseFormat{
+		Data:    data,
+		Message: "success",
+		Status:  dto.Success,
+	}
+
+	render.Status(r, http.StatusOK)
+	render.Respond(w, r, response)
+}
+
+// Retrietoken
 func (h HttpServer) GetChannels(w http.ResponseWriter, r *http.Request) {
 	channels, err := h.service.GetChannels(r.Context())
 	if err != nil {
