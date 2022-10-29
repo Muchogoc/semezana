@@ -4,17 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Muchogoc/semezana/dto"
 	"github.com/Muchogoc/semezana/ports/session"
 )
 
-type ContextKey string
-
-var (
-	ContextKeySession ContextKey = "session"
-)
-
 func SessionFromContext(ctx context.Context) (*session.Session, error) {
-	value := ctx.Value(ContextKeySession)
+	value := ctx.Value(dto.ContextKeySession)
 	if value == nil {
 		return nil, fmt.Errorf("no session in context")
 	}

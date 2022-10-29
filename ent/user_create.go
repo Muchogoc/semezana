@@ -91,14 +91,6 @@ func (uc *UserCreate) SetID(u uuid.UUID) *UserCreate {
 	return uc
 }
 
-// SetNillableID sets the "id" field if the given value is not nil.
-func (uc *UserCreate) SetNillableID(u *uuid.UUID) *UserCreate {
-	if u != nil {
-		uc.SetID(*u)
-	}
-	return uc
-}
-
 // AddMessageIDs adds the "messages" edge to the Message entity by IDs.
 func (uc *UserCreate) AddMessageIDs(ids ...uuid.UUID) *UserCreate {
 	uc.mutation.AddMessageIDs(ids...)
@@ -258,10 +250,6 @@ func (uc *UserCreate) defaults() {
 	if _, ok := uc.mutation.UpdatedAt(); !ok {
 		v := user.DefaultUpdatedAt
 		uc.mutation.SetUpdatedAt(v)
-	}
-	if _, ok := uc.mutation.ID(); !ok {
-		v := user.DefaultID()
-		uc.mutation.SetID(v)
 	}
 }
 
@@ -439,13 +427,6 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		createE := &SubscriptionCreate{config: uc.config, mutation: newSubscriptionMutation(uc.config, OpCreate)}
-		createE.defaults()
-		_, specE := createE.createSpec()
-		edge.Target.Fields = specE.Fields
-		if specE.ID.Value != nil {
-			edge.Target.Fields = append(edge.Target.Fields, specE.ID)
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}

@@ -15,6 +15,7 @@ type Repository interface {
 	) error
 
 	CreateMembership(ctx context.Context, membership *Membership) error
+	GetUserMemberships(ctx context.Context, userID string) (*[]Membership, error)
 	GetMembership(ctx context.Context, userID, channelID string) (*Membership, error)
 	UpdateMembership(
 		ctx context.Context,

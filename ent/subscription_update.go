@@ -61,9 +61,37 @@ func (su *SubscriptionUpdate) SetPinned(b bool) *SubscriptionUpdate {
 	return su
 }
 
+// SetNillablePinned sets the "pinned" field if the given value is not nil.
+func (su *SubscriptionUpdate) SetNillablePinned(b *bool) *SubscriptionUpdate {
+	if b != nil {
+		su.SetPinned(*b)
+	}
+	return su
+}
+
+// ClearPinned clears the value of the "pinned" field.
+func (su *SubscriptionUpdate) ClearPinned() *SubscriptionUpdate {
+	su.mutation.ClearPinned()
+	return su
+}
+
 // SetPinnedAt sets the "pinned_at" field.
 func (su *SubscriptionUpdate) SetPinnedAt(t time.Time) *SubscriptionUpdate {
 	su.mutation.SetPinnedAt(t)
+	return su
+}
+
+// SetNillablePinnedAt sets the "pinned_at" field if the given value is not nil.
+func (su *SubscriptionUpdate) SetNillablePinnedAt(t *time.Time) *SubscriptionUpdate {
+	if t != nil {
+		su.SetPinnedAt(*t)
+	}
+	return su
+}
+
+// ClearPinnedAt clears the value of the "pinned_at" field.
+func (su *SubscriptionUpdate) ClearPinnedAt() *SubscriptionUpdate {
+	su.mutation.ClearPinnedAt()
 	return su
 }
 
@@ -204,10 +232,22 @@ func (su *SubscriptionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: subscription.FieldPinned,
 		})
 	}
+	if su.mutation.PinnedCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Column: subscription.FieldPinned,
+		})
+	}
 	if value, ok := su.mutation.PinnedAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
+			Column: subscription.FieldPinnedAt,
+		})
+	}
+	if su.mutation.PinnedAtCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
 			Column: subscription.FieldPinnedAt,
 		})
 	}
@@ -330,9 +370,37 @@ func (suo *SubscriptionUpdateOne) SetPinned(b bool) *SubscriptionUpdateOne {
 	return suo
 }
 
+// SetNillablePinned sets the "pinned" field if the given value is not nil.
+func (suo *SubscriptionUpdateOne) SetNillablePinned(b *bool) *SubscriptionUpdateOne {
+	if b != nil {
+		suo.SetPinned(*b)
+	}
+	return suo
+}
+
+// ClearPinned clears the value of the "pinned" field.
+func (suo *SubscriptionUpdateOne) ClearPinned() *SubscriptionUpdateOne {
+	suo.mutation.ClearPinned()
+	return suo
+}
+
 // SetPinnedAt sets the "pinned_at" field.
 func (suo *SubscriptionUpdateOne) SetPinnedAt(t time.Time) *SubscriptionUpdateOne {
 	suo.mutation.SetPinnedAt(t)
+	return suo
+}
+
+// SetNillablePinnedAt sets the "pinned_at" field if the given value is not nil.
+func (suo *SubscriptionUpdateOne) SetNillablePinnedAt(t *time.Time) *SubscriptionUpdateOne {
+	if t != nil {
+		suo.SetPinnedAt(*t)
+	}
+	return suo
+}
+
+// ClearPinnedAt clears the value of the "pinned_at" field.
+func (suo *SubscriptionUpdateOne) ClearPinnedAt() *SubscriptionUpdateOne {
+	suo.mutation.ClearPinnedAt()
 	return suo
 }
 
@@ -503,10 +571,22 @@ func (suo *SubscriptionUpdateOne) sqlSave(ctx context.Context) (_node *Subscript
 			Column: subscription.FieldPinned,
 		})
 	}
+	if suo.mutation.PinnedCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Column: subscription.FieldPinned,
+		})
+	}
 	if value, ok := suo.mutation.PinnedAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
+			Column: subscription.FieldPinnedAt,
+		})
+	}
+	if suo.mutation.PinnedAtCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
 			Column: subscription.FieldPinnedAt,
 		})
 	}

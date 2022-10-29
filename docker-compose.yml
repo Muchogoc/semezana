@@ -12,6 +12,8 @@ services:
     environment:
       - DEBUG=true
       - PORT=8080
+      - CORS_ALLOWED_ORIGINS="*"
+      - SECRET_KEY="something is cooking"
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USER=postgres

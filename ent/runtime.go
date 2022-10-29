@@ -9,9 +9,7 @@ import (
 	"github.com/Muchogoc/semezana/ent/device"
 	"github.com/Muchogoc/semezana/ent/message"
 	"github.com/Muchogoc/semezana/ent/schema"
-	"github.com/Muchogoc/semezana/ent/subscription"
 	"github.com/Muchogoc/semezana/ent/user"
-	"github.com/google/uuid"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -38,10 +36,6 @@ func init() {
 	channelDescTouched := channelFields[9].Descriptor()
 	// channel.DefaultTouched holds the default value on creation for the touched field.
 	channel.DefaultTouched = channelDescTouched.Default.(time.Time)
-	// channelDescID is the schema descriptor for id field.
-	channelDescID := channelFields[0].Descriptor()
-	// channel.DefaultID holds the default value on creation for the id field.
-	channel.DefaultID = channelDescID.Default.(func() uuid.UUID)
 	deviceFields := schema.Device{}.Fields()
 	_ = deviceFields
 	// deviceDescCreatedAt is the schema descriptor for created_at field.
@@ -54,10 +48,6 @@ func init() {
 	device.DefaultUpdatedAt = deviceDescUpdatedAt.Default.(time.Time)
 	// device.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	device.UpdateDefaultUpdatedAt = deviceDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// deviceDescID is the schema descriptor for id field.
-	deviceDescID := deviceFields[0].Descriptor()
-	// device.DefaultID holds the default value on creation for the id field.
-	device.DefaultID = deviceDescID.Default.(func() uuid.UUID)
 	messageFields := schema.Message{}.Fields()
 	_ = messageFields
 	// messageDescCreatedAt is the schema descriptor for created_at field.
@@ -70,16 +60,6 @@ func init() {
 	message.DefaultUpdatedAt = messageDescUpdatedAt.Default.(time.Time)
 	// message.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	message.UpdateDefaultUpdatedAt = messageDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// messageDescID is the schema descriptor for id field.
-	messageDescID := messageFields[0].Descriptor()
-	// message.DefaultID holds the default value on creation for the id field.
-	message.DefaultID = messageDescID.Default.(func() uuid.UUID)
-	subscriptionFields := schema.Subscription{}.Fields()
-	_ = subscriptionFields
-	// subscriptionDescID is the schema descriptor for id field.
-	subscriptionDescID := subscriptionFields[0].Descriptor()
-	// subscription.DefaultID holds the default value on creation for the id field.
-	subscription.DefaultID = subscriptionDescID.Default.(func() uuid.UUID)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescCreatedAt is the schema descriptor for created_at field.
@@ -92,8 +72,4 @@ func init() {
 	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(time.Time)
 	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	user.UpdateDefaultUpdatedAt = userDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// userDescID is the schema descriptor for id field.
-	userDescID := userFields[0].Descriptor()
-	// user.DefaultID holds the default value on creation for the id field.
-	user.DefaultID = userDescID.Default.(func() uuid.UUID)
 }

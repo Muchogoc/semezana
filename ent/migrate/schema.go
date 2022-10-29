@@ -131,8 +131,8 @@ var (
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "role", Type: field.TypeString},
 		{Name: "status", Type: field.TypeString},
-		{Name: "pinned", Type: field.TypeBool},
-		{Name: "pinned_at", Type: field.TypeTime},
+		{Name: "pinned", Type: field.TypeBool, Nullable: true},
+		{Name: "pinned_at", Type: field.TypeTime, Nullable: true},
 		{Name: "user_id", Type: field.TypeUUID},
 		{Name: "channel_id", Type: field.TypeUUID},
 	}

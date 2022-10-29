@@ -2,10 +2,6 @@
 
 package subscription
 
-import (
-	"github.com/google/uuid"
-)
-
 const (
 	// Label holds the string label denoting the subscription type in the database.
 	Label = "subscription"
@@ -65,8 +61,3 @@ func ValidColumn(column string) bool {
 	}
 	return false
 }
-
-var (
-	// DefaultID holds the default value on creation for the "id" field.
-	DefaultID func() uuid.UUID
-)

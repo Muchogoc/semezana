@@ -53,23 +53,31 @@ func (sc *SubscriptionCreate) SetPinned(b bool) *SubscriptionCreate {
 	return sc
 }
 
+// SetNillablePinned sets the "pinned" field if the given value is not nil.
+func (sc *SubscriptionCreate) SetNillablePinned(b *bool) *SubscriptionCreate {
+	if b != nil {
+		sc.SetPinned(*b)
+	}
+	return sc
+}
+
 // SetPinnedAt sets the "pinned_at" field.
 func (sc *SubscriptionCreate) SetPinnedAt(t time.Time) *SubscriptionCreate {
 	sc.mutation.SetPinnedAt(t)
 	return sc
 }
 
-// SetID sets the "id" field.
-func (sc *SubscriptionCreate) SetID(u uuid.UUID) *SubscriptionCreate {
-	sc.mutation.SetID(u)
+// SetNillablePinnedAt sets the "pinned_at" field if the given value is not nil.
+func (sc *SubscriptionCreate) SetNillablePinnedAt(t *time.Time) *SubscriptionCreate {
+	if t != nil {
+		sc.SetPinnedAt(*t)
+	}
 	return sc
 }
 
-// SetNillableID sets the "id" field if the given value is not nil.
-func (sc *SubscriptionCreate) SetNillableID(u *uuid.UUID) *SubscriptionCreate {
-	if u != nil {
-		sc.SetID(*u)
-	}
+// SetID sets the "id" field.
+func (sc *SubscriptionCreate) SetID(u uuid.UUID) *SubscriptionCreate {
+	sc.mutation.SetID(u)
 	return sc
 }
 
@@ -94,7 +102,6 @@ func (sc *SubscriptionCreate) Save(ctx context.Context) (*Subscription, error) {
 		err  error
 		node *Subscription
 	)
-	sc.defaults()
 	if len(sc.hooks) == 0 {
 		if err = sc.check(); err != nil {
 			return nil, err
@@ -158,14 +165,6 @@ func (sc *SubscriptionCreate) ExecX(ctx context.Context) {
 	}
 }
 
-// defaults sets the default values of the builder before save.
-func (sc *SubscriptionCreate) defaults() {
-	if _, ok := sc.mutation.ID(); !ok {
-		v := subscription.DefaultID()
-		sc.mutation.SetID(v)
-	}
-}
-
 // check runs all checks and user-defined validators on the builder.
 func (sc *SubscriptionCreate) check() error {
 	if _, ok := sc.mutation.ChannelID(); !ok {
@@ -179,12 +178,6 @@ func (sc *SubscriptionCreate) check() error {
 	}
 	if _, ok := sc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Subscription.status"`)}
-	}
-	if _, ok := sc.mutation.Pinned(); !ok {
-		return &ValidationError{Name: "pinned", err: errors.New(`ent: missing required field "Subscription.pinned"`)}
-	}
-	if _, ok := sc.mutation.PinnedAt(); !ok {
-		return &ValidationError{Name: "pinned_at", err: errors.New(`ent: missing required field "Subscription.pinned_at"`)}
 	}
 	if _, ok := sc.mutation.UserID(); !ok {
 		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "Subscription.user"`)}
@@ -317,7 +310,6 @@ func (scb *SubscriptionCreateBulk) Save(ctx context.Context) ([]*Subscription, e
 	for i := range scb.builders {
 		func(i int, root context.Context) {
 			builder := scb.builders[i]
-			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*SubscriptionMutation)
 				if !ok {

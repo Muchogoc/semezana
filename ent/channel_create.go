@@ -116,14 +116,6 @@ func (cc *ChannelCreate) SetID(u uuid.UUID) *ChannelCreate {
 	return cc
 }
 
-// SetNillableID sets the "id" field if the given value is not nil.
-func (cc *ChannelCreate) SetNillableID(u *uuid.UUID) *ChannelCreate {
-	if u != nil {
-		cc.SetID(*u)
-	}
-	return cc
-}
-
 // AddMessageIDs adds the "messages" edge to the Message entity by IDs.
 func (cc *ChannelCreate) AddMessageIDs(ids ...uuid.UUID) *ChannelCreate {
 	cc.mutation.AddMessageIDs(ids...)
@@ -261,10 +253,6 @@ func (cc *ChannelCreate) defaults() {
 	if _, ok := cc.mutation.Touched(); !ok {
 		v := channel.DefaultTouched
 		cc.mutation.SetTouched(v)
-	}
-	if _, ok := cc.mutation.ID(); !ok {
-		v := channel.DefaultID()
-		cc.mutation.SetID(v)
 	}
 }
 
@@ -440,13 +428,6 @@ func (cc *ChannelCreate) createSpec() (*Channel, *sqlgraph.CreateSpec) {
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		createE := &SubscriptionCreate{config: cc.config, mutation: newSubscriptionMutation(cc.config, OpCreate)}
-		createE.defaults()
-		_, specE := createE.createSpec()
-		edge.Target.Fields = specE.Fields
-		if specE.ID.Value != nil {
-			edge.Target.Fields = append(edge.Target.Fields, specE.ID)
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}

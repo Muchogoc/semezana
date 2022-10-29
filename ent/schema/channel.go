@@ -17,8 +17,7 @@ type Channel struct {
 // Fields of the Channel.
 func (Channel) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.New()).
-			Default(uuid.New),
+		field.UUID("id", uuid.New()),
 		field.Time("created_at").
 			Default(time.Now),
 		field.Time("updated_at").

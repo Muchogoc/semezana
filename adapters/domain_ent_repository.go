@@ -117,6 +117,11 @@ func (e EntRepository) UpdateChannel(
 }
 
 func (e EntRepository) CreateMembership(ctx context.Context, membership *chat.Membership) error {
+	sid, err := uuid.Parse(membership.ID())
+	if err != nil {
+		return err
+	}
+
 	user := membership.User()
 	uid, err := uuid.Parse(user.ID())
 	if err != nil {
@@ -130,6 +135,7 @@ func (e EntRepository) CreateMembership(ctx context.Context, membership *chat.Me
 	}
 
 	_, err = e.client.Subscription.Create().
+		SetID(sid).
 		SetUserID(uid).
 		SetChannelID(cid).
 		SetRole(membership.Role().String()).
@@ -138,6 +144,7 @@ func (e EntRepository) CreateMembership(ctx context.Context, membership *chat.Me
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -155,7 +162,23 @@ func (e EntRepository) GetMembership(ctx context.Context, userID, channelID stri
 	sub, err := e.client.Subscription.Query().Where(
 		subscription.UserID(uid),
 		subscription.ChannelID(cid),
-	).Only(ctx)
+	).WithChannel().WithUser().Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	channel, err := sub.Edges.ChannelOrErr()
+	if err != nil {
+		return nil, err
+	}
+
+	chn, err := e.chatFactory.UnmarshalChannelFromDatabase(
+		channel.ID.String(),
+		channel.Description,
+		channel.Name,
+		chat.ChannelState(channel.State),
+		chat.ChannelCategory(channel.Type),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -163,6 +186,7 @@ func (e EntRepository) GetMembership(ctx context.Context, userID, channelID stri
 	return e.chatFactory.UnmarshalMembershipFromDatabase(
 		sub.ID.String(),
 		chat.MembershipRole(sub.Role),
+		*chn,
 	)
 }
 
@@ -274,4 +298,51 @@ func (e EntRepository) GetUsers(ctx context.Context) (*[]user.User, error) {
 	}
 
 	return &users, nil
+}
+
+func (e EntRepository) GetUserMemberships(ctx context.Context, userID string) (*[]chat.Membership, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	subs, err := e.client.Subscription.Query().Where(
+		subscription.UserID(uid),
+	).WithChannel().WithUser().All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var memberships []chat.Membership
+	for _, sub := range subs {
+
+		channel, err := sub.Edges.ChannelOrErr()
+		if err != nil {
+			return nil, err
+		}
+
+		chn, err := e.chatFactory.UnmarshalChannelFromDatabase(
+			channel.ID.String(),
+			channel.Description,
+			channel.Name,
+			chat.ChannelState(channel.State),
+			chat.ChannelCategory(channel.Type),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		membership, err := e.chatFactory.UnmarshalMembershipFromDatabase(
+			sub.ID.String(),
+			chat.MembershipRole(sub.Role),
+			*chn,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		memberships = append(memberships, *membership)
+	}
+
+	return &memberships, nil
 }

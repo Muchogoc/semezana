@@ -82,14 +82,6 @@ func (mc *MessageCreate) SetID(u uuid.UUID) *MessageCreate {
 	return mc
 }
 
-// SetNillableID sets the "id" field if the given value is not nil.
-func (mc *MessageCreate) SetNillableID(u *uuid.UUID) *MessageCreate {
-	if u != nil {
-		mc.SetID(*u)
-	}
-	return mc
-}
-
 // SetAuthorID sets the "author" edge to the User entity by ID.
 func (mc *MessageCreate) SetAuthorID(id uuid.UUID) *MessageCreate {
 	mc.mutation.SetAuthorID(id)
@@ -205,10 +197,6 @@ func (mc *MessageCreate) defaults() {
 	if _, ok := mc.mutation.UpdatedAt(); !ok {
 		v := message.DefaultUpdatedAt
 		mc.mutation.SetUpdatedAt(v)
-	}
-	if _, ok := mc.mutation.ID(); !ok {
-		v := message.DefaultID()
-		mc.mutation.SetID(v)
 	}
 }
 

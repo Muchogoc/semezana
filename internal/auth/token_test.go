@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"testing"
 
 	"github.com/google/uuid"
@@ -13,6 +14,7 @@ func TestVerifyToken(t *testing.T) {
 	}
 
 	type args struct {
+		ctx         context.Context
 		tokenString string
 	}
 	tests := []struct {
@@ -23,6 +25,7 @@ func TestVerifyToken(t *testing.T) {
 		{
 			name: "happy case: valid token",
 			args: args{
+				ctx:         context.Background(),
 				tokenString: token,
 			},
 			wantErr: false,
@@ -30,49 +33,10 @@ func TestVerifyToken(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := ParseToken(tt.args.tokenString)
+			_, err := ParseToken(tt.args.ctx, tt.args.tokenString)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ParseToken() error = %v, wantErr %v", err, tt.wantErr)
 				return
-			}
-		})
-	}
-}
-
-func TestGetUIDFromToken(t *testing.T) {
-	uid := uuid.NewString()
-	token, err := CreateToken(uid)
-	if err != nil {
-		t.Errorf("failed to create token")
-	}
-
-	type args struct {
-		tokenString string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    string
-		wantErr bool
-	}{
-		{
-			name: "happy case: get uid",
-			args: args{
-				tokenString: token,
-			},
-			want:    uid,
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetUIDFromToken(tt.args.tokenString)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetUIDFromToken() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("GetUIDFromToken() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -2,16 +2,47 @@ package session
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/Muchogoc/semezana/dto"
+	"github.com/Muchogoc/semezana/internal/auth"
 )
 
 type handler func(ctx context.Context, payload *dto.ClientPayload)
 
 func (s *Session) dispatch(ctx context.Context, payload *dto.ClientPayload) {
+
+	token, err := auth.ParseToken(ctx, payload.Auth.Token)
+	if err != nil {
+		response := &dto.ServerResponse{
+			Control: &dto.Ctrl{
+				Code:      http.StatusBadRequest,
+				Message:   fmt.Errorf("invalid token: %w", err).Error(),
+				Timestamp: payload.Timestamp,
+			},
+		}
+		s.queueOut(response)
+		return
+	}
+
+	err = auth.ValidateToken(ctx, token)
+	if err != nil {
+		response := &dto.ServerResponse{
+			Control: &dto.Ctrl{
+				Code:      http.StatusUnauthorized,
+				Message:   fmt.Errorf("token validation failed: %w", err).Error(),
+				Timestamp: payload.Timestamp,
+			},
+		}
+		s.queueOut(response)
+		return
+	}
+
+	ctx = auth.SetTokenContext(ctx, token)
+	ctx = SetSessionContext(ctx, s)
 
 	var handler handler
 
@@ -45,12 +76,7 @@ func (s *Session) dispatch(ctx context.Context, payload *dto.ClientPayload) {
 }
 
 func (s *Session) helloHandler(ctx context.Context, payload *dto.ClientPayload) {
-	response := &dto.ServerResponse{
-		Control: &dto.Ctrl{
-			Code:      http.StatusOK,
-			Timestamp: payload.Timestamp,
-		},
-	}
+	response := s.service.HandleHello(ctx, payload)
 	s.queueOut(response)
 }
 

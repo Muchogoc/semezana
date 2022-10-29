@@ -408,6 +408,20 @@ func PinnedNEQ(v bool) predicate.Subscription {
 	})
 }
 
+// PinnedIsNil applies the IsNil predicate on the "pinned" field.
+func PinnedIsNil() predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldPinned)))
+	})
+}
+
+// PinnedNotNil applies the NotNil predicate on the "pinned" field.
+func PinnedNotNil() predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldPinned)))
+	})
+}
+
 // PinnedAtEQ applies the EQ predicate on the "pinned_at" field.
 func PinnedAtEQ(v time.Time) predicate.Subscription {
 	return predicate.Subscription(func(s *sql.Selector) {
@@ -469,6 +483,20 @@ func PinnedAtLT(v time.Time) predicate.Subscription {
 func PinnedAtLTE(v time.Time) predicate.Subscription {
 	return predicate.Subscription(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldPinnedAt), v))
+	})
+}
+
+// PinnedAtIsNil applies the IsNil predicate on the "pinned_at" field.
+func PinnedAtIsNil() predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldPinnedAt)))
+	})
+}
+
+// PinnedAtNotNil applies the NotNil predicate on the "pinned_at" field.
+func PinnedAtNotNil() predicate.Subscription {
+	return predicate.Subscription(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldPinnedAt)))
 	})
 }
 

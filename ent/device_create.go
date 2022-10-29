@@ -86,14 +86,6 @@ func (dc *DeviceCreate) SetID(u uuid.UUID) *DeviceCreate {
 	return dc
 }
 
-// SetNillableID sets the "id" field if the given value is not nil.
-func (dc *DeviceCreate) SetNillableID(u *uuid.UUID) *DeviceCreate {
-	if u != nil {
-		dc.SetID(*u)
-	}
-	return dc
-}
-
 // SetOwnerID sets the "owner" edge to the User entity by ID.
 func (dc *DeviceCreate) SetOwnerID(id uuid.UUID) *DeviceCreate {
 	dc.mutation.SetOwnerID(id)
@@ -189,10 +181,6 @@ func (dc *DeviceCreate) defaults() {
 	if _, ok := dc.mutation.UpdatedAt(); !ok {
 		v := device.DefaultUpdatedAt
 		dc.mutation.SetUpdatedAt(v)
-	}
-	if _, ok := dc.mutation.ID(); !ok {
-		v := device.DefaultID()
-		dc.mutation.SetID(v)
 	}
 }
 

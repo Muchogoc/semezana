@@ -4,10 +4,16 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"strconv"
 
 	"github.com/Muchogoc/semezana/internal/utils"
 	"github.com/nsqio/go-nsq"
 	"github.com/sirupsen/logrus"
+)
+
+var (
+	DEBUG, _ = strconv.ParseBool(os.Getenv("DEBUG"))
 )
 
 type NSQSubscriber struct {
@@ -39,9 +45,9 @@ func (n NSQSubscriber) CreateSessionSubscriber(ctx context.Context, membershipID
 	}
 	defer consumer.Stop()
 
-	// if DEBUG {
-	// 	consumer.SetLogger(log.Default(), nsq.LogLevelDebug)
-	// }
+	if DEBUG {
+		consumer.SetLogger(log.Default(), nsq.LogLevelDebug)
+	}
 
 	consumer.AddHandler(session)
 

@@ -15,14 +15,13 @@ type Subscription struct {
 // Fields of the Subscription.
 func (Subscription) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.New()).
-			Default(uuid.New),
+		field.UUID("id", uuid.New()),
 		field.UUID("channel_id", uuid.New()),
 		field.UUID("user_id", uuid.New()),
 		field.String("role").Comment("Authorizations in channel i.e admin, moderator etc"),
 		field.String("status").Comment("Access to channel i.e ok, banned"),
-		field.Bool("pinned"),
-		field.Time("pinned_at"),
+		field.Bool("pinned").Optional(),
+		field.Time("pinned_at").Optional(),
 	}
 }
 

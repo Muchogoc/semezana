@@ -136,7 +136,7 @@ func service(service app.ChatService, store *ports.SessionStore) http.Handler {
 	})
 	r.Use(httplog.RequestLogger(logger))
 
-	r.Use(middleware.Recoverer)
+	// r.Use(middleware.Recoverer)
 
 	// r.Mount("/debug", middleware.Profiler())
 

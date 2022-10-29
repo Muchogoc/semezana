@@ -1,10 +1,12 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
 
+	"github.com/Muchogoc/semezana/dto"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 )
@@ -42,7 +44,7 @@ func CreateToken(uid string) (string, error) {
 	return token.SignedString(SigningKey())
 }
 
-func ParseToken(tokenString string) (*jwt.Token, error) {
+func ParseToken(ctx context.Context, tokenString string) (*jwt.Token, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -57,7 +59,7 @@ func ParseToken(tokenString string) (*jwt.Token, error) {
 	return token, nil
 }
 
-func ValidateToken(token *jwt.Token) error {
+func ValidateToken(ctx context.Context, token *jwt.Token) error {
 	claims, ok := token.Claims.(*CustomClaims)
 	if !ok {
 		return fmt.Errorf("not a custom claim %T", token.Claims)
@@ -67,27 +69,23 @@ func ValidateToken(token *jwt.Token) error {
 		return fmt.Errorf("token is invalid")
 	}
 
-	if !claims.VerifyAudience("", true) {
-		return fmt.Errorf("token is invalid")
-	}
+	// if !claims.VerifyAudience("", false) {
+	// 	return fmt.Errorf("token audience is invalid")
+	// }
 
 	if !claims.VerifyExpiresAt(time.Now().Unix(), true) {
-		return fmt.Errorf("token is invalid")
+		return fmt.Errorf("token is expired")
 	}
 
-	if !claims.VerifyIssuer("", true) {
-		return fmt.Errorf("token is invalid")
-	}
-
-	if !claims.VerifyNotBefore(time.Now().Unix(), true) {
-		return fmt.Errorf("token is invalid")
-	}
+	// if !claims.VerifyIssuer("", false) {
+	// 	return fmt.Errorf("token issuer is invalid")
+	// }
 
 	return nil
 }
 
-func GetUIDFromToken(tokenString string) (string, error) {
-	token, err := ParseToken(tokenString)
+func GetUIDFromContext(ctx context.Context) (string, error) {
+	token, err := TokenFromContext(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -95,4 +93,22 @@ func GetUIDFromToken(tokenString string) (string, error) {
 	claims := token.Claims.(*CustomClaims)
 
 	return claims.UserID, nil
+}
+
+func TokenFromContext(ctx context.Context) (*jwt.Token, error) {
+	value := ctx.Value(dto.ContextKeyToken)
+	if value == nil {
+		return nil, fmt.Errorf("no token in context")
+	}
+
+	session, ok := value.(*jwt.Token)
+	if !ok {
+		return nil, fmt.Errorf("invalid token type in context")
+	}
+
+	return session, nil
+}
+
+func SetTokenContext(ctx context.Context, token *jwt.Token) context.Context {
+	return context.WithValue(ctx, dto.ContextKeyToken, token)
 }

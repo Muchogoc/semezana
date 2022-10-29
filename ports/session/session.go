@@ -6,7 +6,6 @@ import (
 	"log"
 	"sync"
 
-	"github.com/Muchogoc/semezana/app"
 	"github.com/Muchogoc/semezana/dto"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -14,6 +13,10 @@ import (
 
 // Maximum number of queued messages before session is considered stale and dropped.
 const sendQueueLimit = 128
+
+type Service interface {
+	HandleHello(ctx context.Context, payload *dto.ClientPayload) *dto.ServerResponse
+}
 
 // Session holds and represents a single connection to the server
 // It is responsible for maintaining the connection to a client
@@ -43,7 +46,7 @@ type Session struct {
 	// Map of channel subscriptions/memberships, indexed by channel name.
 	// Don't access directly. Use getters/setters.
 	subscriptions *sync.Map
-	service       *app.ChatService
+	service       Service
 }
 
 func (s Session) ID() string {
@@ -91,7 +94,7 @@ func (s *Session) queueOut(msg *dto.ServerResponse) bool {
 	return true
 }
 
-func NewWebsocketSession(conn *websocket.Conn, service *app.ChatService) *Session {
+func NewWebsocketSession(conn *websocket.Conn, service Service) *Session {
 	return &Session{
 		sid:           uuid.NewString(),
 		ws:            conn,
@@ -101,4 +104,8 @@ func NewWebsocketSession(conn *websocket.Conn, service *app.ChatService) *Sessio
 		subscriptions: &sync.Map{},
 		service:       service,
 	}
+}
+
+func SetSessionContext(ctx context.Context, session *Session) context.Context {
+	return context.WithValue(ctx, dto.ContextKeySession, session)
 }

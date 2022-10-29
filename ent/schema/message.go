@@ -20,8 +20,7 @@ func (Message) Fields() []ent.Field {
 	// field.UUID("from", uuid.New()).Optional().Nillable().Comment("Who sent the message"),
 
 	return []ent.Field{
-		field.UUID("id", uuid.New()).
-			Default(uuid.New),
+		field.UUID("id", uuid.New()),
 		field.UUID("channel_id", uuid.New()),
 		field.Time("created_at").
 			Default(time.Now),

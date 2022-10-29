@@ -6,13 +6,13 @@ type ClientPayloadType string
 
 var (
 	ClientPayloadTypeHello   ClientPayloadType = "HELLO"
-	ClientPayloadTypeAccount ClientPayloadType = "HELLO"
-	ClientPayloadTypeLogin   ClientPayloadType = "HELLO"
-	ClientPayloadTypeSub     ClientPayloadType = "HELLO"
-	ClientPayloadTypeLeave   ClientPayloadType = "HELLO"
-	ClientPayloadTypePublish ClientPayloadType = "HELLO"
-	ClientPayloadTypeDelete  ClientPayloadType = "HELLO"
-	ClientPayloadTypeNotify  ClientPayloadType = "HELLO"
+	ClientPayloadTypeAccount ClientPayloadType = "ACCOUNT"
+	ClientPayloadTypeLogin   ClientPayloadType = "LOGIN"
+	ClientPayloadTypeSub     ClientPayloadType = "SUBSCRIBE"
+	ClientPayloadTypeLeave   ClientPayloadType = "LEAVE"
+	ClientPayloadTypePublish ClientPayloadType = "PUBLISH"
+	ClientPayloadTypeDelete  ClientPayloadType = "DELETE"
+	ClientPayloadTypeNotify  ClientPayloadType = "NOTE"
 )
 
 // ClientPayload is a wrapper for client messages.

@@ -449,13 +449,6 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				},
 			},
 		}
-		createE := &SubscriptionCreate{config: cu.config, mutation: newSubscriptionMutation(cu.config, OpCreate)}
-		createE.defaults()
-		_, specE := createE.createSpec()
-		edge.Target.Fields = specE.Fields
-		if specE.ID.Value != nil {
-			edge.Target.Fields = append(edge.Target.Fields, specE.ID)
-		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := cu.mutation.RemovedMembersIDs(); len(nodes) > 0 && !cu.mutation.MembersCleared() {
@@ -475,13 +468,6 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		createE := &SubscriptionCreate{config: cu.config, mutation: newSubscriptionMutation(cu.config, OpCreate)}
-		createE.defaults()
-		_, specE := createE.createSpec()
-		edge.Target.Fields = specE.Fields
-		if specE.ID.Value != nil {
-			edge.Target.Fields = append(edge.Target.Fields, specE.ID)
-		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := cu.mutation.MembersIDs(); len(nodes) > 0 {
@@ -500,13 +486,6 @@ func (cu *ChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		createE := &SubscriptionCreate{config: cu.config, mutation: newSubscriptionMutation(cu.config, OpCreate)}
-		createE.defaults()
-		_, specE := createE.createSpec()
-		edge.Target.Fields = specE.Fields
-		if specE.ID.Value != nil {
-			edge.Target.Fields = append(edge.Target.Fields, specE.ID)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
@@ -1030,13 +1009,6 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 				},
 			},
 		}
-		createE := &SubscriptionCreate{config: cuo.config, mutation: newSubscriptionMutation(cuo.config, OpCreate)}
-		createE.defaults()
-		_, specE := createE.createSpec()
-		edge.Target.Fields = specE.Fields
-		if specE.ID.Value != nil {
-			edge.Target.Fields = append(edge.Target.Fields, specE.ID)
-		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := cuo.mutation.RemovedMembersIDs(); len(nodes) > 0 && !cuo.mutation.MembersCleared() {
@@ -1056,13 +1028,6 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		createE := &SubscriptionCreate{config: cuo.config, mutation: newSubscriptionMutation(cuo.config, OpCreate)}
-		createE.defaults()
-		_, specE := createE.createSpec()
-		edge.Target.Fields = specE.Fields
-		if specE.ID.Value != nil {
-			edge.Target.Fields = append(edge.Target.Fields, specE.ID)
-		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := cuo.mutation.MembersIDs(); len(nodes) > 0 {
@@ -1081,13 +1046,6 @@ func (cuo *ChannelUpdateOne) sqlSave(ctx context.Context) (_node *Channel, err e
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		createE := &SubscriptionCreate{config: cuo.config, mutation: newSubscriptionMutation(cuo.config, OpCreate)}
-		createE.defaults()
-		_, specE := createE.createSpec()
-		edge.Target.Fields = specE.Fields
-		if specE.ID.Value != nil {
-			edge.Target.Fields = append(edge.Target.Fields, specE.ID)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}

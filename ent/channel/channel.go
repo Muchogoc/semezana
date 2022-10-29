@@ -4,8 +4,6 @@ package channel
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
 const (
@@ -101,6 +99,4 @@ var (
 	DefaultSequence int
 	// DefaultTouched holds the default value on creation for the "touched" field.
 	DefaultTouched time.Time
-	// DefaultID holds the default value on creation for the "id" field.
-	DefaultID func() uuid.UUID
 )

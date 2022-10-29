@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/Muchogoc/semezana/domain/chat"
 	"github.com/Muchogoc/semezana/domain/user"
@@ -194,6 +195,16 @@ func (c ChatService) CreateMembership(ctx context.Context, newMembership dto.New
 		return nil, err
 	}
 
+	msg := dto.PubMessage{
+		Sender: user.ID(),
+		Type:   dto.PubSubMessageTypeCreate,
+		Data:   nil,
+	}
+	err = c.publisher.PublishToMembership(ctx, msp.ID(), msg)
+	if err != nil {
+		return nil, err
+	}
+
 	cid := channel.ID()
 	uid := user.ID()
 	return &dto.Membership{
@@ -201,4 +212,43 @@ func (c ChatService) CreateMembership(ctx context.Context, newMembership dto.New
 		ChannelID: &cid,
 		UserID:    &uid,
 	}, nil
+}
+
+// get memberships
+// getOrCreate device
+// set current device
+// set up pubsub subscribers
+func (c ChatService) HandleHello(ctx context.Context, payload *dto.ClientPayload) *dto.ServerResponse {
+	uid, err := auth.GetUIDFromContext(ctx)
+	if err != nil {
+		return &dto.ServerResponse{
+			Control: &dto.Ctrl{
+				Code:      http.StatusInternalServerError,
+				Message:   err.Error(),
+				Timestamp: payload.Timestamp,
+			},
+		}
+	}
+
+	memberships, err := c.chatRepo.GetUserMemberships(ctx, uid)
+	if err != nil {
+		return &dto.ServerResponse{
+			Control: &dto.Ctrl{
+				Code:      http.StatusInternalServerError,
+				Message:   err.Error(),
+				Timestamp: payload.Timestamp,
+			},
+		}
+	}
+
+	for _, membership := range *memberships {
+		go c.subscriber.CreateSessionSubscriber(ctx, membership.ID())
+	}
+
+	return &dto.ServerResponse{
+		Control: &dto.Ctrl{
+			Code:      http.StatusOK,
+			Timestamp: payload.Timestamp,
+		},
+	}
 }
