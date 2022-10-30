@@ -8,7 +8,6 @@ import (
 
 	"github.com/Muchogoc/semezana/dto"
 	"github.com/gorilla/websocket"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -79,14 +78,8 @@ func (s *Session) Writer() {
 				return
 			}
 
-		case msg := <-s.sub:
-			logrus.Println(msg)
-
 		case <-s.stop:
 			return
-
-		case channel := <-s.detach:
-			s.delSub(channel)
 
 		case <-ticker.C:
 			if err := wsWrite(s.ws, websocket.PingMessage, nil); err != nil {

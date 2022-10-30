@@ -1,6 +1,7 @@
 package session
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/Muchogoc/semezana/dto"
@@ -8,9 +9,6 @@ import (
 )
 
 func (s *Session) HandleMessage(m *nsq.Message) error {
-	// s.messageLock.Lock()
-	// defer s.messageLock.Unlock()
-
 	var request dto.PubMessage
 	if err := json.Unmarshal(m.Body, &request); err != nil {
 		return err
@@ -19,4 +17,17 @@ func (s *Session) HandleMessage(m *nsq.Message) error {
 	s.sub <- request
 
 	return nil
+}
+
+func (s *Session) SubscriptionListener() {
+	for {
+		select {
+		case msg := <-s.sub:
+			response := s.service.ProcessPubsubMessage(context.Background(), msg)
+			s.queueOut(response)
+
+		case <-s.stop:
+			return
+		}
+	}
 }

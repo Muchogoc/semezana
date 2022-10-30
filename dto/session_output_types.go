@@ -13,7 +13,6 @@ var (
 	ServerResponseTypeData     ServerResponseType = "DATA"
 	ServerResponseTypeMeta     ServerResponseType = "META"
 	ServerResponseTypePresence ServerResponseType = "PRESENCE"
-	ServerResponseTypeInfo     ServerResponseType = "INFO"
 )
 
 // ServerResponse is a wrapper for server-side messages.
@@ -24,7 +23,6 @@ type ServerResponse struct {
 	Data     *Data `json:"data,omitempty"`
 	Meta     *Meta `json:"meta,omitempty"`
 	Presence *Pres `json:"presence,omitempty"`
-	Info     *Info `json:"info,omitempty"`
 }
 
 // Ctrl is a server control message {ctrl}.
@@ -33,7 +31,6 @@ type Ctrl struct {
 	Timestamp  time.Time   `json:"timestamp,omitempty"`
 	Parameters interface{} `json:"parameters,omitempty"`
 	Message    string      `json:"message,omitempty"`
-	Line       int
 }
 
 // Data is a server {data} message.
@@ -51,6 +48,3 @@ type Pres struct{}
 
 // Meta is a channel metadata {meta} update.
 type Meta struct{}
-
-// Info is the server-side copy of MsgClientNote with From and optionally Src added (non-authoritative).
-type Info struct{}

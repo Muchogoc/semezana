@@ -51,7 +51,6 @@ func (h HttpServer) GetUserAccessToken(w http.ResponseWriter, r *http.Request) {
 	render.Respond(w, r, response)
 }
 
-// Retrietoken
 func (h HttpServer) GetChannels(w http.ResponseWriter, r *http.Request) {
 	channels, err := h.service.GetChannels(r.Context())
 	if err != nil {
@@ -155,6 +154,7 @@ func (h HttpServer) Websocket(w http.ResponseWriter, r *http.Request) {
 
 	go session.Writer()
 	go session.Reader()
+	go session.SubscriptionListener()
 }
 
 // Retrieve all users

@@ -3,8 +3,8 @@ package dto
 type PubSubMessageType string
 
 var (
-	PubSubMessageTypeCreate  PubSubMessageType = "CREATE_TOPIC"
-	PubSubMessageTypeMessage PubSubMessageType = "RECEIVED_MESSAGE"
+	PubSubMessageTypeCreate     PubSubMessageType = "CREATE_TOPIC"
+	PubSubMessageTypeNewMessage PubSubMessageType = "RECEIVED_MESSAGE"
 )
 
 type PubMessage struct {

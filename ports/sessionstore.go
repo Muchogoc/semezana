@@ -69,6 +69,6 @@ func (s *SessionStore) Shutdown() {
 	defer s.lock.Unlock()
 
 	for _, session := range s.sessions {
-		session.StopSession(1)
+		session.Stop(1)
 	}
 }

@@ -3,12 +3,15 @@ package app
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/Muchogoc/semezana/domain/chat"
 	"github.com/Muchogoc/semezana/domain/user"
 	"github.com/Muchogoc/semezana/dto"
+	"github.com/Muchogoc/semezana/ent/schema"
 	"github.com/Muchogoc/semezana/internal/auth"
 	"github.com/google/uuid"
+	"github.com/mitchellh/mapstructure"
 )
 
 type ChatService struct {
@@ -251,4 +254,31 @@ func (c ChatService) HandleHello(ctx context.Context, payload *dto.ClientPayload
 			Timestamp: payload.Timestamp,
 		},
 	}
+}
+
+func (c ChatService) ProcessPubsubMessage(ctx context.Context, payload dto.PubMessage) *dto.ServerResponse {
+	var response *dto.ServerResponse
+
+	switch payload.Type {
+	case dto.PubSubMessageTypeNewMessage:
+		mapstructure.Decode(payload.Data, nil)
+		response = &dto.ServerResponse{
+			Type: dto.ServerResponseTypeData,
+			Data: &dto.Data{
+				Head:      schema.MessageHeaders{},
+				Channel:   "",
+				From:      "",
+				Timestamp: time.Time{},
+				Sequence:  0,
+				Content:   schema.MessageContent{},
+			},
+			Control: &dto.Ctrl{
+				Code: http.StatusOK,
+			},
+		}
+
+	case dto.PubSubMessageTypeCreate:
+	}
+
+	return response
 }
