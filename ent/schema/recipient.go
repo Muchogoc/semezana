@@ -26,8 +26,7 @@ func (Recipient) Fields() []ent.Field {
 		field.UUID("message_id", uuid.New()),
 		field.UUID("user_id", uuid.New()),
 		field.Enum("status").Values("DELIVERED", "UNREAD", "READ"),
-		field.Time("delivered_at").Nillable().Optional(),
-		field.Time("read_at").Nillable().Optional(),
+		field.Time("status_at"),
 	}
 }
 

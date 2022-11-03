@@ -15,10 +15,8 @@ const (
 	FieldUserID = "user_id"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
-	// FieldDeliveredAt holds the string denoting the delivered_at field in the database.
-	FieldDeliveredAt = "delivered_at"
-	// FieldReadAt holds the string denoting the read_at field in the database.
-	FieldReadAt = "read_at"
+	// FieldStatusAt holds the string denoting the status_at field in the database.
+	FieldStatusAt = "status_at"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
 	// EdgeMessage holds the string denoting the message edge name in mutations.
@@ -50,8 +48,7 @@ var Columns = []string{
 	FieldMessageID,
 	FieldUserID,
 	FieldStatus,
-	FieldDeliveredAt,
-	FieldReadAt,
+	FieldStatusAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).

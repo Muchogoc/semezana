@@ -41,31 +41,9 @@ func (rc *RecipientCreate) SetStatus(r recipient.Status) *RecipientCreate {
 	return rc
 }
 
-// SetDeliveredAt sets the "delivered_at" field.
-func (rc *RecipientCreate) SetDeliveredAt(t time.Time) *RecipientCreate {
-	rc.mutation.SetDeliveredAt(t)
-	return rc
-}
-
-// SetNillableDeliveredAt sets the "delivered_at" field if the given value is not nil.
-func (rc *RecipientCreate) SetNillableDeliveredAt(t *time.Time) *RecipientCreate {
-	if t != nil {
-		rc.SetDeliveredAt(*t)
-	}
-	return rc
-}
-
-// SetReadAt sets the "read_at" field.
-func (rc *RecipientCreate) SetReadAt(t time.Time) *RecipientCreate {
-	rc.mutation.SetReadAt(t)
-	return rc
-}
-
-// SetNillableReadAt sets the "read_at" field if the given value is not nil.
-func (rc *RecipientCreate) SetNillableReadAt(t *time.Time) *RecipientCreate {
-	if t != nil {
-		rc.SetReadAt(*t)
-	}
+// SetStatusAt sets the "status_at" field.
+func (rc *RecipientCreate) SetStatusAt(t time.Time) *RecipientCreate {
+	rc.mutation.SetStatusAt(t)
 	return rc
 }
 
@@ -167,6 +145,9 @@ func (rc *RecipientCreate) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Recipient.status": %w`, err)}
 		}
 	}
+	if _, ok := rc.mutation.StatusAt(); !ok {
+		return &ValidationError{Name: "status_at", err: errors.New(`ent: missing required field "Recipient.status_at"`)}
+	}
 	if _, ok := rc.mutation.UserID(); !ok {
 		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "Recipient.user"`)}
 	}
@@ -202,21 +183,13 @@ func (rc *RecipientCreate) createSpec() (*Recipient, *sqlgraph.CreateSpec) {
 		})
 		_node.Status = value
 	}
-	if value, ok := rc.mutation.DeliveredAt(); ok {
+	if value, ok := rc.mutation.StatusAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
-			Column: recipient.FieldDeliveredAt,
+			Column: recipient.FieldStatusAt,
 		})
-		_node.DeliveredAt = &value
-	}
-	if value, ok := rc.mutation.ReadAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: recipient.FieldReadAt,
-		})
-		_node.ReadAt = &value
+		_node.StatusAt = value
 	}
 	if nodes := rc.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

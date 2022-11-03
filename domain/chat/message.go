@@ -3,12 +3,12 @@ package chat
 import "github.com/Muchogoc/semezana/domain/user"
 
 type Message struct {
-	id       string
-	headers  MessageHeaders
-	content  MessageContent
-	channel  Channel
-	author   user.User
-	audience []Audience
+	id         string
+	headers    MessageHeaders
+	content    MessageContent
+	channel    Channel
+	author     user.User
+	recipients []Recipient
 }
 
 type MessageHeaders struct{}
@@ -17,7 +17,7 @@ type MessageContent struct {
 	text string
 }
 
-func (m *MessageContent) Text() string {
+func (m MessageContent) Text() string {
 	return m.text
 }
 
@@ -25,8 +25,8 @@ func (m *Message) ID() string {
 	return m.id
 }
 
-func (m *Message) Audience() []Audience {
-	return m.audience
+func (m *Message) Recipients() []Recipient {
+	return m.recipients
 }
 
 func (m *Message) Headers() MessageHeaders {

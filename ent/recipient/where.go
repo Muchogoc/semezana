@@ -25,17 +25,10 @@ func UserID(v uuid.UUID) predicate.Recipient {
 	})
 }
 
-// DeliveredAt applies equality check predicate on the "delivered_at" field. It's identical to DeliveredAtEQ.
-func DeliveredAt(v time.Time) predicate.Recipient {
+// StatusAt applies equality check predicate on the "status_at" field. It's identical to StatusAtEQ.
+func StatusAt(v time.Time) predicate.Recipient {
 	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldDeliveredAt), v))
-	})
-}
-
-// ReadAt applies equality check predicate on the "read_at" field. It's identical to ReadAtEQ.
-func ReadAt(v time.Time) predicate.Recipient {
-	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldReadAt), v))
+		s.Where(sql.EQ(s.C(FieldStatusAt), v))
 	})
 }
 
@@ -147,159 +140,67 @@ func StatusNotIn(vs ...Status) predicate.Recipient {
 	})
 }
 
-// DeliveredAtEQ applies the EQ predicate on the "delivered_at" field.
-func DeliveredAtEQ(v time.Time) predicate.Recipient {
+// StatusAtEQ applies the EQ predicate on the "status_at" field.
+func StatusAtEQ(v time.Time) predicate.Recipient {
 	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldDeliveredAt), v))
+		s.Where(sql.EQ(s.C(FieldStatusAt), v))
 	})
 }
 
-// DeliveredAtNEQ applies the NEQ predicate on the "delivered_at" field.
-func DeliveredAtNEQ(v time.Time) predicate.Recipient {
+// StatusAtNEQ applies the NEQ predicate on the "status_at" field.
+func StatusAtNEQ(v time.Time) predicate.Recipient {
 	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldDeliveredAt), v))
+		s.Where(sql.NEQ(s.C(FieldStatusAt), v))
 	})
 }
 
-// DeliveredAtIn applies the In predicate on the "delivered_at" field.
-func DeliveredAtIn(vs ...time.Time) predicate.Recipient {
+// StatusAtIn applies the In predicate on the "status_at" field.
+func StatusAtIn(vs ...time.Time) predicate.Recipient {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
 	}
 	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.In(s.C(FieldDeliveredAt), v...))
+		s.Where(sql.In(s.C(FieldStatusAt), v...))
 	})
 }
 
-// DeliveredAtNotIn applies the NotIn predicate on the "delivered_at" field.
-func DeliveredAtNotIn(vs ...time.Time) predicate.Recipient {
+// StatusAtNotIn applies the NotIn predicate on the "status_at" field.
+func StatusAtNotIn(vs ...time.Time) predicate.Recipient {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
 	}
 	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.NotIn(s.C(FieldDeliveredAt), v...))
+		s.Where(sql.NotIn(s.C(FieldStatusAt), v...))
 	})
 }
 
-// DeliveredAtGT applies the GT predicate on the "delivered_at" field.
-func DeliveredAtGT(v time.Time) predicate.Recipient {
+// StatusAtGT applies the GT predicate on the "status_at" field.
+func StatusAtGT(v time.Time) predicate.Recipient {
 	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldDeliveredAt), v))
+		s.Where(sql.GT(s.C(FieldStatusAt), v))
 	})
 }
 
-// DeliveredAtGTE applies the GTE predicate on the "delivered_at" field.
-func DeliveredAtGTE(v time.Time) predicate.Recipient {
+// StatusAtGTE applies the GTE predicate on the "status_at" field.
+func StatusAtGTE(v time.Time) predicate.Recipient {
 	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldDeliveredAt), v))
+		s.Where(sql.GTE(s.C(FieldStatusAt), v))
 	})
 }
 
-// DeliveredAtLT applies the LT predicate on the "delivered_at" field.
-func DeliveredAtLT(v time.Time) predicate.Recipient {
+// StatusAtLT applies the LT predicate on the "status_at" field.
+func StatusAtLT(v time.Time) predicate.Recipient {
 	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldDeliveredAt), v))
+		s.Where(sql.LT(s.C(FieldStatusAt), v))
 	})
 }
 
-// DeliveredAtLTE applies the LTE predicate on the "delivered_at" field.
-func DeliveredAtLTE(v time.Time) predicate.Recipient {
+// StatusAtLTE applies the LTE predicate on the "status_at" field.
+func StatusAtLTE(v time.Time) predicate.Recipient {
 	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldDeliveredAt), v))
-	})
-}
-
-// DeliveredAtIsNil applies the IsNil predicate on the "delivered_at" field.
-func DeliveredAtIsNil() predicate.Recipient {
-	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.IsNull(s.C(FieldDeliveredAt)))
-	})
-}
-
-// DeliveredAtNotNil applies the NotNil predicate on the "delivered_at" field.
-func DeliveredAtNotNil() predicate.Recipient {
-	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.NotNull(s.C(FieldDeliveredAt)))
-	})
-}
-
-// ReadAtEQ applies the EQ predicate on the "read_at" field.
-func ReadAtEQ(v time.Time) predicate.Recipient {
-	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldReadAt), v))
-	})
-}
-
-// ReadAtNEQ applies the NEQ predicate on the "read_at" field.
-func ReadAtNEQ(v time.Time) predicate.Recipient {
-	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldReadAt), v))
-	})
-}
-
-// ReadAtIn applies the In predicate on the "read_at" field.
-func ReadAtIn(vs ...time.Time) predicate.Recipient {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.In(s.C(FieldReadAt), v...))
-	})
-}
-
-// ReadAtNotIn applies the NotIn predicate on the "read_at" field.
-func ReadAtNotIn(vs ...time.Time) predicate.Recipient {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.NotIn(s.C(FieldReadAt), v...))
-	})
-}
-
-// ReadAtGT applies the GT predicate on the "read_at" field.
-func ReadAtGT(v time.Time) predicate.Recipient {
-	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldReadAt), v))
-	})
-}
-
-// ReadAtGTE applies the GTE predicate on the "read_at" field.
-func ReadAtGTE(v time.Time) predicate.Recipient {
-	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldReadAt), v))
-	})
-}
-
-// ReadAtLT applies the LT predicate on the "read_at" field.
-func ReadAtLT(v time.Time) predicate.Recipient {
-	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldReadAt), v))
-	})
-}
-
-// ReadAtLTE applies the LTE predicate on the "read_at" field.
-func ReadAtLTE(v time.Time) predicate.Recipient {
-	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldReadAt), v))
-	})
-}
-
-// ReadAtIsNil applies the IsNil predicate on the "read_at" field.
-func ReadAtIsNil() predicate.Recipient {
-	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.IsNull(s.C(FieldReadAt)))
-	})
-}
-
-// ReadAtNotNil applies the NotNil predicate on the "read_at" field.
-func ReadAtNotNil() predicate.Recipient {
-	return predicate.Recipient(func(s *sql.Selector) {
-		s.Where(sql.NotNull(s.C(FieldReadAt)))
+		s.Where(sql.LTE(s.C(FieldStatusAt), v))
 	})
 }
 

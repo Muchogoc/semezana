@@ -101,8 +101,7 @@ var (
 	// RecipientsColumns holds the columns for the "recipients" table.
 	RecipientsColumns = []*schema.Column{
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"DELIVERED", "UNREAD", "READ"}},
-		{Name: "delivered_at", Type: field.TypeTime, Nullable: true},
-		{Name: "read_at", Type: field.TypeTime, Nullable: true},
+		{Name: "status_at", Type: field.TypeTime},
 		{Name: "user_id", Type: field.TypeUUID},
 		{Name: "message_id", Type: field.TypeUUID},
 	}
@@ -110,17 +109,17 @@ var (
 	RecipientsTable = &schema.Table{
 		Name:       "recipients",
 		Columns:    RecipientsColumns,
-		PrimaryKey: []*schema.Column{RecipientsColumns[3], RecipientsColumns[4]},
+		PrimaryKey: []*schema.Column{RecipientsColumns[2], RecipientsColumns[3]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "recipients_users_user",
-				Columns:    []*schema.Column{RecipientsColumns[3]},
+				Columns:    []*schema.Column{RecipientsColumns[2]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "recipients_messages_message",
-				Columns:    []*schema.Column{RecipientsColumns[4]},
+				Columns:    []*schema.Column{RecipientsColumns[3]},
 				RefColumns: []*schema.Column{MessagesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

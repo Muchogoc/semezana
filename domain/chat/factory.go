@@ -1,5 +1,7 @@
 package chat
 
+import "github.com/Muchogoc/semezana/domain/user"
+
 type Factory struct{}
 
 func NewFactory() (Factory, error) {
@@ -34,10 +36,12 @@ func (f Factory) UnmarshalMembershipFromDatabase(
 	id string,
 	role MembershipRole,
 	channel Channel,
+	user user.User,
 ) (*Membership, error) {
 	return &Membership{
 		id:      id,
 		role:    role,
 		channel: channel,
+		user:    user,
 	}, nil
 }

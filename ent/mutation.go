@@ -2619,8 +2619,7 @@ type RecipientMutation struct {
 	op             Op
 	typ            string
 	status         *recipient.Status
-	delivered_at   *time.Time
-	read_at        *time.Time
+	status_at      *time.Time
 	clearedFields  map[string]struct{}
 	user           *uuid.UUID
 	cleareduser    bool
@@ -2726,68 +2725,23 @@ func (m *RecipientMutation) ResetStatus() {
 	m.status = nil
 }
 
-// SetDeliveredAt sets the "delivered_at" field.
-func (m *RecipientMutation) SetDeliveredAt(t time.Time) {
-	m.delivered_at = &t
+// SetStatusAt sets the "status_at" field.
+func (m *RecipientMutation) SetStatusAt(t time.Time) {
+	m.status_at = &t
 }
 
-// DeliveredAt returns the value of the "delivered_at" field in the mutation.
-func (m *RecipientMutation) DeliveredAt() (r time.Time, exists bool) {
-	v := m.delivered_at
+// StatusAt returns the value of the "status_at" field in the mutation.
+func (m *RecipientMutation) StatusAt() (r time.Time, exists bool) {
+	v := m.status_at
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// ClearDeliveredAt clears the value of the "delivered_at" field.
-func (m *RecipientMutation) ClearDeliveredAt() {
-	m.delivered_at = nil
-	m.clearedFields[recipient.FieldDeliveredAt] = struct{}{}
-}
-
-// DeliveredAtCleared returns if the "delivered_at" field was cleared in this mutation.
-func (m *RecipientMutation) DeliveredAtCleared() bool {
-	_, ok := m.clearedFields[recipient.FieldDeliveredAt]
-	return ok
-}
-
-// ResetDeliveredAt resets all changes to the "delivered_at" field.
-func (m *RecipientMutation) ResetDeliveredAt() {
-	m.delivered_at = nil
-	delete(m.clearedFields, recipient.FieldDeliveredAt)
-}
-
-// SetReadAt sets the "read_at" field.
-func (m *RecipientMutation) SetReadAt(t time.Time) {
-	m.read_at = &t
-}
-
-// ReadAt returns the value of the "read_at" field in the mutation.
-func (m *RecipientMutation) ReadAt() (r time.Time, exists bool) {
-	v := m.read_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ClearReadAt clears the value of the "read_at" field.
-func (m *RecipientMutation) ClearReadAt() {
-	m.read_at = nil
-	m.clearedFields[recipient.FieldReadAt] = struct{}{}
-}
-
-// ReadAtCleared returns if the "read_at" field was cleared in this mutation.
-func (m *RecipientMutation) ReadAtCleared() bool {
-	_, ok := m.clearedFields[recipient.FieldReadAt]
-	return ok
-}
-
-// ResetReadAt resets all changes to the "read_at" field.
-func (m *RecipientMutation) ResetReadAt() {
-	m.read_at = nil
-	delete(m.clearedFields, recipient.FieldReadAt)
+// ResetStatusAt resets all changes to the "status_at" field.
+func (m *RecipientMutation) ResetStatusAt() {
+	m.status_at = nil
 }
 
 // ClearUser clears the "user" edge to the User entity.
@@ -2861,7 +2815,7 @@ func (m *RecipientMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *RecipientMutation) Fields() []string {
-	fields := make([]string, 0, 5)
+	fields := make([]string, 0, 4)
 	if m.message != nil {
 		fields = append(fields, recipient.FieldMessageID)
 	}
@@ -2871,11 +2825,8 @@ func (m *RecipientMutation) Fields() []string {
 	if m.status != nil {
 		fields = append(fields, recipient.FieldStatus)
 	}
-	if m.delivered_at != nil {
-		fields = append(fields, recipient.FieldDeliveredAt)
-	}
-	if m.read_at != nil {
-		fields = append(fields, recipient.FieldReadAt)
+	if m.status_at != nil {
+		fields = append(fields, recipient.FieldStatusAt)
 	}
 	return fields
 }
@@ -2891,10 +2842,8 @@ func (m *RecipientMutation) Field(name string) (ent.Value, bool) {
 		return m.UserID()
 	case recipient.FieldStatus:
 		return m.Status()
-	case recipient.FieldDeliveredAt:
-		return m.DeliveredAt()
-	case recipient.FieldReadAt:
-		return m.ReadAt()
+	case recipient.FieldStatusAt:
+		return m.StatusAt()
 	}
 	return nil, false
 }
@@ -2932,19 +2881,12 @@ func (m *RecipientMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetStatus(v)
 		return nil
-	case recipient.FieldDeliveredAt:
+	case recipient.FieldStatusAt:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetDeliveredAt(v)
-		return nil
-	case recipient.FieldReadAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetReadAt(v)
+		m.SetStatusAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Recipient field %s", name)
@@ -2975,14 +2917,7 @@ func (m *RecipientMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *RecipientMutation) ClearedFields() []string {
-	var fields []string
-	if m.FieldCleared(recipient.FieldDeliveredAt) {
-		fields = append(fields, recipient.FieldDeliveredAt)
-	}
-	if m.FieldCleared(recipient.FieldReadAt) {
-		fields = append(fields, recipient.FieldReadAt)
-	}
-	return fields
+	return nil
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -2995,14 +2930,6 @@ func (m *RecipientMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *RecipientMutation) ClearField(name string) error {
-	switch name {
-	case recipient.FieldDeliveredAt:
-		m.ClearDeliveredAt()
-		return nil
-	case recipient.FieldReadAt:
-		m.ClearReadAt()
-		return nil
-	}
 	return fmt.Errorf("unknown Recipient nullable field %s", name)
 }
 
@@ -3019,11 +2946,8 @@ func (m *RecipientMutation) ResetField(name string) error {
 	case recipient.FieldStatus:
 		m.ResetStatus()
 		return nil
-	case recipient.FieldDeliveredAt:
-		m.ResetDeliveredAt()
-		return nil
-	case recipient.FieldReadAt:
-		m.ResetReadAt()
+	case recipient.FieldStatusAt:
+		m.ResetStatusAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Recipient field %s", name)

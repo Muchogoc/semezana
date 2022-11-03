@@ -162,7 +162,7 @@ func (c ChatService) GetChannels(ctx context.Context) (*[]dto.Channel, error) {
 }
 
 func (c ChatService) GetChannelById(ctx context.Context, channelID string) (*dto.Channel, error) {
-	channel, err := c.chatRepo.GetChannel(ctx, channelID)
+	channel, err := c.chatRepo.GetChannel(ctx, channelID, true)
 	if err != nil {
 		return nil, err
 	}
@@ -187,7 +187,7 @@ func (c ChatService) CreateMembership(ctx context.Context, newMembership dto.New
 	}
 	msp.SetUser(*user)
 
-	channel, err := c.chatRepo.GetChannel(ctx, *newMembership.ChannelID)
+	channel, err := c.chatRepo.GetChannel(ctx, *newMembership.ChannelID, false)
 	if err != nil {
 		return nil, err
 	}
@@ -252,6 +252,127 @@ func (c ChatService) HandleHello(ctx context.Context, payload *dto.ClientPayload
 		Control: &dto.Ctrl{
 			Code:      http.StatusOK,
 			Timestamp: payload.Timestamp,
+		},
+	}
+}
+
+func (c ChatService) HandleNewMessage(ctx context.Context, payload *dto.ClientPayload) *dto.ServerResponse {
+	uid, err := auth.GetUIDFromContext(ctx)
+	if err != nil {
+		return &dto.ServerResponse{
+			Control: &dto.Ctrl{
+				Code:      http.StatusInternalServerError,
+				Message:   err.Error(),
+				Timestamp: payload.Timestamp,
+			},
+		}
+	}
+
+	channel, err := c.chatRepo.GetChannel(ctx, payload.Publish.Channel, true)
+	if err != nil {
+		return &dto.ServerResponse{
+			Control: &dto.Ctrl{
+				Code:      http.StatusInternalServerError,
+				Message:   err.Error(),
+				Timestamp: payload.Timestamp,
+			},
+		}
+	}
+
+	message, memberships, err := channel.NewMessage(payload.Publish.Content.(string), uid)
+	if err != nil {
+		return &dto.ServerResponse{
+			Control: &dto.Ctrl{
+				Code:      http.StatusInternalServerError,
+				Message:   err.Error(),
+				Timestamp: payload.Timestamp,
+			},
+		}
+	}
+
+	err = c.chatRepo.CreateMessage(ctx, message, uid, channel.ID())
+	if err != nil {
+		return &dto.ServerResponse{
+			Control: &dto.Ctrl{
+				Code:      http.StatusInternalServerError,
+				Message:   err.Error(),
+				Timestamp: payload.Timestamp,
+			},
+		}
+	}
+
+	for _, m := range *memberships {
+		membership, err := c.chatRepo.GetMembership(ctx, m.ID(), true)
+		if err != nil {
+			return &dto.ServerResponse{
+				Control: &dto.Ctrl{
+					Code:      http.StatusInternalServerError,
+					Message:   err.Error(),
+					Timestamp: payload.Timestamp,
+				},
+			}
+		}
+
+		user := membership.User()
+
+		recipient := chat.Recipient{}
+		recipient.SetUserID(user.ID())
+		recipient.SetMessageID(message.ID())
+		recipient.SetStatus("DELIVERED")
+		recipient.SetStatusAt(time.Now())
+
+		err = c.chatRepo.CreateRecipient(ctx, &recipient)
+		if err != nil {
+			return &dto.ServerResponse{
+				Control: &dto.Ctrl{
+					Code:      http.StatusInternalServerError,
+					Message:   err.Error(),
+					Timestamp: payload.Timestamp,
+				},
+			}
+		}
+
+		input := dto.PubMessage{
+			Sender: uid,
+			Type:   dto.PubSubMessageTypeNewMessage,
+			Data: dto.Data{
+				Head:      schema.MessageHeaders{},
+				Channel:   channel.ID(),
+				From:      uid,
+				Timestamp: payload.Timestamp,
+				Sequence:  1,
+				Content: schema.MessageContent{
+					Text: message.Content().Text(),
+				},
+			},
+		}
+		err = c.publisher.PublishToMembership(ctx, membership.ID(), input)
+		if err != nil {
+			return &dto.ServerResponse{
+				Control: &dto.Ctrl{
+					Code:      http.StatusInternalServerError,
+					Message:   err.Error(),
+					Timestamp: payload.Timestamp,
+				},
+			}
+		}
+
+	}
+
+	return &dto.ServerResponse{
+		Control: &dto.Ctrl{
+			Code:      http.StatusOK,
+			Timestamp: payload.Timestamp,
+		},
+		Data: &dto.Data{
+			Head:      schema.MessageHeaders{},
+			Channel:   channel.ID(),
+			From:      uid,
+			Timestamp: payload.Timestamp,
+			Sequence:  1,
+			Content: schema.MessageContent{
+				Text: message.Content().Text(),
+			},
 		},
 	}
 }

@@ -23,10 +23,8 @@ type Recipient struct {
 	UserID uuid.UUID `json:"user_id,omitempty"`
 	// Status holds the value of the "status" field.
 	Status recipient.Status `json:"status,omitempty"`
-	// DeliveredAt holds the value of the "delivered_at" field.
-	DeliveredAt *time.Time `json:"delivered_at,omitempty"`
-	// ReadAt holds the value of the "read_at" field.
-	ReadAt *time.Time `json:"read_at,omitempty"`
+	// StatusAt holds the value of the "status_at" field.
+	StatusAt time.Time `json:"status_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the RecipientQuery when eager-loading is set.
 	Edges RecipientEdges `json:"edges"`
@@ -76,7 +74,7 @@ func (*Recipient) scanValues(columns []string) ([]interface{}, error) {
 		switch columns[i] {
 		case recipient.FieldStatus:
 			values[i] = new(sql.NullString)
-		case recipient.FieldDeliveredAt, recipient.FieldReadAt:
+		case recipient.FieldStatusAt:
 			values[i] = new(sql.NullTime)
 		case recipient.FieldMessageID, recipient.FieldUserID:
 			values[i] = new(uuid.UUID)
@@ -113,19 +111,11 @@ func (r *Recipient) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				r.Status = recipient.Status(value.String)
 			}
-		case recipient.FieldDeliveredAt:
+		case recipient.FieldStatusAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field delivered_at", values[i])
+				return fmt.Errorf("unexpected type %T for field status_at", values[i])
 			} else if value.Valid {
-				r.DeliveredAt = new(time.Time)
-				*r.DeliveredAt = value.Time
-			}
-		case recipient.FieldReadAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field read_at", values[i])
-			} else if value.Valid {
-				r.ReadAt = new(time.Time)
-				*r.ReadAt = value.Time
+				r.StatusAt = value.Time
 			}
 		}
 	}
@@ -173,15 +163,8 @@ func (r *Recipient) String() string {
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", r.Status))
 	builder.WriteString(", ")
-	if v := r.DeliveredAt; v != nil {
-		builder.WriteString("delivered_at=")
-		builder.WriteString(v.Format(time.ANSIC))
-	}
-	builder.WriteString(", ")
-	if v := r.ReadAt; v != nil {
-		builder.WriteString("read_at=")
-		builder.WriteString(v.Format(time.ANSIC))
-	}
+	builder.WriteString("status_at=")
+	builder.WriteString(r.StatusAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

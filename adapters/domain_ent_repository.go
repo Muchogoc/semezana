@@ -2,11 +2,14 @@ package adapters
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/Muchogoc/semezana/domain/chat"
 	"github.com/Muchogoc/semezana/domain/user"
 	"github.com/Muchogoc/semezana/ent"
+	"github.com/Muchogoc/semezana/ent/channel"
+	"github.com/Muchogoc/semezana/ent/recipient"
 	"github.com/Muchogoc/semezana/ent/schema"
 	"github.com/Muchogoc/semezana/ent/subscription"
 	"github.com/google/uuid"
@@ -61,23 +64,31 @@ func (e EntRepository) CreateChannel(ctx context.Context, channel *chat.Channel)
 
 }
 
-func (e EntRepository) GetChannel(ctx context.Context, id string) (*chat.Channel, error) {
+func (e EntRepository) GetChannel(ctx context.Context, id string, preload bool) (*chat.Channel, error) {
 	cid, err := uuid.Parse(id)
 	if err != nil {
 		return nil, err
 	}
 
-	channel, err := e.client.Channel.Get(ctx, cid)
+	query := e.client.Channel.Query().Where(
+		channel.ID(cid),
+	)
+
+	if preload {
+		query = query.WithSubscriptions().WithSubscriptions()
+	}
+
+	chann, err := query.Only(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	return e.chatFactory.UnmarshalChannelFromDatabase(
-		channel.ID.String(),
-		channel.Description,
-		channel.Name,
-		chat.ChannelState(channel.State),
-		chat.ChannelCategory(channel.Type),
+		chann.ID.String(),
+		chann.Description,
+		chann.Name,
+		chat.ChannelState(chann.State),
+		chat.ChannelCategory(chann.Type),
 	)
 }
 
@@ -148,7 +159,57 @@ func (e EntRepository) CreateMembership(ctx context.Context, membership *chat.Me
 	return nil
 }
 
-func (e EntRepository) GetMembership(ctx context.Context, userID, channelID string) (*chat.Membership, error) {
+func (e EntRepository) GetMembership(ctx context.Context, id string, preload bool) (*chat.Membership, error) {
+	sid, err := uuid.Parse(id)
+	if err != nil {
+		return nil, err
+	}
+
+	sub, err := e.client.Subscription.Query().Where(
+		subscription.ID(sid),
+	).WithChannel().WithUser().Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	channel, err := sub.Edges.ChannelOrErr()
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := sub.Edges.UserOrErr()
+	if err != nil {
+		return nil, err
+	}
+
+	usr, err := e.userFactory.UnmarshalUserFromDatabase(
+		user.ID.String(), user.Name,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	chn, err := e.chatFactory.UnmarshalChannelFromDatabase(
+		channel.ID.String(),
+		channel.Description,
+		channel.Name,
+		chat.ChannelState(channel.State),
+		chat.ChannelCategory(channel.Type),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return e.chatFactory.UnmarshalMembershipFromDatabase(
+		sub.ID.String(),
+		chat.MembershipRole(sub.Role),
+		*chn,
+		*usr,
+	)
+
+}
+
+func (e EntRepository) GetUserChannelMembership(ctx context.Context, userID, channelID string) (*chat.Membership, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
 		return nil, err
@@ -172,6 +233,18 @@ func (e EntRepository) GetMembership(ctx context.Context, userID, channelID stri
 		return nil, err
 	}
 
+	user, err := sub.Edges.UserOrErr()
+	if err != nil {
+		return nil, err
+	}
+
+	usr, err := e.userFactory.UnmarshalUserFromDatabase(
+		user.ID.String(), user.Name,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	chn, err := e.chatFactory.UnmarshalChannelFromDatabase(
 		channel.ID.String(),
 		channel.Description,
@@ -187,6 +260,7 @@ func (e EntRepository) GetMembership(ctx context.Context, userID, channelID stri
 		sub.ID.String(),
 		chat.MembershipRole(sub.Role),
 		*chn,
+		*usr,
 	)
 }
 
@@ -199,37 +273,84 @@ func (e EntRepository) UpdateMembership(
 }
 
 func (e EntRepository) CreateMessage(ctx context.Context, message *chat.Message, userID, channelID string) error {
-	author := message.Author()
-	uid, err := uuid.Parse(author.ID())
+	uid, err := uuid.Parse(userID)
 	if err != nil {
 		return err
 	}
 
-	channel := message.Channel()
-	cid, err := uuid.Parse(channel.ID())
+	cid, err := uuid.Parse(channelID)
 	if err != nil {
 		return err
+	}
+
+	tx, err := e.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("createMessage(): failed to start a transaction: %w", err)
+	}
+
+	author, err := tx.User.Get(ctx, uid)
+	if err != nil {
+		return fmt.Errorf("createMessage(): failed to get author: %w", err)
+	}
+
+	channel, err := tx.Channel.Get(ctx, cid)
+	if err != nil {
+		return fmt.Errorf("createMessage(): failed to get channel: %w", err)
+	}
+
+	sequence := channel.Sequence + 1
+	_, err = tx.Channel.Update().SetSequence(sequence).Save(ctx)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("createMessage(): failed to update channel sequence: %w", err)
 	}
 
 	content := message.Content()
-
-	_, err = e.client.Message.Create().
-		SetAuthorID(uid).
-		SetChannelID(cid).
+	_, err = tx.Message.Create().
+		SetAuthor(author).
+		SetChannel(channel).
 		SetHeader(schema.MessageHeaders{}).
 		SetContent(schema.MessageContent{
 			Text: content.Text(),
 		}).
-		SetSequence(1).
+		SetSequence(sequence).
 		Save(ctx)
 	if err != nil {
-		return err
+		tx.Rollback()
+		return fmt.Errorf("createMessage(): failed to create message: %w", err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("createMessage(): failed to commit transaction: %w", err)
 	}
 
 	return nil
 }
 
-func (e EntRepository) CreateMessageAudience(ctx context.Context, audience *chat.Audience) error {
+func (e EntRepository) CreateRecipient(ctx context.Context, resp *chat.Recipient) error {
+	uid, err := uuid.Parse(resp.UserID())
+	if err != nil {
+		return err
+	}
+
+	mid, err := uuid.Parse(resp.MessageID())
+	if err != nil {
+		return err
+	}
+
+	_, err = e.client.Recipient.
+		Create().
+		SetMessageID(mid).
+		SetUserID(uid).
+		SetStatus(recipient.Status(resp.Status())).
+		SetStatusAt(resp.StatusAt()).
+		Save(ctx)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -321,6 +442,18 @@ func (e EntRepository) GetUserMemberships(ctx context.Context, userID string) (*
 			return nil, err
 		}
 
+		user, err := sub.Edges.UserOrErr()
+		if err != nil {
+			return nil, err
+		}
+
+		usr, err := e.userFactory.UnmarshalUserFromDatabase(
+			user.ID.String(), user.Name,
+		)
+		if err != nil {
+			return nil, err
+		}
+
 		chn, err := e.chatFactory.UnmarshalChannelFromDatabase(
 			channel.ID.String(),
 			channel.Description,
@@ -336,6 +469,7 @@ func (e EntRepository) GetUserMemberships(ctx context.Context, userID string) (*
 			sub.ID.String(),
 			chat.MembershipRole(sub.Role),
 			*chn,
+			*usr,
 		)
 		if err != nil {
 			return nil, err

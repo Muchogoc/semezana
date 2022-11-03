@@ -49,43 +49,9 @@ func (ru *RecipientUpdate) SetStatus(r recipient.Status) *RecipientUpdate {
 	return ru
 }
 
-// SetDeliveredAt sets the "delivered_at" field.
-func (ru *RecipientUpdate) SetDeliveredAt(t time.Time) *RecipientUpdate {
-	ru.mutation.SetDeliveredAt(t)
-	return ru
-}
-
-// SetNillableDeliveredAt sets the "delivered_at" field if the given value is not nil.
-func (ru *RecipientUpdate) SetNillableDeliveredAt(t *time.Time) *RecipientUpdate {
-	if t != nil {
-		ru.SetDeliveredAt(*t)
-	}
-	return ru
-}
-
-// ClearDeliveredAt clears the value of the "delivered_at" field.
-func (ru *RecipientUpdate) ClearDeliveredAt() *RecipientUpdate {
-	ru.mutation.ClearDeliveredAt()
-	return ru
-}
-
-// SetReadAt sets the "read_at" field.
-func (ru *RecipientUpdate) SetReadAt(t time.Time) *RecipientUpdate {
-	ru.mutation.SetReadAt(t)
-	return ru
-}
-
-// SetNillableReadAt sets the "read_at" field if the given value is not nil.
-func (ru *RecipientUpdate) SetNillableReadAt(t *time.Time) *RecipientUpdate {
-	if t != nil {
-		ru.SetReadAt(*t)
-	}
-	return ru
-}
-
-// ClearReadAt clears the value of the "read_at" field.
-func (ru *RecipientUpdate) ClearReadAt() *RecipientUpdate {
-	ru.mutation.ClearReadAt()
+// SetStatusAt sets the "status_at" field.
+func (ru *RecipientUpdate) SetStatusAt(t time.Time) *RecipientUpdate {
+	ru.mutation.SetStatusAt(t)
 	return ru
 }
 
@@ -223,30 +189,11 @@ func (ru *RecipientUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: recipient.FieldStatus,
 		})
 	}
-	if value, ok := ru.mutation.DeliveredAt(); ok {
+	if value, ok := ru.mutation.StatusAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
-			Column: recipient.FieldDeliveredAt,
-		})
-	}
-	if ru.mutation.DeliveredAtCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Column: recipient.FieldDeliveredAt,
-		})
-	}
-	if value, ok := ru.mutation.ReadAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: recipient.FieldReadAt,
-		})
-	}
-	if ru.mutation.ReadAtCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Column: recipient.FieldReadAt,
+			Column: recipient.FieldStatusAt,
 		})
 	}
 	if ru.mutation.UserCleared() {
@@ -356,43 +303,9 @@ func (ruo *RecipientUpdateOne) SetStatus(r recipient.Status) *RecipientUpdateOne
 	return ruo
 }
 
-// SetDeliveredAt sets the "delivered_at" field.
-func (ruo *RecipientUpdateOne) SetDeliveredAt(t time.Time) *RecipientUpdateOne {
-	ruo.mutation.SetDeliveredAt(t)
-	return ruo
-}
-
-// SetNillableDeliveredAt sets the "delivered_at" field if the given value is not nil.
-func (ruo *RecipientUpdateOne) SetNillableDeliveredAt(t *time.Time) *RecipientUpdateOne {
-	if t != nil {
-		ruo.SetDeliveredAt(*t)
-	}
-	return ruo
-}
-
-// ClearDeliveredAt clears the value of the "delivered_at" field.
-func (ruo *RecipientUpdateOne) ClearDeliveredAt() *RecipientUpdateOne {
-	ruo.mutation.ClearDeliveredAt()
-	return ruo
-}
-
-// SetReadAt sets the "read_at" field.
-func (ruo *RecipientUpdateOne) SetReadAt(t time.Time) *RecipientUpdateOne {
-	ruo.mutation.SetReadAt(t)
-	return ruo
-}
-
-// SetNillableReadAt sets the "read_at" field if the given value is not nil.
-func (ruo *RecipientUpdateOne) SetNillableReadAt(t *time.Time) *RecipientUpdateOne {
-	if t != nil {
-		ruo.SetReadAt(*t)
-	}
-	return ruo
-}
-
-// ClearReadAt clears the value of the "read_at" field.
-func (ruo *RecipientUpdateOne) ClearReadAt() *RecipientUpdateOne {
-	ruo.mutation.ClearReadAt()
+// SetStatusAt sets the "status_at" field.
+func (ruo *RecipientUpdateOne) SetStatusAt(t time.Time) *RecipientUpdateOne {
+	ruo.mutation.SetStatusAt(t)
 	return ruo
 }
 
@@ -562,30 +475,11 @@ func (ruo *RecipientUpdateOne) sqlSave(ctx context.Context) (_node *Recipient, e
 			Column: recipient.FieldStatus,
 		})
 	}
-	if value, ok := ruo.mutation.DeliveredAt(); ok {
+	if value, ok := ruo.mutation.StatusAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
-			Column: recipient.FieldDeliveredAt,
-		})
-	}
-	if ruo.mutation.DeliveredAtCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Column: recipient.FieldDeliveredAt,
-		})
-	}
-	if value, ok := ruo.mutation.ReadAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: recipient.FieldReadAt,
-		})
-	}
-	if ruo.mutation.ReadAtCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Column: recipient.FieldReadAt,
+			Column: recipient.FieldStatusAt,
 		})
 	}
 	if ruo.mutation.UserCleared() {

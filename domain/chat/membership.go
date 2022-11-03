@@ -1,11 +1,13 @@
 package chat
 
-import "github.com/Muchogoc/semezana/domain/user"
+import (
+	"github.com/Muchogoc/semezana/domain/user"
+)
 
 type Membership struct {
-	id   string
-	role MembershipRole
-
+	id      string
+	role    MembershipRole
+	status  MembershipStatus
 	user    user.User
 	channel Channel
 }
@@ -40,4 +42,16 @@ func (m *Membership) ID() string {
 
 func (m *Membership) SetID(id string) {
 	m.id = id
+}
+
+func (m *Membership) Status() MembershipStatus {
+	return m.status
+}
+
+func (m *Membership) SetStatus(status MembershipStatus) {
+	m.status = status
+}
+
+func (m *Membership) CanReceiveMessage() bool {
+	return m.Status() == MembershipStatusOk
 }
