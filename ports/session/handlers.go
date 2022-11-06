@@ -57,7 +57,7 @@ func (s *Session) dispatch(ctx context.Context, payload *dto.ClientPayload) {
 	case dto.ClientPayloadTypeHello:
 		handler = s.authMiddleware(s.helloHandler)
 	case dto.ClientPayloadTypePublish:
-		handler = s.publishHandler
+		handler = s.authMiddleware(s.publishHandler)
 	case dto.ClientPayloadTypeNotify:
 		handler = s.notifyHandler
 	default:
@@ -75,23 +75,8 @@ func (s *Session) helloHandler(ctx context.Context, payload *dto.ClientPayload) 
 	s.queueOut(response)
 }
 
-// publishHandler
-// 1. Get user
-// 2. Fetch channel
-// 3. Fetch memberships
-// 4. Save Message to DB with sequence, author is user
-// 5. Save new channel sequence
-// 6. Save message audience
-// 7. Publish details to membership topics
-// 8. Return data response
 func (s *Session) publishHandler(ctx context.Context, payload *dto.ClientPayload) {
-
-	response := &dto.ServerResponse{
-		Control: &dto.Ctrl{
-			Code:    http.StatusOK,
-			Message: "",
-		},
-	}
+	response := s.service.HandleNewMessage(ctx, payload)
 	s.queueOut(response)
 
 }

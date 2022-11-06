@@ -35,12 +35,14 @@ func (f Factory) UnmarshalChannelFromDatabase(
 func (f Factory) UnmarshalMembershipFromDatabase(
 	id string,
 	role MembershipRole,
+	status MembershipStatus,
 	channel Channel,
 	user user.User,
 ) (*Membership, error) {
 	return &Membership{
 		id:      id,
 		role:    role,
+		status:  status,
 		channel: channel,
 		user:    user,
 	}, nil

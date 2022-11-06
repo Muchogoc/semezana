@@ -62,8 +62,16 @@ func (c *Channel) Memberships() []Membership {
 	return c.memberships
 }
 
+func (c *Channel) SetMemberships(memberships []Membership) {
+	c.memberships = memberships
+}
+
 func (c *Channel) Messages() []Message {
 	return c.messages
+}
+
+func (c *Channel) SetMessages(messages []Message) {
+	c.messages = messages
 }
 
 func (c *Channel) ValidateMembership(uid string) (user.User, error) {

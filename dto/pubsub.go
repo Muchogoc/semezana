@@ -1,14 +1,14 @@
 package dto
 
-type PubSubMessageType string
+type MessageType string
 
 var (
-	PubSubMessageTypeCreate     PubSubMessageType = "CREATE_TOPIC"
-	PubSubMessageTypeNewMessage PubSubMessageType = "RECEIVED_MESSAGE"
+	MessageTypeNewMembership MessageType = "NEW_MEMBERSHIP"
+	MessageTypeNewMessage    MessageType = "NEW_MESSAGE"
 )
 
 type PubMessage struct {
-	Sender string            `json:"sender"`
-	Type   PubSubMessageType `json:"type"`
-	Data   interface{}       `json:"data"`
+	Sender string      `json:"sender"`
+	Type   MessageType `json:"type"`
+	Data   interface{} `json:"data"`
 }

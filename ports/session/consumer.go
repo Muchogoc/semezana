@@ -14,20 +14,8 @@ func (s *Session) HandleMessage(m *nsq.Message) error {
 		return err
 	}
 
-	s.sub <- request
+	response := s.service.ProcessPubsubMessage(context.Background(), request)
+	s.queueOut(response)
 
 	return nil
-}
-
-func (s *Session) SubscriptionListener() {
-	for {
-		select {
-		case msg := <-s.sub:
-			response := s.service.ProcessPubsubMessage(context.Background(), msg)
-			s.queueOut(response)
-
-		case <-s.stop:
-			return
-		}
-	}
 }

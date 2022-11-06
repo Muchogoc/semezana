@@ -154,7 +154,7 @@ func (h HttpServer) Websocket(w http.ResponseWriter, r *http.Request) {
 
 	go session.Writer()
 	go session.Reader()
-	go session.SubscriptionListener()
+	// go session.SubscriptionListener()
 }
 
 // Retrieve all users

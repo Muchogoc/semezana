@@ -15,6 +15,7 @@ const sendQueueLimit = 128
 
 type Service interface {
 	HandleHello(ctx context.Context, payload *dto.ClientPayload) *dto.ServerResponse
+	HandleNewMessage(ctx context.Context, payload *dto.ClientPayload) *dto.ServerResponse
 	ProcessPubsubMessage(ctx context.Context, payload dto.PubMessage) *dto.ServerResponse
 }
 
@@ -35,7 +36,7 @@ type Session struct {
 	send chan interface{}
 
 	// Inbound messages channel from a pull pubsub subscriber
-	sub chan dto.PubMessage
+	// sub chan dto.PubMessage
 
 	service Service
 }
@@ -75,7 +76,7 @@ func (s *Session) dispatchRaw(ctx context.Context, raw []byte) {
 // queueOut attempts to send a ServerResponse to a session write loop;
 // it fails, if the send buffer is full.
 func (s *Session) queueOut(msg *dto.ServerResponse) bool {
-	if s == nil {
+	if msg == nil {
 		return true
 	}
 

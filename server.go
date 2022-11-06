@@ -21,7 +21,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/go-chi/httplog"
 	_ "github.com/lib/pq"
 	"github.com/nsqio/go-nsq"
 	"github.com/sirupsen/logrus"
@@ -127,14 +126,14 @@ func service(service app.ChatService, store *ports.SessionStore) http.Handler {
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
+	// r.Use(middleware.Logger)
 
 	// r.Use(middleware.Heartbeat("/ping"))
-	logger := httplog.NewLogger("httplog", httplog.Options{
-		JSON:    !DEBUG,
-		Concise: DEBUG,
-	})
-	r.Use(httplog.RequestLogger(logger))
+	// logger := httplog.NewLogger("httplog", httplog.Options{
+	// 	JSON:    !DEBUG,
+	// 	Concise: DEBUG,
+	// })
+	// r.Use(httplog.RequestLogger(logger))
 
 	// r.Use(middleware.Recoverer)
 

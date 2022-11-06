@@ -14,6 +14,7 @@ type Repository interface {
 		updateFn func(h *Channel) (*Channel, error),
 	) error
 
+	GetAllMemberships(ctx context.Context) ([]string, error)
 	CreateMembership(ctx context.Context, membership *Membership) error
 	GetMembership(ctx context.Context, id string, preload bool) (*Membership, error)
 	GetUserMemberships(ctx context.Context, userID string) (*[]Membership, error)

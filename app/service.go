@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -43,12 +44,39 @@ func NewChatService(
 		panic("missing subscriber")
 	}
 
-	return ChatService{
+	service := ChatService{
 		chatRepo:   chatRepo,
 		userRepo:   userRepo,
 		publisher:  publisher,
 		subscriber: subscriber,
 	}
+
+	if err := service.ensureTopicsExist(context.Background()); err != nil {
+		panic(fmt.Errorf("failed to create topics: %w", err))
+	}
+
+	return service
+}
+
+func (c ChatService) ensureTopicsExist(ctx context.Context) error {
+	memberships, err := c.chatRepo.GetAllMemberships(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, membership := range memberships {
+		msg := dto.PubMessage{
+			Sender: "SYSTEM",
+			Type:   dto.MessageTypeNewMembership,
+			Data:   nil,
+		}
+		err = c.publisher.PublishToMembership(ctx, membership, msg)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (c ChatService) GenerateAccessToken(ctx context.Context, creds dto.NewToken) (*dto.TokenResponse, error) {
@@ -200,7 +228,7 @@ func (c ChatService) CreateMembership(ctx context.Context, newMembership dto.New
 
 	msg := dto.PubMessage{
 		Sender: user.ID(),
-		Type:   dto.PubSubMessageTypeCreate,
+		Type:   dto.MessageTypeNewMembership,
 		Data:   nil,
 	}
 	err = c.publisher.PublishToMembership(ctx, msp.ID(), msg)
@@ -334,7 +362,7 @@ func (c ChatService) HandleNewMessage(ctx context.Context, payload *dto.ClientPa
 
 		input := dto.PubMessage{
 			Sender: uid,
-			Type:   dto.PubSubMessageTypeNewMessage,
+			Type:   dto.MessageTypeNewMessage,
 			Data: dto.Data{
 				Head:      schema.MessageHeaders{},
 				Channel:   channel.ID(),
@@ -378,28 +406,24 @@ func (c ChatService) HandleNewMessage(ctx context.Context, payload *dto.ClientPa
 }
 
 func (c ChatService) ProcessPubsubMessage(ctx context.Context, payload dto.PubMessage) *dto.ServerResponse {
-	var response *dto.ServerResponse
-
 	switch payload.Type {
-	case dto.PubSubMessageTypeNewMessage:
-		mapstructure.Decode(payload.Data, nil)
-		response = &dto.ServerResponse{
+	case dto.MessageTypeNewMessage:
+		data := &dto.Data{}
+		mapstructure.Decode(payload.Data, data)
+
+		response := &dto.ServerResponse{
 			Type: dto.ServerResponseTypeData,
-			Data: &dto.Data{
-				Head:      schema.MessageHeaders{},
-				Channel:   "",
-				From:      "",
-				Timestamp: time.Time{},
-				Sequence:  0,
-				Content:   schema.MessageContent{},
-			},
+			Data: data,
 			Control: &dto.Ctrl{
 				Code: http.StatusOK,
 			},
 		}
 
-	case dto.PubSubMessageTypeCreate:
+		return response
+
+	case dto.MessageTypeNewMembership:
+		return nil
 	}
 
-	return response
+	return nil
 }

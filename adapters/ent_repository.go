@@ -35,7 +35,7 @@ func (e EntRepository) CreateChannel(ctx context.Context, channel *chat.Channel)
 		return err
 	}
 
-	nch, err := e.client.Channel.Create().
+	_, err = e.client.Channel.Create().
 		SetID(cid).
 		SetName(channel.Name()).
 		SetDescription(channel.Description()).
@@ -46,19 +46,6 @@ func (e EntRepository) CreateChannel(ctx context.Context, channel *chat.Channel)
 	if err != nil {
 		return err
 	}
-
-	newChannel, err := e.chatFactory.UnmarshalChannelFromDatabase(
-		nch.ID.String(),
-		nch.Description,
-		nch.Name,
-		chat.ChannelState(nch.State),
-		chat.ChannelCategory(nch.Type),
-	)
-	if err != nil {
-		return err
-	}
-
-	channel = newChannel
 
 	return nil
 
@@ -74,22 +61,63 @@ func (e EntRepository) GetChannel(ctx context.Context, id string, preload bool) 
 		channel.ID(cid),
 	)
 
-	if preload {
-		query = query.WithSubscriptions().WithSubscriptions()
-	}
-
 	chann, err := query.Only(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return e.chatFactory.UnmarshalChannelFromDatabase(
+	channel, err := e.chatFactory.UnmarshalChannelFromDatabase(
 		chann.ID.String(),
 		chann.Description,
 		chann.Name,
 		chat.ChannelState(chann.State),
 		chat.ChannelCategory(chann.Type),
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	if preload {
+		subs, err := chann.QuerySubscriptions().WithUser().All(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		var memberships []chat.Membership
+		for _, sub := range subs {
+
+			user, err := sub.Edges.UserOrErr()
+			if err != nil {
+				return nil, err
+			}
+
+			usr, err := e.userFactory.UnmarshalUserFromDatabase(
+				user.ID.String(), user.Name,
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			membership, err := e.chatFactory.UnmarshalMembershipFromDatabase(
+				sub.ID.String(),
+				chat.MembershipRole(sub.Role),
+				chat.MembershipStatus(sub.Status),
+				*channel,
+				*usr,
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			memberships = append(memberships, *membership)
+
+		}
+
+		channel.SetMemberships(memberships)
+
+	}
+
+	return channel, nil
 }
 
 func (e EntRepository) GetChannels(ctx context.Context) (*[]chat.Channel, error) {
@@ -203,6 +231,7 @@ func (e EntRepository) GetMembership(ctx context.Context, id string, preload boo
 	return e.chatFactory.UnmarshalMembershipFromDatabase(
 		sub.ID.String(),
 		chat.MembershipRole(sub.Role),
+		chat.MembershipStatus(sub.Status),
 		*chn,
 		*usr,
 	)
@@ -259,6 +288,7 @@ func (e EntRepository) GetUserChannelMembership(ctx context.Context, userID, cha
 	return e.chatFactory.UnmarshalMembershipFromDatabase(
 		sub.ID.String(),
 		chat.MembershipRole(sub.Role),
+		chat.MembershipStatus(sub.Status),
 		*chn,
 		*usr,
 	)
@@ -305,8 +335,14 @@ func (e EntRepository) CreateMessage(ctx context.Context, message *chat.Message,
 		return fmt.Errorf("createMessage(): failed to update channel sequence: %w", err)
 	}
 
+	mid, err := uuid.Parse(message.ID())
+	if err != nil {
+		return err
+	}
+
 	content := message.Content()
 	_, err = tx.Message.Create().
+		SetID(mid).
 		SetAuthor(author).
 		SetChannel(channel).
 		SetHeader(schema.MessageHeaders{}).
@@ -360,7 +396,7 @@ func (e EntRepository) CreateUser(ctx context.Context, user *user.User) error {
 		return err
 	}
 
-	usr, err := e.client.User.
+	_, err = e.client.User.
 		Create().
 		SetID(uid).
 		SetName(user.Name()).
@@ -370,15 +406,6 @@ func (e EntRepository) CreateUser(ctx context.Context, user *user.User) error {
 	if err != nil {
 		return err
 	}
-
-	new, err := e.userFactory.UnmarshalUserFromDatabase(
-		usr.ID.String(), usr.Name,
-	)
-	if err != nil {
-		return err
-	}
-
-	user = new
 
 	return nil
 }
@@ -468,6 +495,7 @@ func (e EntRepository) GetUserMemberships(ctx context.Context, userID string) (*
 		membership, err := e.chatFactory.UnmarshalMembershipFromDatabase(
 			sub.ID.String(),
 			chat.MembershipRole(sub.Role),
+			chat.MembershipStatus(sub.Status),
 			*chn,
 			*usr,
 		)
@@ -479,4 +507,18 @@ func (e EntRepository) GetUserMemberships(ctx context.Context, userID string) (*
 	}
 
 	return &memberships, nil
+}
+
+func (e EntRepository) GetAllMemberships(ctx context.Context) ([]string, error) {
+	var memberships []string
+	subs, err := e.client.Subscription.Query().IDs(ctx)
+	if err != nil {
+		return memberships, err
+	}
+
+	for _, sub := range subs {
+		memberships = append(memberships, sub.String())
+	}
+
+	return memberships, nil
 }
