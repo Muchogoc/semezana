@@ -2,6 +2,7 @@ package chat
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Muchogoc/semezana/domain/user"
 	"github.com/google/uuid"
@@ -95,7 +96,7 @@ func (c *Channel) ValidateMembership(uid string) (user.User, error) {
 }
 
 // New Message receives a text. It returns the new message and the memberships that should receive it
-func (c *Channel) NewMessage(text string, senderID string) (*Message, *[]Membership, error) {
+func (c *Channel) NewMessage(text string, senderID string, timestamp time.Time) (*Message, *[]Membership, error) {
 	user, err := c.ValidateMembership(senderID)
 	if err != nil {
 		return nil, nil, err
@@ -115,8 +116,9 @@ func (c *Channel) NewMessage(text string, senderID string) (*Message, *[]Members
 		content: MessageContent{
 			text: text,
 		},
-		channel: *c,
-		author:  user,
+		channel:   *c,
+		author:    user,
+		timestamp: timestamp,
 	}
 
 	return &message, &recipients, nil

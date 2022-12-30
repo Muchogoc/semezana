@@ -1,0 +1,39 @@
+- id: 8b3c5794-577b-488b-a24a-9992dce9b5ba
+  name: Elizabeth Wanja
+  created_at: '2022-11-06 09:00:30.324548 +00:00'
+  updated_at: '2022-11-06 08:57:50.405006 +00:00'
+  state: OK
+  state_at: '2022-11-06 09:00:30.324543 +00:00'
+  last_seen:
+
+- id: 8a6192f0-75f1-4900-a889-256e410724ae
+  name: Charles Muchogo
+  created_at: '2022-11-06 09:00:42.560713 +00:00'
+  updated_at: '2022-11-06 08:57:50.405006 +00:00'
+  state: OK
+  state_at: '2022-11-06 09:00:42.560711 +00:00'
+  last_seen:
+
+- id: 489cef23-4274-4e93-8f1d-33d22a35cc98
+  name: Kenneth Kingori
+  created_at: '2022-11-06 09:00:54.717048 +00:00'
+  updated_at: '2022-11-06 08:57:50.405006 +00:00'
+  state: OK
+  state_at: '2022-11-06 09:00:54.717047 +00:00'
+  last_seen:
+
+- id: 44355fbe-1ea8-4f49-af5f-ac93a3ec36e2
+  name: Margaret Wanjiru
+  created_at: '2022-11-06 09:01:21.487073 +00:00'
+  updated_at: '2022-11-06 08:57:50.405006 +00:00'
+  state: OK
+  state_at: '2022-11-06 09:01:21.487073 +00:00'
+  last_seen:
+
+- id: ef8d13f3-c47a-4b2a-9af5-4425b445e007
+  name: Daniel Mathenge
+  created_at: '2022-11-06 09:06:55.713761 +00:00'
+  updated_at: '2022-11-06 08:57:50.405006 +00:00'
+  state: OK
+  state_at: '2022-11-06 09:06:55.713760 +00:00'
+  last_seen:

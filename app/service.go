@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -284,6 +285,62 @@ func (c ChatService) HandleHello(ctx context.Context, payload *dto.ClientPayload
 	}
 }
 
+func (c ChatService) BroadcastMessage(_ context.Context, message *chat.Message, memberships *[]chat.Membership) {
+	// Change from the request context
+	ctx := context.Background()
+
+	author := message.Author()
+	channel := message.Channel()
+
+	send := func(ctx context.Context, m chat.Membership) {
+		membership, err := c.chatRepo.GetMembership(ctx, m.ID(), true)
+		if err != nil {
+			log.Printf("failed to get membership: %s", err.Error())
+			return
+		}
+
+		user := membership.User()
+
+		recipient := chat.Recipient{}
+		recipient.SetUserID(user.ID())
+		recipient.SetMessageID(message.ID())
+		recipient.SetStatus("DELIVERED")
+		recipient.SetStatusAt(time.Now())
+
+		err = c.chatRepo.CreateRecipient(ctx, &recipient)
+		if err != nil {
+			log.Printf("failed to create recipient: %s", err.Error())
+			return
+		}
+
+		input := dto.PubMessage{
+			Sender: author.ID(),
+			Type:   dto.MessageTypeNewMessage,
+			Data: dto.Data{
+				Head:      schema.MessageHeaders{},
+				Channel:   channel.ID(),
+				From:      author.ID(),
+				Timestamp: message.Timestamp(),
+				Sequence:  1,
+				Content: schema.MessageContent{
+					Text: message.Content().Text(),
+				},
+			},
+		}
+
+		err = c.publisher.PublishToMembership(ctx, membership.ID(), input)
+		if err != nil {
+			log.Printf("failed to publish to membership: %s", err.Error())
+			return
+		}
+	}
+
+	for _, m := range *memberships {
+		go send(ctx, m)
+	}
+
+}
+
 func (c ChatService) HandleNewMessage(ctx context.Context, payload *dto.ClientPayload) *dto.ServerResponse {
 	uid, err := auth.GetUIDFromContext(ctx)
 	if err != nil {
@@ -307,7 +364,7 @@ func (c ChatService) HandleNewMessage(ctx context.Context, payload *dto.ClientPa
 		}
 	}
 
-	message, memberships, err := channel.NewMessage(payload.Publish.Content.(string), uid)
+	message, memberships, err := channel.NewMessage(payload.Publish.Content.(string), uid, payload.Timestamp)
 	if err != nil {
 		return &dto.ServerResponse{
 			Control: &dto.Ctrl{
@@ -329,63 +386,7 @@ func (c ChatService) HandleNewMessage(ctx context.Context, payload *dto.ClientPa
 		}
 	}
 
-	for _, m := range *memberships {
-		membership, err := c.chatRepo.GetMembership(ctx, m.ID(), true)
-		if err != nil {
-			return &dto.ServerResponse{
-				Control: &dto.Ctrl{
-					Code:      http.StatusInternalServerError,
-					Message:   err.Error(),
-					Timestamp: payload.Timestamp,
-				},
-			}
-		}
-
-		user := membership.User()
-
-		recipient := chat.Recipient{}
-		recipient.SetUserID(user.ID())
-		recipient.SetMessageID(message.ID())
-		recipient.SetStatus("DELIVERED")
-		recipient.SetStatusAt(time.Now())
-
-		err = c.chatRepo.CreateRecipient(ctx, &recipient)
-		if err != nil {
-			return &dto.ServerResponse{
-				Control: &dto.Ctrl{
-					Code:      http.StatusInternalServerError,
-					Message:   err.Error(),
-					Timestamp: payload.Timestamp,
-				},
-			}
-		}
-
-		input := dto.PubMessage{
-			Sender: uid,
-			Type:   dto.MessageTypeNewMessage,
-			Data: dto.Data{
-				Head:      schema.MessageHeaders{},
-				Channel:   channel.ID(),
-				From:      uid,
-				Timestamp: payload.Timestamp,
-				Sequence:  1,
-				Content: schema.MessageContent{
-					Text: message.Content().Text(),
-				},
-			},
-		}
-		err = c.publisher.PublishToMembership(ctx, membership.ID(), input)
-		if err != nil {
-			return &dto.ServerResponse{
-				Control: &dto.Ctrl{
-					Code:      http.StatusInternalServerError,
-					Message:   err.Error(),
-					Timestamp: payload.Timestamp,
-				},
-			}
-		}
-
-	}
+	go c.BroadcastMessage(ctx, message, memberships)
 
 	return &dto.ServerResponse{
 		Control: &dto.Ctrl{

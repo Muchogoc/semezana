@@ -21,6 +21,7 @@ services:
       - DB_PASSWORD=postgres
       - NSQ_ADDRESS=nsqd:4150
       - NSQ_LOOKUP_ADDRESS=nsqlookupd:4161
+      - ENVIRONMENT=local
 
   db:
     image: postgres:14.1-alpine
@@ -32,6 +33,7 @@ services:
       - "5432:5432"
     logging:
       driver: "none"
+
   nsqlookupd:
     image: nsqio/nsq
     command: /nsqlookupd
@@ -45,6 +47,7 @@ services:
       - nsqlookupd
     logging:
       driver: "none"
+      
   nsqadmin:
     image: nsqio/nsq
     command: /nsqadmin --lookupd-http-address=nsqlookupd:4161

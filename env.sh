@@ -1,5 +1,6 @@
 export DEBUG=true
 export PORT="8080"
+export ENVIRONMENT="local"
 
 export DB_HOST="db"
 export DB_PORT="5432"

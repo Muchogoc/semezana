@@ -1,0 +1,10 @@
+- id: add9dffc-9382-4f98-8ce2-3f9e03a9817c
+  created_at: '2022-11-06 09:01:26.938443 +00:00'
+  updated_at: '2022-11-06 08:57:50.404828 +00:00'
+  name: Family Group
+  description: a family group
+  type: CHANNEL
+  state: OK
+  state_at: '2022-11-06 09:01:26.938441 +00:00'
+  sequence: 0
+  touched: '2022-11-06 08:57:50.404833 +00:00'

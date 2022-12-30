@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	entsql "entgo.io/ent/dialect/sql"
 	"github.com/Muchogoc/semezana/adapters"
 	"github.com/Muchogoc/semezana/app"
 	"github.com/Muchogoc/semezana/domain/chat"
@@ -21,6 +23,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/go-testfixtures/testfixtures/v3"
 	_ "github.com/lib/pq"
 	"github.com/nsqio/go-nsq"
 	"github.com/sirupsen/logrus"
@@ -28,7 +31,7 @@ import (
 
 var (
 	DB_HOST     string = os.Getenv("DB_HOST")
-	DB_PORT     string = os.Getenv("DB_PORT")
+	DB_PORT, _         = strconv.Atoi(os.Getenv("DB_PORT"))
 	DB_USER     string = os.Getenv("DB_USER")
 	DB_NAME     string = os.Getenv("DB_NAME")
 	DB_PASSWORD string = os.Getenv("DB_PASSWORD")
@@ -40,26 +43,53 @@ var (
 )
 
 var (
-	PORT     = os.Getenv("PORT")
-	DEBUG, _ = strconv.ParseBool(os.Getenv("DEBUG"))
+	PORT        = os.Getenv("PORT")
+	DEBUG, _    = strconv.ParseBool(os.Getenv("DEBUG"))
+	ENVIRONMENT = os.Getenv("ENVIRONMENT")
 )
 
-func main() {
-	client, err := ent.Open(
-		"postgres",
-		fmt.Sprintf(
-			"postgres://%s:%s@%s:%s/%s?sslmode=disable",
-			DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME,
+func loadSampleData(db *sql.DB) error {
+	fixtures, err := testfixtures.New(
+		testfixtures.Database(db),
+		testfixtures.Dialect("postgres"),
+		testfixtures.DangerousSkipTestDatabaseCheck(),
+		testfixtures.Paths(
+			"data/dev",
 		),
 	)
 	if err != nil {
+		return err
+	}
+
+	if err := fixtures.Load(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func main() {
+	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME)
+	db, err := sql.Open("postgres", psqlconn)
+	if err != nil {
 		log.Fatalf("failed opening connection to postgres: %v", err)
 	}
+	defer db.Close()
+
+	client := ent.NewClient(
+		ent.Driver(entsql.OpenDB("postgres", db)),
+	)
 	defer client.Close()
 
 	// Run the auto migration tool.
 	if err := client.Schema.Create(context.Background()); err != nil {
 		log.Fatalf("failed creating schema resources: %v", err)
+	}
+
+	if ENVIRONMENT == "local" {
+		if err := loadSampleData(db); err != nil {
+			log.Fatalf("failed to load sample data: %v", err)
+		}
 	}
 
 	config := nsq.NewConfig()
@@ -84,11 +114,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	db := adapters.NewEntRepository(client, chatFactory, userFactory)
+	repository := adapters.NewEntRepository(client, chatFactory, userFactory)
 	publisher := adapters.NewNSQPublisher(producer)
 	subscriber := adapters.NewNSQSubscriber(NSQ_LOOKUP_ADDRESS)
 
-	chatService := app.NewChatService(db, db, publisher, subscriber)
+	chatService := app.NewChatService(repository, repository, publisher, subscriber)
 	sessionStore := ports.NewSessionStore()
 	defer sessionStore.Shutdown()
 

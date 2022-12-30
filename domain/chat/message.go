@@ -1,6 +1,10 @@
 package chat
 
-import "github.com/Muchogoc/semezana/domain/user"
+import (
+	"time"
+
+	"github.com/Muchogoc/semezana/domain/user"
+)
 
 type Message struct {
 	id         string
@@ -9,6 +13,7 @@ type Message struct {
 	channel    Channel
 	author     user.User
 	recipients []Recipient
+	timestamp  time.Time
 }
 
 type MessageHeaders struct{}
@@ -43,4 +48,8 @@ func (m *Message) Author() user.User {
 
 func (m *Message) Channel() Channel {
 	return m.channel
+}
+
+func (m *Message) Timestamp() time.Time {
+	return m.timestamp
 }
