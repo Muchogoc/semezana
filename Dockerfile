@@ -1,4 +1,4 @@
-FROM golang:1.18-alpine
+FROM golang:1.20-alpine
 
 # create a working directory inside the image
 WORKDIR /app
