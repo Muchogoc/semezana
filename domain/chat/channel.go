@@ -89,7 +89,7 @@ func (c *Channel) ValidateMembership(uid string) (user.User, error) {
 	}
 
 	if !exists {
-		return current, fmt.Errorf("user is not a member of channel:%s", c.name)
+		return current, fmt.Errorf("user is not a member of channel: %s", c.name)
 	}
 
 	return current, nil
