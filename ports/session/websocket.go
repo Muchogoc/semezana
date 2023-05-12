@@ -8,6 +8,7 @@ import (
 
 	"github.com/Muchogoc/semezana/dto"
 	"github.com/gorilla/websocket"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -25,17 +26,18 @@ func (s *Session) closeWebsocket() {
 	s.ws.Close()
 }
 
-func (s *Session) Reader() {
+func (s *Session) Reader(ctx context.Context, span trace.Span) {
 	defer func() {
 		s.closeWebsocket()
+		span.End()
 		s.cleanUp()
 	}()
 
 	// s.ws.SetReadLimit(globals.maxMessageSize)
-	s.ws.SetReadDeadline(time.Now().Add(pongWait))
+	_ = s.ws.SetReadDeadline(time.Now().Add(pongWait))
 	s.ws.SetPongHandler(
 		func(string) error {
-			s.ws.SetReadDeadline(time.Now().Add(pongWait))
+			_ = s.ws.SetReadDeadline(time.Now().Add(pongWait))
 			return nil
 		},
 	)
@@ -45,15 +47,18 @@ func (s *Session) Reader() {
 		if err != nil {
 			return
 		}
-		s.dispatchRaw(context.Background(), raw)
+		s.dispatchRaw(ctx, raw)
 	}
 }
 
-func (s *Session) Writer() {
+func (s *Session) Writer(ctx context.Context, span trace.Span) {
+	s.ctx = ctx
+
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
 		s.closeWebsocket()
+		span.End()
 	}()
 
 	for {
@@ -98,7 +103,7 @@ func wsWrite(ws *websocket.Conn, messageType int, msg interface{}) error {
 		return err
 	}
 
-	ws.SetWriteDeadline(time.Now().Add(writeWait))
+	_ = ws.SetWriteDeadline(time.Now().Add(writeWait))
 
 	return ws.WriteMessage(messageType, buf.Bytes())
 }

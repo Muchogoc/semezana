@@ -17,7 +17,6 @@ import (
 	"github.com/Muchogoc/semezana/adapters"
 	"github.com/Muchogoc/semezana/app"
 	"github.com/Muchogoc/semezana/domain/chat"
-	"github.com/Muchogoc/semezana/domain/user"
 	"github.com/Muchogoc/semezana/ent"
 	"github.com/Muchogoc/semezana/ports"
 	"github.com/go-chi/chi/v5"
@@ -27,6 +26,8 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/nsqio/go-nsq"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/sdk/trace"
 )
 
 var (
@@ -43,6 +44,12 @@ var (
 )
 
 var (
+	OTEL_EXPORTER_JAEGER_AGENT_HOST string = os.Getenv("OTEL_EXPORTER_JAEGER_AGENT_HOST")
+	OTEL_EXPORTER_JAEGER_AGENT_PORT string = os.Getenv("OTEL_EXPORTER_JAEGER_AGENT_PORT")
+	OTEL_EXPORTER_JAEGER_ENDPOINT   string = os.Getenv("OTEL_EXPORTER_JAEGER_ENDPOINT")
+)
+
+var (
 	PORT        = os.Getenv("PORT")
 	DEBUG, _    = strconv.ParseBool(os.Getenv("DEBUG"))
 	ENVIRONMENT = os.Getenv("ENVIRONMENT")
@@ -54,7 +61,7 @@ func loadSampleData(db *sql.DB) error {
 		testfixtures.Dialect("postgres"),
 		testfixtures.DangerousSkipTestDatabaseCheck(),
 		testfixtures.Paths(
-			"data/dev",
+			"data/fixtures",
 		),
 	)
 	if err != nil {
@@ -69,6 +76,22 @@ func loadSampleData(db *sql.DB) error {
 }
 
 func main() {
+	exp, err := newExporter()
+	if err != nil {
+		log.Fatalf("failed to create jaeger exporter: %v", err)
+	}
+
+	tp := trace.NewTracerProvider(
+		trace.WithBatcher(exp),
+		trace.WithResource(newResource()),
+	)
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			log.Fatalf("failed to shut down trace provider: %v", err)
+		}
+	}()
+	otel.SetTracerProvider(tp)
+
 	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME)
 	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
@@ -109,16 +132,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	userFactory, err := user.NewFactory()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	repository := adapters.NewEntRepository(client, chatFactory, userFactory)
+	repository := adapters.NewEntRepository(client, chatFactory)
 	publisher := adapters.NewNSQPublisher(producer)
 	subscriber := adapters.NewNSQSubscriber(NSQ_LOOKUP_ADDRESS)
 
-	chatService := app.NewChatService(repository, repository, publisher, subscriber)
+	chatService := app.NewChatService(repository, publisher, subscriber)
 	sessionStore := ports.NewSessionStore()
 	defer sessionStore.Shutdown()
 
@@ -156,18 +174,15 @@ func service(service app.ChatService, store *ports.SessionStore) http.Handler {
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	// r.Use(middleware.Logger)
+	r.Use(middleware.Logger)
 
-	// r.Use(middleware.Heartbeat("/ping"))
 	// logger := httplog.NewLogger("httplog", httplog.Options{
 	// 	JSON:    !DEBUG,
 	// 	Concise: DEBUG,
 	// })
 	// r.Use(httplog.RequestLogger(logger))
 
-	// r.Use(middleware.Recoverer)
-
-	// r.Mount("/debug", middleware.Profiler())
+	r.Use(middleware.Recoverer)
 
 	addCorsMiddleware(r)
 
@@ -176,6 +191,9 @@ func service(service app.ChatService, store *ports.SessionStore) http.Handler {
 		middleware.SetHeader("X-Frame-Options", "deny"),
 	)
 	r.Use(middleware.NoCache)
+
+	r.Use(middleware.Heartbeat("/ping"))
+	r.Mount("/debug", middleware.Profiler())
 
 	ports.HandlerFromMux(ports.NewHttpServer(service, store), r)
 

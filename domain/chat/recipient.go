@@ -2,19 +2,17 @@ package chat
 
 import (
 	"time"
-
-	"github.com/Muchogoc/semezana/domain/user"
 )
 
 type Recipient struct {
 	uid       string
 	mid       string
-	user      user.User
+	user      User
 	status    string
 	status_at time.Time
 }
 
-func (a *Recipient) User() user.User {
+func (a *Recipient) User() User {
 	return a.user
 }
 

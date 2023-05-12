@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Muchogoc/semezana/domain/user"
 	"github.com/google/uuid"
 )
 
@@ -75,9 +74,9 @@ func (c *Channel) SetMessages(messages []Message) {
 	c.messages = messages
 }
 
-func (c *Channel) ValidateMembership(uid string) (user.User, error) {
+func (c *Channel) ValidateMembership(uid string) (User, error) {
 	var exists bool
-	var current user.User
+	var current User
 
 	for _, membership := range c.Memberships() {
 		user := membership.User()

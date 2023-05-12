@@ -8,33 +8,31 @@ import (
 	"time"
 
 	"github.com/Muchogoc/semezana/domain/chat"
-	"github.com/Muchogoc/semezana/domain/user"
 	"github.com/Muchogoc/semezana/dto"
 	"github.com/Muchogoc/semezana/ent/schema"
 	"github.com/Muchogoc/semezana/internal/auth"
 	"github.com/google/uuid"
 	"github.com/mitchellh/mapstructure"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
+
+const tracerName = "github.com/Muchogoc/semezana/app"
 
 type ChatService struct {
 	chatRepo   chat.Repository
-	userRepo   user.Repository
 	publisher  Publish
 	subscriber Subscribe
 }
 
 func NewChatService(
 	chatRepo chat.Repository,
-	userRepo user.Repository,
 	publisher Publish,
 	subscriber Subscribe,
 ) ChatService {
 	if chatRepo == nil {
 		panic("missing chat repository")
-	}
-
-	if userRepo == nil {
-		panic("missing user repository")
 	}
 
 	if publisher == nil {
@@ -47,7 +45,6 @@ func NewChatService(
 
 	service := ChatService{
 		chatRepo:   chatRepo,
-		userRepo:   userRepo,
 		publisher:  publisher,
 		subscriber: subscriber,
 	}
@@ -60,6 +57,9 @@ func NewChatService(
 }
 
 func (c ChatService) ensureTopicsExist(ctx context.Context) error {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "ensureTopicsExist()")
+	defer span.End()
+
 	memberships, err := c.chatRepo.GetAllMemberships(ctx)
 	if err != nil {
 		return err
@@ -81,13 +81,20 @@ func (c ChatService) ensureTopicsExist(ctx context.Context) error {
 }
 
 func (c ChatService) GenerateAccessToken(ctx context.Context, creds dto.NewToken) (*dto.TokenResponse, error) {
-	user, err := c.userRepo.GetUser(ctx, creds.UserID)
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "GenerateAccessToken()")
+	defer span.End()
+
+	user, err := c.chatRepo.GetUser(ctx, creds.UserID)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
 	token, err := auth.CreateToken(user.ID())
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
@@ -97,13 +104,17 @@ func (c ChatService) GenerateAccessToken(ctx context.Context, creds dto.NewToken
 }
 
 func (c ChatService) CreateUser(ctx context.Context, newUser dto.NewUser) (*dto.User, error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "CreateUser()")
+	defer span.End()
 
-	usr := &user.User{}
+	usr := &chat.User{}
 	usr.SetID(uuid.NewString())
 	usr.SetName(newUser.Name)
 
-	err := c.userRepo.CreateUser(ctx, usr)
+	err := c.chatRepo.CreateUser(ctx, usr)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
@@ -114,8 +125,13 @@ func (c ChatService) CreateUser(ctx context.Context, newUser dto.NewUser) (*dto.
 }
 
 func (c ChatService) GetUsers(ctx context.Context) (*[]dto.User, error) {
-	users, err := c.userRepo.GetUsers(ctx)
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "GetUsers()")
+	defer span.End()
+
+	users, err := c.chatRepo.GetUsers(ctx)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
@@ -133,8 +149,13 @@ func (c ChatService) GetUsers(ctx context.Context) (*[]dto.User, error) {
 }
 
 func (c ChatService) GetUserById(ctx context.Context, userID string) (*dto.User, error) {
-	user, err := c.userRepo.GetUser(ctx, userID)
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "GetUserById()")
+	defer span.End()
+
+	user, err := c.chatRepo.GetUser(ctx, userID)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
@@ -145,6 +166,9 @@ func (c ChatService) GetUserById(ctx context.Context, userID string) (*dto.User,
 }
 
 func (c ChatService) CreateChannel(ctx context.Context, channel dto.NewChannel) (dto.Channel, error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "CreateChannel()")
+	defer span.End()
+
 	chn := &chat.Channel{}
 	chn.SetID(uuid.NewString())
 	chn.SetName(channel.Name)
@@ -156,6 +180,8 @@ func (c ChatService) CreateChannel(ctx context.Context, channel dto.NewChannel) 
 
 	err := c.chatRepo.CreateChannel(ctx, chn)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return dto.Channel{}, err
 	}
 
@@ -169,8 +195,13 @@ func (c ChatService) CreateChannel(ctx context.Context, channel dto.NewChannel) 
 }
 
 func (c ChatService) GetChannels(ctx context.Context) (*[]dto.Channel, error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "GetChannels()")
+	defer span.End()
+
 	channels, err := c.chatRepo.GetChannels(ctx)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
@@ -191,8 +222,13 @@ func (c ChatService) GetChannels(ctx context.Context) (*[]dto.Channel, error) {
 }
 
 func (c ChatService) GetChannelById(ctx context.Context, channelID string) (*dto.Channel, error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "GetChannelById()")
+	defer span.End()
+
 	channel, err := c.chatRepo.GetChannel(ctx, channelID, true)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
@@ -206,24 +242,32 @@ func (c ChatService) GetChannelById(ctx context.Context, channelID string) (*dto
 }
 
 func (c ChatService) CreateMembership(ctx context.Context, newMembership dto.NewMembership) (*dto.Membership, error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "CreateMembership()")
+	defer span.End()
 
 	msp := &chat.Membership{}
 	msp.SetID(uuid.NewString())
 
-	user, err := c.userRepo.GetUser(ctx, *newMembership.UserID)
+	user, err := c.chatRepo.GetUser(ctx, *newMembership.UserID)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 	msp.SetUser(*user)
 
 	channel, err := c.chatRepo.GetChannel(ctx, *newMembership.ChannelID, false)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 	msp.SetChannel(*channel)
 
 	err = c.chatRepo.CreateMembership(ctx, msp)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
@@ -234,6 +278,8 @@ func (c ChatService) CreateMembership(ctx context.Context, newMembership dto.New
 	}
 	err = c.publisher.PublishToMembership(ctx, msp.ID(), msg)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
 
@@ -251,8 +297,13 @@ func (c ChatService) CreateMembership(ctx context.Context, newMembership dto.New
 // set current device
 // set up pubsub subscribers
 func (c ChatService) HandleHello(ctx context.Context, payload *dto.ClientPayload) *dto.ServerResponse {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "HandleHello()")
+	defer span.End()
+
 	uid, err := auth.GetUIDFromContext(ctx)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return &dto.ServerResponse{
 			Control: &dto.Ctrl{
 				Code:      http.StatusInternalServerError,
@@ -264,6 +315,8 @@ func (c ChatService) HandleHello(ctx context.Context, payload *dto.ClientPayload
 
 	memberships, err := c.chatRepo.GetUserMemberships(ctx, uid)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return &dto.ServerResponse{
 			Control: &dto.Ctrl{
 				Code:      http.StatusInternalServerError,
@@ -285,9 +338,13 @@ func (c ChatService) HandleHello(ctx context.Context, payload *dto.ClientPayload
 	}
 }
 
-func (c ChatService) BroadcastMessage(_ context.Context, message *chat.Message, memberships *[]chat.Membership) {
+func (c ChatService) BroadcastMessage(nctx context.Context, message *chat.Message, memberships *[]chat.Membership) {
 	// Change from the request context
 	ctx := context.Background()
+	ctx = trace.ContextWithSpan(ctx, trace.SpanFromContext(nctx))
+
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "BroadcastMessage()")
+	defer span.End()
 
 	author := message.Author()
 	channel := message.Channel()
@@ -295,6 +352,8 @@ func (c ChatService) BroadcastMessage(_ context.Context, message *chat.Message, 
 	send := func(ctx context.Context, m chat.Membership) {
 		membership, err := c.chatRepo.GetMembership(ctx, m.ID(), true)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			log.Printf("failed to get membership: %s", err.Error())
 			return
 		}
@@ -309,6 +368,8 @@ func (c ChatService) BroadcastMessage(_ context.Context, message *chat.Message, 
 
 		err = c.chatRepo.CreateRecipient(ctx, &recipient)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			log.Printf("failed to create recipient: %s", err.Error())
 			return
 		}
@@ -330,6 +391,8 @@ func (c ChatService) BroadcastMessage(_ context.Context, message *chat.Message, 
 
 		err = c.publisher.PublishToMembership(ctx, membership.ID(), input)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			log.Printf("failed to publish to membership: %s", err.Error())
 			return
 		}
@@ -342,8 +405,13 @@ func (c ChatService) BroadcastMessage(_ context.Context, message *chat.Message, 
 }
 
 func (c ChatService) HandleNewMessage(ctx context.Context, payload *dto.ClientPayload) *dto.ServerResponse {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "HandleNewMessage()")
+	defer span.End()
+
 	uid, err := auth.GetUIDFromContext(ctx)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return &dto.ServerResponse{
 			Control: &dto.Ctrl{
 				Code:      http.StatusInternalServerError,
@@ -355,6 +423,8 @@ func (c ChatService) HandleNewMessage(ctx context.Context, payload *dto.ClientPa
 
 	channel, err := c.chatRepo.GetChannel(ctx, payload.Publish.Channel, true)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return &dto.ServerResponse{
 			Control: &dto.Ctrl{
 				Code:      http.StatusInternalServerError,
@@ -366,6 +436,8 @@ func (c ChatService) HandleNewMessage(ctx context.Context, payload *dto.ClientPa
 
 	message, memberships, err := channel.NewMessage(payload.Publish.Content.(string), uid, payload.Timestamp)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return &dto.ServerResponse{
 			Control: &dto.Ctrl{
 				Code:      http.StatusInternalServerError,
@@ -377,6 +449,8 @@ func (c ChatService) HandleNewMessage(ctx context.Context, payload *dto.ClientPa
 
 	err = c.chatRepo.CreateMessage(ctx, message, uid, channel.ID())
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return &dto.ServerResponse{
 			Control: &dto.Ctrl{
 				Code:      http.StatusInternalServerError,
@@ -407,10 +481,13 @@ func (c ChatService) HandleNewMessage(ctx context.Context, payload *dto.ClientPa
 }
 
 func (c ChatService) ProcessPubsubMessage(ctx context.Context, payload dto.PubMessage) *dto.ServerResponse {
+	_, span := otel.Tracer(tracerName).Start(ctx, "ProcessPubsubMessage()")
+	defer span.End()
+
 	switch payload.Type {
 	case dto.MessageTypeNewMessage:
 		data := &dto.Data{}
-		mapstructure.Decode(payload.Data, data)
+		_ = mapstructure.Decode(payload.Data, data)
 
 		response := &dto.ServerResponse{
 			Type: dto.ServerResponseTypeData,

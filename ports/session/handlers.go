@@ -9,14 +9,24 @@ import (
 
 	"github.com/Muchogoc/semezana/dto"
 	"github.com/Muchogoc/semezana/internal/auth"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 )
+
+const tracerName = "github.com/Muchogoc/ports/session"
 
 type handler func(ctx context.Context, payload *dto.ClientPayload)
 
 func (s *Session) authMiddleware(next handler) handler {
 	return func(ctx context.Context, payload *dto.ClientPayload) {
+		ctx, span := otel.Tracer(tracerName).Start(ctx, "authMiddleware()")
+		defer span.End()
+
 		token, err := auth.ParseToken(ctx, payload.Auth.Token)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+
 			response := &dto.ServerResponse{
 				Control: &dto.Ctrl{
 					Code:      http.StatusBadRequest,
@@ -30,6 +40,9 @@ func (s *Session) authMiddleware(next handler) handler {
 
 		err = auth.ValidateToken(ctx, token)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+
 			response := &dto.ServerResponse{
 				Control: &dto.Ctrl{
 					Code:      http.StatusUnauthorized,

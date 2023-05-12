@@ -1,6 +1,7 @@
 package ports
 
 import (
+	"context"
 	"log"
 	"net/http"
 
@@ -9,7 +10,11 @@ import (
 	"github.com/go-chi/render"
 	"github.com/gorilla/websocket"
 	"github.com/mitchellh/mapstructure"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 )
+
+const tracerName = "github.com/Muchogoc/semezana/ports"
 
 type HttpServer struct {
 	service      app.ChatService
@@ -31,15 +36,29 @@ func (h HttpServer) GetUserAccessToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := h.service.GenerateAccessToken(r.Context(), creds)
+	ctx := r.Context()
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "GetUserAccessToken()")
+	defer span.End()
+
+	token, err := h.service.GenerateAccessToken(ctx, creds)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+
 		render.Status(r, http.StatusInternalServerError)
 		render.PlainText(w, r, err.Error())
 		return
 	}
 
 	data := map[string]interface{}{}
-	mapstructure.Decode(token, &data)
+	if err = mapstructure.Decode(token, &data); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+
+		render.Status(r, http.StatusInternalServerError)
+		render.PlainText(w, r, err.Error())
+		return
+	}
 
 	response := dto.APIResponseFormat{
 		Data:    data,
@@ -52,15 +71,28 @@ func (h HttpServer) GetUserAccessToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h HttpServer) GetChannels(w http.ResponseWriter, r *http.Request) {
-	channels, err := h.service.GetChannels(r.Context())
+	ctx := r.Context()
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "GetChannels()")
+	defer span.End()
+
+	channels, err := h.service.GetChannels(ctx)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+
 		render.Status(r, http.StatusInternalServerError)
 		render.PlainText(w, r, err.Error())
 		return
 	}
 
 	data := []map[string]interface{}{}
-	mapstructure.Decode(channels, &data)
+	if err = mapstructure.Decode(channels, &data); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+
+		render.Status(r, http.StatusInternalServerError)
+		render.PlainText(w, r, err.Error())
+	}
 
 	response := dto.APIResponseFormat{
 		Data: map[string]interface{}{
@@ -83,15 +115,28 @@ func (h HttpServer) CreateChannel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	channel, err := h.service.CreateChannel(r.Context(), newChannel)
+	ctx := r.Context()
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "CreateChannel()")
+	defer span.End()
+
+	channel, err := h.service.CreateChannel(ctx, newChannel)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+
 		render.Status(r, http.StatusInternalServerError)
 		render.PlainText(w, r, err.Error())
 		return
 	}
 
 	data := map[string]interface{}{}
-	mapstructure.Decode(channel, &data)
+	if err = mapstructure.Decode(channel, &data); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+
+		render.Status(r, http.StatusInternalServerError)
+		render.PlainText(w, r, err.Error())
+	}
 
 	response := dto.APIResponseFormat{
 		Data:    data,
@@ -108,15 +153,28 @@ func (h HttpServer) DeleteChannelById(w http.ResponseWriter, r *http.Request, ch
 
 // Retrieve a channel
 func (h HttpServer) GetChannelById(w http.ResponseWriter, r *http.Request, channelID string) {
-	channel, err := h.service.GetChannelById(r.Context(), channelID)
+	ctx := r.Context()
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "GetChannelById()")
+	defer span.End()
+
+	channel, err := h.service.GetChannelById(ctx, channelID)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+
 		render.Status(r, http.StatusInternalServerError)
 		render.PlainText(w, r, err.Error())
 		return
 	}
 
 	data := map[string]interface{}{}
-	mapstructure.Decode(channel, &data)
+	if err = mapstructure.Decode(channel, &data); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+
+		render.Status(r, http.StatusInternalServerError)
+		render.PlainText(w, r, err.Error())
+	}
 
 	response := dto.APIResponseFormat{
 		Data:    data,
@@ -152,22 +210,39 @@ func (h HttpServer) Websocket(w http.ResponseWriter, r *http.Request) {
 
 	session, _ := h.sessionStore.NewWebsocketSession(conn, &h.service)
 
-	go session.Writer()
-	go session.Reader()
+	ctx := context.Background()
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "Websocket")
+
+	go session.Writer(ctx, span)
+	go session.Reader(ctx, span)
 	// go session.SubscriptionListener()
 }
 
 // Retrieve all users
 func (h HttpServer) GetUsers(w http.ResponseWriter, r *http.Request) {
-	users, err := h.service.GetUsers(r.Context())
+	ctx := r.Context()
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "GetUsers()")
+	defer span.End()
+
+	users, err := h.service.GetUsers(ctx)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+
 		render.Status(r, http.StatusInternalServerError)
 		render.PlainText(w, r, err.Error())
 		return
 	}
 
 	data := []map[string]interface{}{}
-	mapstructure.Decode(users, &data)
+	if err = mapstructure.Decode(users, &data); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+
+		render.Status(r, http.StatusInternalServerError)
+		render.PlainText(w, r, err.Error())
+		return
+	}
 
 	response := dto.APIResponseFormat{
 		Data: map[string]interface{}{
@@ -191,15 +266,29 @@ func (h HttpServer) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.service.CreateUser(r.Context(), newUser)
+	ctx := r.Context()
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "CreateUser()")
+	defer span.End()
+
+	user, err := h.service.CreateUser(ctx, newUser)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+
 		render.Status(r, http.StatusInternalServerError)
 		render.PlainText(w, r, err.Error())
 		return
 	}
 
 	data := map[string]interface{}{}
-	mapstructure.Decode(user, &data)
+	if err = mapstructure.Decode(user, &data); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+
+		render.Status(r, http.StatusInternalServerError)
+		render.PlainText(w, r, err.Error())
+		return
+	}
 
 	response := dto.APIResponseFormat{
 		Data:    data,
@@ -216,15 +305,29 @@ func (h HttpServer) DeleteUserById(w http.ResponseWriter, r *http.Request, userI
 
 // Retrieve a user
 func (h HttpServer) GetUserById(w http.ResponseWriter, r *http.Request, userID string) {
-	user, err := h.service.GetUserById(r.Context(), userID)
+	ctx := r.Context()
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "GetUserById()")
+	defer span.End()
+
+	user, err := h.service.GetUserById(ctx, userID)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+
 		render.Status(r, http.StatusInternalServerError)
 		render.PlainText(w, r, err.Error())
 		return
 	}
 
 	data := map[string]interface{}{}
-	mapstructure.Decode(user, &data)
+	if err = mapstructure.Decode(user, &data); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+
+		render.Status(r, http.StatusInternalServerError)
+		render.PlainText(w, r, err.Error())
+		return
+	}
 
 	response := dto.APIResponseFormat{
 		Data:    data,
@@ -245,15 +348,29 @@ func (h HttpServer) CreateMembership(w http.ResponseWriter, r *http.Request, cha
 		return
 	}
 
-	membership, err := h.service.CreateMembership(r.Context(), newMembership)
+	ctx := r.Context()
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "CreateMembership()")
+	defer span.End()
+
+	membership, err := h.service.CreateMembership(ctx, newMembership)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+
 		render.Status(r, http.StatusInternalServerError)
 		render.PlainText(w, r, err.Error())
 		return
 	}
 
 	data := map[string]interface{}{}
-	mapstructure.Decode(membership, &data)
+	if err = mapstructure.Decode(membership, &data); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+
+		render.Status(r, http.StatusInternalServerError)
+		render.PlainText(w, r, err.Error())
+		return
+	}
 
 	response := dto.APIResponseFormat{
 		Data:    data,

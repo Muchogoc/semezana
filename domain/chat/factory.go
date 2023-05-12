@@ -1,7 +1,5 @@
 package chat
 
-import "github.com/Muchogoc/semezana/domain/user"
-
 type Factory struct{}
 
 func NewFactory() (Factory, error) {
@@ -37,7 +35,7 @@ func (f Factory) UnmarshalMembershipFromDatabase(
 	role MembershipRole,
 	status MembershipStatus,
 	channel Channel,
-	user user.User,
+	user User,
 ) (*Membership, error) {
 	return &Membership{
 		id:      id,
@@ -45,5 +43,21 @@ func (f Factory) UnmarshalMembershipFromDatabase(
 		status:  status,
 		channel: channel,
 		user:    user,
+	}, nil
+}
+
+func (f Factory) NewUser(name string) User {
+	return User{
+		name: name,
+	}
+}
+
+func (f Factory) UnmarshalUserFromDatabase(
+	id string,
+	name string,
+) (*User, error) {
+	return &User{
+		id:   id,
+		name: name,
 	}, nil
 }

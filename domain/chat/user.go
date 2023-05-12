@@ -1,4 +1,4 @@
-package user
+package chat
 
 type User struct {
 	id   string

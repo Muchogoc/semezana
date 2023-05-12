@@ -22,6 +22,9 @@ services:
       - NSQ_ADDRESS=nsqd:4150
       - NSQ_LOOKUP_ADDRESS=nsqlookupd:4161
       - ENVIRONMENT=local
+      - OTEL_EXPORTER_JAEGER_AGENT_HOST=jaeger
+      - OTEL_EXPORTER_JAEGER_AGENT_PORT=6831
+      - OTEL_EXPORTER_JAEGER_ENDPOINT=http://jaeger:14268/api/traces
 
   db:
     image: postgres:14.1-alpine
@@ -57,3 +60,10 @@ services:
       - "4171:4171"
     logging:
       driver: "none"
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"
+      - "6831:6831/udp"
+      - "14268:14268"

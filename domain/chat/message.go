@@ -2,8 +2,6 @@ package chat
 
 import (
 	"time"
-
-	"github.com/Muchogoc/semezana/domain/user"
 )
 
 type Message struct {
@@ -11,7 +9,7 @@ type Message struct {
 	headers    MessageHeaders
 	content    MessageContent
 	channel    Channel
-	author     user.User
+	author     User
 	recipients []Recipient
 	timestamp  time.Time
 }
@@ -42,7 +40,7 @@ func (m *Message) Content() MessageContent {
 	return m.content
 }
 
-func (m *Message) Author() user.User {
+func (m *Message) Author() User {
 	return m.author
 }
 
