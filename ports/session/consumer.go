@@ -1,7 +1,6 @@
 package session
 
 import (
-	"context"
 	"encoding/json"
 
 	"github.com/Muchogoc/semezana/dto"
@@ -14,7 +13,7 @@ func (s *Session) HandleMessage(m *nsq.Message) error {
 		return err
 	}
 
-	response := s.service.ProcessPubsubMessage(context.Background(), request)
+	response := s.service.ProcessPubsubMessage(s.ctx, request)
 	s.queueOut(response)
 
 	return nil

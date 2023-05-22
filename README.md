@@ -34,7 +34,7 @@
 
 ## About
 
-> It is a chat server that allows users to communicate with each other in real time using the Go programming language. The chat server follows the principles of domain-driven design (DDD), which is a software development approach that focuses on modeling the business domain and its rules. The project uses the concepts and techniques from the book [Go With The Domain](https://threedots.tech/go-with-the-domain/). The project is a practical exercise that helps me learn and apply DDD and Go in a realistic scenario.
+> It is a chat server that allows users to communicate with each other in real time. The chat server follows the principles of domain-driven design (DDD), which is a software development approach that focuses on modeling the business domain and its rules. The project uses the concepts and techniques from the book [Go With The Domain](https://threedots.tech/go-with-the-domain/). The project is a practical exercise that helps me learn and apply DDD and Go in a realistic scenario.
 
 
 

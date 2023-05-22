@@ -10,6 +10,8 @@ import (
 	"github.com/Muchogoc/semezana/internal/utils"
 	"github.com/nsqio/go-nsq"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 )
 
 var (
@@ -27,8 +29,14 @@ func NewNSQSubscriber(address string) *NSQSubscriber {
 }
 
 func (n NSQSubscriber) CreateSessionSubscriber(ctx context.Context, membershipID string) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "CreateSessionSubscriber()")
+	defer span.End()
+
 	session, err := utils.SessionFromContext(ctx)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+
 		logrus.Error(err)
 		return
 	}
@@ -41,6 +49,9 @@ func (n NSQSubscriber) CreateSessionSubscriber(ctx context.Context, membershipID
 	//Creating the consumer
 	consumer, err := nsq.NewConsumer(membershipID, nsqChannel, config)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+
 		log.Fatal(err)
 	}
 	defer consumer.Stop()
@@ -52,7 +63,12 @@ func (n NSQSubscriber) CreateSessionSubscriber(ctx context.Context, membershipID
 	consumer.AddHandler(session)
 
 	//Creating the Producer using NSQ lookup Address
-	consumer.ConnectToNSQLookupd(n.lookupAddress)
+	if err = consumer.ConnectToNSQLookupd(n.lookupAddress); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+
+		log.Fatal(err)
+	}
 
 	stop := session.StopChan()
 	<-stop

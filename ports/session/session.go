@@ -38,6 +38,8 @@ type Session struct {
 	// Inbound messages channel from a pull pubsub subscriber
 	// sub chan dto.PubMessage
 
+	ctx context.Context
+
 	service Service
 }
 

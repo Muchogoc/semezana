@@ -1,22 +1,18 @@
 package chat
 
-import (
-	"github.com/Muchogoc/semezana/domain/user"
-)
-
 type Membership struct {
 	id      string
 	role    MembershipRole
 	status  MembershipStatus
-	user    user.User
+	user    User
 	channel Channel
 }
 
-func (m *Membership) User() user.User {
+func (m *Membership) User() User {
 	return m.user
 }
 
-func (m *Membership) SetUser(user user.User) {
+func (m *Membership) SetUser(user User) {
 	m.user = user
 }
 
